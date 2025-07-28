@@ -4,8 +4,15 @@ import { setupVite, serveStatic, log } from "./vite";
 import { sessionMiddleware } from "./middleware/session";
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: false, limit: '50mb' }));
+
+// Set proper character encoding
+app.use((req, res, next) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  next();
+});
+
 app.use(sessionMiddleware);
 
 app.use((req, res, next) => {

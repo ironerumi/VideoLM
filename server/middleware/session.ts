@@ -10,6 +10,9 @@ declare global {
 }
 
 export async function sessionMiddleware(req: Request, res: Response, next: NextFunction) {
+  // Set UTF-8 encoding headers
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  
   let sessionId = req.headers['x-session-id'] as string;
   
   if (!sessionId) {

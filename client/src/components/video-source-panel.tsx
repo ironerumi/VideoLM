@@ -3,6 +3,7 @@ import { Plus, Play, Upload, Film, PanelLeftClose } from "lucide-react";
 import VideoUpload from "./video-upload";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { fixJapaneseDisplay } from "../utils/encoding";
 import type { Video } from "@shared/schema";
 
 interface VideoSourcePanelProps {
@@ -132,10 +133,10 @@ export default function VideoSourcePanel({
                 <div className="flex-1 min-w-0">
                   <p 
                     className="text-sm font-medium text-slate-700 truncate japanese-filename"
-                    title={video.originalName}
+                    title={fixJapaneseDisplay(video.originalName)}
                     data-testid={`text-name-${video.id}`}
                   >
-                    {video.originalName}
+                    {fixJapaneseDisplay(video.originalName)}
                   </p>
                   <p 
                     className="text-xs text-slate-400"

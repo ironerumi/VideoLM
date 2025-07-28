@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { videoUpload, generateThumbnails, getVideoMetadata, extractVideoFrame } from "./services/video";
 import { analyzeVideoFrame, chatWithVideo, generateVideoSummary, type VideoAnalysis } from "./services/openai";
 import { insertVideoSchema, insertChatMessageSchema } from "@shared/schema";
+import { decodeFilename, encodeFilename, fixJapaneseEncoding } from "./utils/encoding";
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -26,8 +27,10 @@ const sessionVideoUpload = multer({
     filename: (req, file, cb) => {
       const timestamp = Date.now();
       const ext = path.extname(file.originalname);
-      const name = path.basename(file.originalname, ext);
-      cb(null, `${timestamp}-${name}${ext}`);
+      // Fix Japanese encoding and ensure proper UTF-8
+      const decodedName = fixJapaneseEncoding(decodeFilename(file.originalname));
+      const name = path.basename(decodedName, ext);
+      cb(null, `${timestamp}-${encodeFilename(name)}${ext}`);
     }
   }),
   limits: {
@@ -75,7 +78,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const videoData = {
         sessionId: req.sessionId,
         filename: req.file.filename,
-        originalName: req.file.originalname,
+        originalName: fixJapaneseEncoding(decodeFilename(req.file.originalname)),
         filePath: req.file.path,
         size: req.file.size,
         duration: metadata.duration,
