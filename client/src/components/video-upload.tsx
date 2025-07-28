@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { uploadFile } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { CloudUpload, X, CheckCircle, AlertCircle } from "lucide-react";
@@ -33,7 +33,7 @@ export default function VideoUpload({ onVideoUploaded, onCancel }: VideoUploadPr
       }, 200);
 
       try {
-        const response = await apiRequest('POST', '/api/videos/upload', formData);
+        const response = await uploadFile('/api/videos/upload', formData);
         clearInterval(progressInterval);
         setUploadProgress(100);
         return response.json();

@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { sessionManager } from "./session";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -14,11 +15,35 @@ export async function apiRequest(
 ): Promise<Response> {
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers: {
+      ...(data ? { "Content-Type": "application/json" } : {}),
+      ...sessionManager.getSessionHeaders(),
+    },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
 
+  // Update session ID from response if provided
+  sessionManager.updateFromResponse(res);
+  
+  await throwIfResNotOk(res);
+  return res;
+}
+
+// Helper function for file uploads with session management
+export async function uploadFile(url: string, formData: FormData) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      ...sessionManager.getSessionHeaders(),
+    },
+    body: formData,
+    credentials: "include",
+  });
+
+  // Update session ID from response if provided
+  sessionManager.updateFromResponse(res);
+  
   await throwIfResNotOk(res);
   return res;
 }
@@ -30,8 +55,14 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     const res = await fetch(queryKey.join("/") as string, {
+      headers: {
+        ...sessionManager.getSessionHeaders(),
+      },
       credentials: "include",
     });
+
+    // Update session ID from response if provided
+    sessionManager.updateFromResponse(res);
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
       return null;

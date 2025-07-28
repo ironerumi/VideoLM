@@ -25,14 +25,19 @@ The application follows a monorepo structure with a clear separation between cli
 - **Language**: TypeScript with ESM modules
 - **Database**: PostgreSQL with Drizzle ORM
 - **Database Provider**: Neon Database (@neondatabase/serverless)
-- **File Upload**: Multer for multipart form handling
+- **File Upload**: Multer with session-based disk storage
+- **Session Management**: Custom middleware for session tracking
+- **File Serving**: Express static serving with session validation
 - **Development**: TSX for TypeScript execution
 
 ### Data Storage Strategy
-- **Primary Storage**: PostgreSQL database with three main tables (videos, chatMessages, videoSessions)
+- **Session Management**: Each user gets a unique session ID stored in localStorage
+- **File Storage**: Videos saved to session-specific folders in `uploads/{sessionId}/`
+- **Database Schema**: PostgreSQL with four main tables (sessions, videos, chatMessages, videoSessions)
 - **In-Memory Fallback**: MemStorage class provides in-memory storage during development
-- **File Handling**: Videos stored as binary data in memory during processing
+- **File Handling**: Videos stored as files on disk with metadata in database
 - **Schema Management**: Drizzle Kit for database migrations and schema changes
+- **Session Security**: All video access restricted to session owner
 
 ## Key Components
 
@@ -54,12 +59,18 @@ The application follows a monorepo structure with a clear separation between cli
 
 ## Data Flow
 
-1. **Video Upload Flow**:
+1. **Session Initialization**:
+   - Client requests include session ID header (X-Session-Id)
+   - Server creates session record and unique folder if new
+   - Session ID stored in client localStorage for persistence
+
+2. **Video Upload Flow**:
    - Client uploads video via drag-and-drop or file picker
-   - Server validates file type and size (100MB limit)
+   - Server saves file to session-specific folder (uploads/{sessionId}/)
+   - File validation and size limits (100MB)
    - Metadata extraction and thumbnail generation
    - AI frame analysis using OpenAI Vision API
-   - Database storage with analysis results
+   - Database storage with file path and analysis results
 
 2. **Chat Interaction Flow**:
    - User sends message about selected video
