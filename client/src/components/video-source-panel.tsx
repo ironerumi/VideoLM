@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Play, Upload, Film } from "lucide-react";
+import { Plus, Play, Upload, Film, PanelLeftClose } from "lucide-react";
 import VideoUpload from "./video-upload";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,6 +11,7 @@ interface VideoSourcePanelProps {
   onVideoSelect: (videoId: string, selected: boolean) => void;
   onVideoPlay: (videoId: string) => void;
   onVideoUploaded: () => void;
+  onCollapse?: () => void;
 }
 
 export default function VideoSourcePanel({
@@ -19,6 +20,7 @@ export default function VideoSourcePanel({
   onVideoSelect,
   onVideoPlay,
   onVideoUploaded,
+  onCollapse,
 }: VideoSourcePanelProps) {
   const [showUpload, setShowUpload] = useState(false);
 
@@ -46,14 +48,27 @@ export default function VideoSourcePanel({
       <div className="p-6 border-b border-slate-100">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-slate-800">Sources</h2>
-          <Button
-            onClick={() => setShowUpload(true)}
-            className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 shadow-soft"
-            data-testid="button-add-source"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button
+              onClick={() => setShowUpload(true)}
+              className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 shadow-soft"
+              data-testid="button-add-source"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add
+            </Button>
+            {onCollapse && (
+              <Button
+                onClick={onCollapse}
+                variant="ghost"
+                size="sm"
+                className="text-slate-500 hover:text-slate-700"
+                data-testid="button-collapse-left-panel"
+              >
+                <PanelLeftClose className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 

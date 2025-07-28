@@ -79,6 +79,7 @@ export default function Home() {
             onVideoSelect={handleVideoSelect}
             onVideoPlay={handleVideoPlay}
             onVideoUploaded={refetchVideos}
+            onCollapse={() => setLeftPanelCollapsed(true)}
           />
         </div>
 
@@ -97,21 +98,6 @@ export default function Home() {
 
         {/* Center Panel - Video Player */}
         <div className="flex-1 flex flex-col relative">
-          {/* Left Panel Toggle Button */}
-          {!leftPanelCollapsed && (
-            <div className="absolute top-4 left-4 z-10">
-              <Button
-                onClick={() => setLeftPanelCollapsed(true)}
-                variant="ghost"
-                size="sm"
-                className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white shadow-soft"
-                data-testid="button-collapse-left-panel"
-              >
-                <PanelLeftClose className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-
           <div className="flex-1">
             <VideoPlayer
               video={currentVideo}
