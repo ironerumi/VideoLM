@@ -14,6 +14,43 @@ interface MulterRequest extends Request {
   sessionId: string;
 }
 
+// Custom filename decoder for Japanese/CJK characters
+function decodeMultipartFilename(originalname: string): string {
+  try {
+    console.log('Original filename received:', originalname);
+    console.log('Character codes:', originalname.split('').map(c => c.charCodeAt(0)));
+    
+    // First, try to handle the most common issue: UTF-8 bytes interpreted as Latin-1
+    if (originalname.includes('Ã') || originalname.includes('¢') || originalname.includes('â')) {
+      console.log('Detected encoding issue, attempting to fix...');
+      
+      // Convert from Latin-1 back to bytes, then decode as UTF-8
+      const bytes = [];
+      for (let i = 0; i < originalname.length; i++) {
+        bytes.push(originalname.charCodeAt(i));
+      }
+      const uint8Array = new Uint8Array(bytes);
+      const decoder = new TextDecoder('utf-8');
+      const decoded = decoder.decode(uint8Array);
+      
+      console.log('Decoded filename:', decoded);
+      
+      // Verify this looks like valid text (contains readable characters)
+      if (/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u0020-\u007E]/.test(decoded)) {
+        console.log('Successfully decoded Japanese filename');
+        return decoded;
+      }
+    }
+    
+    // If no conversion needed or conversion failed, return original
+    console.log('Using original filename (no conversion needed)');
+    return originalname;
+  } catch (error) {
+    console.warn('Failed to decode filename:', error);
+    return originalname;
+  }
+}
+
 // Configure multer to save files to session-specific directories
 const sessionVideoUpload = multer({
   storage: multer.diskStorage({
@@ -26,19 +63,20 @@ const sessionVideoUpload = multer({
     },
     filename: (req, file, cb) => {
       const timestamp = Date.now();
-      const ext = path.extname(file.originalname);
-      // Fix Japanese encoding and ensure proper UTF-8
-      const decodedName = fixJapaneseEncoding(decodeFilename(file.originalname));
+      // First decode the problematic filename
+      const decodedName = decodeMultipartFilename(file.originalname);
+      const ext = path.extname(decodedName);
       const name = path.basename(decodedName, ext);
-      cb(null, `${timestamp}-${encodeFilename(name)}${ext}`);
+      cb(null, `${timestamp}-${name}${ext}`);
     }
   }),
   limits: {
     fileSize: 100 * 1024 * 1024, // 100MB limit
   },
   fileFilter: (req, file, cb) => {
+    const decodedName = decodeMultipartFilename(file.originalname);
     const allowedTypes = /\.(mp4|mov|avi|wmv|flv|webm|mkv)$/i;
-    if (allowedTypes.test(file.originalname)) {
+    if (allowedTypes.test(decodedName)) {
       cb(null, true);
     } else {
       cb(new Error('Invalid file type. Only video files are allowed.'));
@@ -75,14 +113,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const frameBase64 = await extractVideoFrame(fileBuffer);
       const analysis = await analyzeVideoFrame(frameBase64);
 
+      const decodedOriginalName = decodeMultipartFilename(req.file.originalname);
       const videoData = {
         sessionId: req.sessionId,
         filename: req.file.filename,
-        originalName: fixJapaneseEncoding(decodeFilename(req.file.originalname)),
+        originalName: decodedOriginalName,
         filePath: req.file.path,
         size: req.file.size,
         duration: metadata.duration,
-        format: path.extname(req.file.originalname).slice(1),
+        format: path.extname(decodedOriginalName).slice(1),
         analysis,
         thumbnails,
       };

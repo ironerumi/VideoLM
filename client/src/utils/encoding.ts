@@ -40,27 +40,8 @@ export function hasJapaneseCharacters(text: string): boolean {
  * Fix common encoding issues with Japanese characters
  */
 export function fixJapaneseDisplay(text: string): string {
-  try {
-    // If the text looks like it has encoding issues, try to fix it
-    if (text.includes('Ã') || text.includes('¢') || text.includes('â')) {
-      // This might be incorrectly encoded Japanese text
-      // Try to decode it properly
-      const bytes = new Uint8Array(text.length);
-      for (let i = 0; i < text.length; i++) {
-        bytes[i] = text.charCodeAt(i);
-      }
-      const decoder = new TextDecoder('utf-8');
-      const decoded = decoder.decode(bytes);
-      
-      // Check if the result looks better (contains Japanese characters)
-      if (hasJapaneseCharacters(decoded)) {
-        return decoded;
-      }
-    }
-    
-    return text;
-  } catch (error) {
-    console.warn('Failed to fix Japanese display:', error);
-    return text;
-  }
+  // Since we're now handling encoding properly at the server level,
+  // we primarily just return the text as-is. The server should send
+  // properly decoded filenames.
+  return text;
 }
