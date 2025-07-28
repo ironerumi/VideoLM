@@ -43,9 +43,9 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="h-screen flex flex-col bg-slate-50 overflow-hidden">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-6 py-4 sticky top-0 z-50">
+      <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-6 py-4 flex-shrink-0 z-50">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
@@ -68,7 +68,7 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex relative">
+      <div className="flex-1 flex relative min-h-0">
         {/* Left Panel - Video Sources */}
         <div className={`transition-all duration-300 ease-in-out ${
           leftPanelCollapsed ? 'w-0' : 'w-80'
@@ -97,8 +97,8 @@ export default function Home() {
         )}
 
         {/* Center Panel - Video Player */}
-        <div className="flex-1 flex flex-col relative">
-          <div className="flex-1">
+        <div className="flex-1 flex flex-col relative min-h-0">
+          <div className="flex-1 min-h-0">
             <VideoPlayer
               video={currentVideo}
               videos={videos}
@@ -107,10 +107,12 @@ export default function Home() {
           </div>
           
           {/* Chat Interface */}
-          <ChatInterface
-            videoId={currentVideoId}
-            selectedVideoCount={selectedVideoIds.length}
-          />
+          <div className="flex-shrink-0">
+            <ChatInterface
+              videoId={currentVideoId}
+              selectedVideoCount={selectedVideoIds.length}
+            />
+          </div>
         </div>
 
         {/* Right Panel Toggle Button */}

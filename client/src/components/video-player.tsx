@@ -69,10 +69,10 @@ export default function VideoPlayer({ video, videos, onVideoSelect }: VideoPlaye
   const progress = video?.duration ? (currentTime / video.duration) * 100 : 0;
 
   return (
-    <div className="p-8 h-full">
-      <div className="bg-white rounded-2xl shadow-premium overflow-hidden h-full flex flex-col">
+    <div className="p-8 h-full flex flex-col min-h-0">
+      <div className="bg-white rounded-2xl shadow-premium overflow-hidden flex-1 flex flex-col min-h-0">
         {/* Video Display */}
-        <div className="relative bg-black aspect-video flex-shrink-0">
+        <div className="relative bg-black flex-1 flex items-center justify-center min-h-0">
           {video ? (
             <>
               {/* Abstract flowing background - matching the design */}

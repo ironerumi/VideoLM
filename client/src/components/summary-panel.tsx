@@ -57,7 +57,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
   };
 
   return (
-    <div className="w-80 bg-white border-l border-slate-200/60 flex flex-col">
+    <div className="w-80 bg-white border-l border-slate-200/60 flex flex-col h-full">
       {/* Summary Section */}
       <div className="p-6 border-b border-slate-100">
         <div className="flex items-center justify-between mb-4">
@@ -178,8 +178,8 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
       </div>
 
       {/* Chat History */}
-      <div className="flex-1 p-6">
-        <h3 className="text-lg font-semibold text-slate-800 mb-4">Chat History</h3>
+      <div className="flex-1 flex flex-col p-6 min-h-0">
+        <h3 className="text-lg font-semibold text-slate-800 mb-4 flex-shrink-0">Chat History</h3>
         
         {chatHistory.length === 0 ? (
           <div className="text-center py-8">
@@ -190,7 +190,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
             <p className="text-slate-400 text-sm">Start chatting to see your conversation history</p>
           </div>
         ) : (
-          <ScrollArea className="max-h-96">
+          <ScrollArea className="flex-1 min-h-0">
             <div className="space-y-4">
               {chatHistory.slice(-6).map((chat) => (
                 <div key={chat.id} className="space-y-2">

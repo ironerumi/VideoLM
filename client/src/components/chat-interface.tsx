@@ -58,7 +58,7 @@ export default function ChatInterface({ videoId, selectedVideoCount }: ChatInter
     <div className="px-8 pb-8">
       <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
         {/* Chat History */}
-        <ScrollArea className="h-80 p-6" ref={scrollRef}>
+        <ScrollArea className="h-64 p-6" ref={scrollRef}>
           {chatHistory.length === 0 && !videoId && (
             <div className="text-center py-12">
               <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">

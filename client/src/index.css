@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Viewport fit styles */
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+}
+
 :root {
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(20, 14.3%, 4.1%);
