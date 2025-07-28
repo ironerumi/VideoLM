@@ -2,15 +2,16 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, FileText, Clock, Database, HardDrive } from "lucide-react";
+import { RefreshCw, FileText, Clock, Database, HardDrive, PanelRightClose } from "lucide-react";
 import type { Video, ChatMessage } from "@shared/schema";
 
 interface SummaryPanelProps {
   selectedVideoIds: string[];
   currentVideoId: string | null;
+  onCollapse?: () => void;
 }
 
-export default function SummaryPanel({ selectedVideoIds, currentVideoId }: SummaryPanelProps) {
+export default function SummaryPanel({ selectedVideoIds, currentVideoId, onCollapse }: SummaryPanelProps) {
   const { data: videos = [] } = useQuery<Video[]>({
     queryKey: ["/api/videos"],
   });
@@ -61,22 +62,35 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId }: Summa
       <div className="p-6 border-b border-slate-100">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-slate-800">Summary</h3>
-          {selectedVideoIds.length > 0 && (
-            <Button
-              onClick={handleGenerateSummary}
-              disabled={summaryMutation.isPending}
-              size="sm"
-              variant="outline"
-              className="text-xs"
-              data-testid="button-generate-summary"
-            >
-              {summaryMutation.isPending ? (
-                <RefreshCw className="w-3 h-3 animate-spin" />
-              ) : (
-                <FileText className="w-3 h-3" />
-              )}
-            </Button>
-          )}
+          <div className="flex items-center space-x-2">
+            {selectedVideoIds.length > 0 && (
+              <Button
+                onClick={handleGenerateSummary}
+                disabled={summaryMutation.isPending}
+                size="sm"
+                variant="outline"
+                className="text-xs"
+                data-testid="button-generate-summary"
+              >
+                {summaryMutation.isPending ? (
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                ) : (
+                  <FileText className="w-3 h-3" />
+                )}
+              </Button>
+            )}
+            {onCollapse && (
+              <Button
+                onClick={onCollapse}
+                variant="ghost"
+                size="sm"
+                className="text-slate-500 hover:text-slate-700"
+                data-testid="button-collapse-right-panel"
+              >
+                <PanelRightClose className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {summaryMutation.data ? (

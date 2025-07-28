@@ -97,32 +97,20 @@ export default function Home() {
 
         {/* Center Panel - Video Player */}
         <div className="flex-1 flex flex-col relative">
-          {/* Panel Toggle Buttons */}
-          <div className="absolute top-4 left-4 right-4 z-10 flex justify-between pointer-events-none">
-            {!leftPanelCollapsed && (
+          {/* Left Panel Toggle Button */}
+          {!leftPanelCollapsed && (
+            <div className="absolute top-4 left-4 z-10">
               <Button
                 onClick={() => setLeftPanelCollapsed(true)}
                 variant="ghost"
                 size="sm"
-                className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white shadow-soft pointer-events-auto"
+                className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white shadow-soft"
                 data-testid="button-collapse-left-panel"
               >
                 <PanelLeftClose className="w-4 h-4" />
               </Button>
-            )}
-            
-            {!rightPanelCollapsed && (
-              <Button
-                onClick={() => setRightPanelCollapsed(true)}
-                variant="ghost"
-                size="sm"
-                className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white shadow-soft pointer-events-auto"
-                data-testid="button-collapse-right-panel"
-              >
-                <PanelRightClose className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
+            </div>
+          )}
 
           <div className="flex-1">
             <VideoPlayer
@@ -159,6 +147,7 @@ export default function Home() {
           <SummaryPanel
             selectedVideoIds={selectedVideoIds}
             currentVideoId={currentVideoId}
+            onCollapse={() => setRightPanelCollapsed(true)}
           />
         </div>
       </div>
