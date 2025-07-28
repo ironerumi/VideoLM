@@ -131,7 +131,7 @@ export default function VideoSourcePanel({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p 
-                    className="text-sm font-medium text-slate-700 truncate"
+                    className="text-sm font-medium text-slate-700 truncate japanese-filename"
                     title={video.originalName}
                     data-testid={`text-name-${video.id}`}
                   >

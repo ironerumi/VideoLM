@@ -92,7 +92,7 @@ export default function ChatInterface({ videoId, selectedVideoCount }: ChatInter
                 {/* User Message */}
                 <div className="flex justify-end" data-testid={`user-message-${chat.id}`}>
                   <div className="bg-indigo-500 text-white rounded-xl rounded-br-sm px-4 py-2 max-w-xs lg:max-w-md">
-                    <p className="text-sm">{chat.message}</p>
+                    <p className="text-sm japanese-filename">{chat.message}</p>
                     <p className="text-xs text-indigo-200 mt-1">
                       {formatTime(chat.timestamp)}
                     </p>
@@ -106,7 +106,7 @@ export default function ChatInterface({ videoId, selectedVideoCount }: ChatInter
                       <Bot className="w-4 h-4 text-slate-600" />
                     </div>
                     <div className="bg-slate-100 text-slate-700 rounded-xl rounded-bl-sm px-4 py-2">
-                      <p className="text-sm leading-relaxed">{chat.response}</p>
+                      <p className="text-sm leading-relaxed japanese-filename">{chat.response}</p>
                       <p className="text-xs text-slate-500 mt-1">
                         {formatTime(chat.timestamp)}
                       </p>

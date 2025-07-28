@@ -56,6 +56,8 @@ The application follows a monorepo structure with a clear separation between cli
 - **Component Library**: Comprehensive set of reusable UI components
 - **Theme System**: CSS custom properties for consistent design tokens
 - **Interactive Elements**: Drag-and-drop upload, video player controls, real-time chat
+- **Internationalization**: Full support for Japanese and double-byte characters with proper font fallbacks
+- **Viewport Optimization**: Full-height layout that fits within browser viewport without scrollbars
 
 ## Data Flow
 
@@ -97,9 +99,10 @@ The application follows a monorepo structure with a clear separation between cli
 
 ### UI/UX Libraries
 - **Radix UI**: Accessible component primitives (40+ components)
-- **Tailwind CSS**: Utility-first CSS framework
+- **Tailwind CSS**: Utility-first CSS framework with CJK character support
 - **Lucide React**: Modern icon library
 - **Embla Carousel**: Touch-friendly carousel component
+- **Font Support**: Comprehensive Japanese/CJK character rendering with Hiragino Sans and Yu Gothic fonts
 
 ### Development Tools
 - **Vite**: Fast build tool with HMR support
