@@ -90,7 +90,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect }: VideoPlaye
                 }}
                 data-testid="video-element"
               >
-                <source src={`/api/videos/${video.id}/file?session=${localStorage.getItem('sessionId')}`} type="video/mp4" />
+                <source src={`/api/videos/${video.id}/file?session=${video.sessionId}`} type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
               
@@ -192,7 +192,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect }: VideoPlaye
                     data-testid={`thumbnail-${index}`}
                   >
                     <img
-                      src={`/api/videos/${video.id}/frames/${frame.fileName}`}
+                      src={`/api/videos/${video.id}/frames/${frame.fileName}?session=${video.sessionId}`}
                       alt={`Frame at ${frame.timestamp.toFixed(1)}s`}
                       className="w-full h-full object-cover"
                       onError={(e) => {
