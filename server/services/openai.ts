@@ -191,7 +191,7 @@ export async function analyzeVideoFrame(base64Frame: string): Promise<VideoAnaly
   }
 }
 
-export async function chatWithVideo(message: string, videoAnalysis: VideoAnalysis, chatHistory: Array<{message: string, response: string}>, language: string = 'en'): Promise<{
+export async function chatWithVideo(message: string, videoAnalysis: VideoAnalysis, chatHistory: Array<{message: string, response: string}>, availableFrames: string[] = [], language: string = 'en'): Promise<{
   response: string;
   rephrasedQuestion: string;
   relevantFrame: string | null;
@@ -204,6 +204,9 @@ Video Analysis Context:
 - Topics: ${videoAnalysis.topics.join(", ")}
 - Visual Elements: ${videoAnalysis.visualElements.join(", ")}
 - Transcription: ${videoAnalysis.transcription.join("\n")}
+
+Available Frame Files (IMPORTANT - Only reference these exact filenames):
+${availableFrames.join(", ")}
 
 Previous Chat History:
 ${chatHistory.map(h => `User: ${h.message}\nAI: ${h.response}`).join("\n\n")}
@@ -225,14 +228,16 @@ ${chatHistory.map(h => `User: ${h.message}\nAI: ${h.response}`).join("\n\n")}
           {
             "rephrasedQuestion": "Complete sentence version of the user's question with video context",
             "response": "Detailed answer to the question",
-            "relevantFrame": "frame_XXX_YYs.jpg or null if no specific frame is most relevant"
-          }`
+            "relevantFrame": "exact filename from available frames list or null (e.g., frame_003_14.1s.jpg)"
+          }
+          
+          CRITICAL: For relevantFrame, you MUST use only the exact filenames from the "Available Frame Files" list above. Do not create or guess frame names.`
         },
         {
           role: "user",
           content: `${context}\n\nUser Question: ${message}
 
-Please rephrase the question into a complete sentence with video context, provide a helpful response based on the video analysis, and identify the most relevant frame filename if applicable (e.g., frame_003_3.0s.jpg).`
+Please rephrase the question into a complete sentence with video context, provide a helpful response based on the video analysis, and identify the most relevant frame filename if applicable. IMPORTANT: Only use exact frame filenames from the Available Frame Files list above.`
         }
       ],
       response_format: { type: "json_object" },

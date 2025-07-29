@@ -209,7 +209,10 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
                             className="w-16 h-12 object-cover rounded-md"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
+                              const parent = target.parentElement;
+                              if (parent) {
+                                parent.style.display = 'none';
+                              }
                             }}
                           />
                           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">

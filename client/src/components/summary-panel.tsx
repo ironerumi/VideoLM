@@ -386,8 +386,11 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                               alt="Relevant frame"
                               className="w-full h-full object-cover"
                               onError={(e) => {
-                                // Hide thumbnail if image fails to load
-                                (e.target as HTMLElement).style.display = 'none';
+                                const target = e.target as HTMLImageElement;
+                                const parent = target.parentElement;
+                                if (parent) {
+                                  parent.style.display = 'none';
+                                }
                               }}
                             />
                           </button>

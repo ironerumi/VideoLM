@@ -453,12 +453,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Detect user's language preference from the request headers
       const userLanguage = req.headers['x-user-language'] as string || 'en';
       
+      // Get available frames from the filesystem to constrain AI responses
+      const videoNameWithoutExt = path.basename(video.originalName, path.extname(video.originalName));
+      const framesDir = path.join(path.dirname(video.filePath), videoNameWithoutExt);
+      let availableFrames: string[] = [];
+      
+      try {
+        if (fs.existsSync(framesDir)) {
+          const frameFiles = fs.readdirSync(framesDir);
+          availableFrames = frameFiles.filter(file => file.endsWith('.jpg'));
+          console.log('Available frames for AI:', availableFrames);
+        }
+      } catch (error) {
+        console.warn('Could not read frames directory:', error);
+      }
+      
       // Generate AI response with rephrased question and relevant frame
       const defaultAnalysis: VideoAnalysis = { summary: "", keyPoints: [], topics: [], sentiment: "neutral", visualElements: [], transcription: [] };
       const aiResult = await chatWithVideo(
         message, 
         (video.analysis as VideoAnalysis) || defaultAnalysis,
         chatHistory.map(m => ({ message: m.message, response: m.response })),
+        availableFrames,
         userLanguage
       );
 
