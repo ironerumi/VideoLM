@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Play, Pause, Volume2, Maximize, SkipBack, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -8,9 +8,10 @@ interface VideoPlayerProps {
   video: Video | undefined;
   videos: Video[];
   onVideoSelect: (videoId: string) => void;
+  seekToTime?: number;
 }
 
-export default function VideoPlayer({ video, videos, onVideoSelect }: VideoPlayerProps) {
+export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [volume, setVolume] = useState(1);
@@ -68,6 +69,14 @@ export default function VideoPlayer({ video, videos, onVideoSelect }: VideoPlaye
     ];
     return gradients[index % gradients.length];
   };
+
+  // Handle seeking to specific time when requested
+  useEffect(() => {
+    if (seekToTime !== undefined && videoRef.current) {
+      videoRef.current.currentTime = seekToTime;
+      setCurrentTime(seekToTime);
+    }
+  }, [seekToTime]);
 
   // Use actual video element duration when available, fallback to database duration
   const actualDuration = videoRef.current?.duration || video?.duration || 0;

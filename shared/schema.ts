@@ -28,7 +28,9 @@ export const chatMessages = sqliteTable("chat_messages", {
   sessionId: text("session_id").references(() => sessions.id).notNull(),
   videoId: text("video_id").references(() => videos.id),
   message: text("message").notNull(),
+  rephrasedQuestion: text("rephrased_question"), // LLM-rephrased full sentence question
   response: text("response").notNull(),
+  relevantFrame: text("relevant_frame"), // frame filename/path if relevant
   timestamp: integer("timestamp", { mode: 'timestamp' }).notNull().default(sql`(unixepoch() * 1000)`),
 });
 

@@ -10,9 +10,10 @@ interface SummaryPanelProps {
   selectedVideoIds: string[];
   currentVideoId: string | null;
   onCollapse?: () => void;
+  onFrameClick?: (frameTime: number) => void;
 }
 
-export default function SummaryPanel({ selectedVideoIds, currentVideoId, onCollapse }: SummaryPanelProps) {
+export default function SummaryPanel({ selectedVideoIds, currentVideoId, onCollapse, onFrameClick }: SummaryPanelProps) {
   const [summaryHeight, setSummaryHeight] = useState(400); // Default height in pixels
   const [isResizing, setIsResizing] = useState(false);
   const [isKeyPointsExpanded, setIsKeyPointsExpanded] = useState(true);
@@ -301,35 +302,62 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
           </div>
         ) : (
           <ScrollArea className="flex-1 min-h-0">
-            <div className="space-y-4">
-              {chatHistory.slice(-6).map((chat) => (
-                <div key={chat.id} className="space-y-2">
-                  {/* User Message */}
-                  <div className="flex justify-end" data-testid={`history-user-${chat.id}`}>
-                    <div className="bg-indigo-500 text-white rounded-xl rounded-br-sm px-3 py-2 max-w-xs">
-                      <p className="text-xs leading-relaxed">{chat.message}</p>
-                      <p className="text-xs text-indigo-200 mt-1">
-                        {formatTime(chat.timestamp)}
-                      </p>
-                    </div>
-                  </div>
+            <div className="space-y-6">
+              {chatHistory.slice(-6).map((chat) => {
+                // Extract frame timestamp from filename if available
+                const getFrameTimeFromFilename = (filename: string | null) => {
+                  if (!filename) return null;
+                  const match = filename.match(/frame_\d+_(\d+(\.\d+)?)s/);
+                  return match ? parseFloat(match[1]) : null;
+                };
 
-                  {/* AI Response */}
-                  <div className="flex justify-start" data-testid={`history-ai-${chat.id}`}>
-                    <div className="bg-slate-100 text-slate-700 rounded-xl rounded-bl-sm px-3 py-2 max-w-xs">
-                      <p className="text-xs leading-relaxed">
-                        {chat.response.length > 100 
-                          ? `${chat.response.substring(0, 100)}...` 
-                          : chat.response
-                        }
-                      </p>
+                const frameTime = getFrameTimeFromFilename((chat as any).relevantFrame);
+
+                return (
+                  <div key={chat.id} className="space-y-3" data-testid={`chat-item-${chat.id}`}>
+                    {/* Rephrased Question */}
+                    <div className="border-b border-slate-100 pb-3">
+                      <h4 className="text-sm font-medium text-slate-800 leading-relaxed">
+                        {(chat as any).rephrasedQuestion || chat.message}
+                      </h4>
                       <p className="text-xs text-slate-500 mt-1">
                         {formatTime(chat.timestamp)}
                       </p>
                     </div>
+
+                    {/* AI Response with Frame Thumbnail */}
+                    <div className="space-y-3">
+                      <div className="flex items-start space-x-3">
+                        {/* Frame Thumbnail */}
+                        {(chat as any).relevantFrame && currentVideoId && (
+                          <button
+                            onClick={() => frameTime && onFrameClick?.(frameTime)}
+                            className="flex-shrink-0 w-16 h-12 bg-slate-200 rounded-lg overflow-hidden hover:ring-2 hover:ring-indigo-300 transition-all duration-200 transform hover:scale-105"
+                            data-testid={`frame-thumbnail-${chat.id}`}
+                          >
+                            <img
+                              src={`/api/videos/${currentVideoId}/frames/${(chat as any).relevantFrame}`}
+                              alt="Relevant frame"
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                // Hide thumbnail if image fails to load
+                                (e.target as HTMLElement).style.display = 'none';
+                              }}
+                            />
+                          </button>
+                        )}
+
+                        {/* Response Text */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-slate-700 leading-relaxed">
+                            {chat.response}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </ScrollArea>
         )}

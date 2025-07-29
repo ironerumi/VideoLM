@@ -356,9 +356,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get chat history
       const chatHistory = await storage.getChatMessagesByVideoId(req.params.id);
       
-      // Generate AI response
+      // Generate AI response with rephrased question and relevant frame
       const defaultAnalysis: VideoAnalysis = { summary: "", keyPoints: [], topics: [], sentiment: "neutral", visualElements: [], transcription: [] };
-      const response = await chatWithVideo(
+      const aiResult = await chatWithVideo(
         message, 
         (video.analysis as VideoAnalysis) || defaultAnalysis,
         chatHistory.map(m => ({ message: m.message, response: m.response }))
@@ -368,7 +368,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sessionId: req.sessionId,
         videoId: req.params.id,
         message,
-        response,
+        rephrasedQuestion: aiResult.rephrasedQuestion,
+        response: aiResult.response,
+        relevantFrame: aiResult.relevantFrame,
       };
 
       const validation = insertChatMessageSchema.safeParse(chatData);

@@ -15,6 +15,7 @@ export default function Home() {
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [seekToTime, setSeekToTime] = useState<number | undefined>(undefined);
 
   const { data: videos = [], refetch: refetchVideos } = useQuery<Video[]>({
     queryKey: ["/api/videos"],
@@ -42,6 +43,12 @@ export default function Home() {
     if (!selectedVideoIds.includes(videoId)) {
       setSelectedVideoIds(prev => [...prev, videoId]);
     }
+  };
+
+  const handleFrameClick = (frameTime: number) => {
+    setSeekToTime(frameTime);
+    // Reset after a short delay to allow the effect to trigger
+    setTimeout(() => setSeekToTime(undefined), 100);
   };
 
   return (
@@ -106,6 +113,7 @@ export default function Home() {
               video={currentVideo}
               videos={videos}
               onVideoSelect={setCurrentVideoId}
+              seekToTime={seekToTime}
             />
           </div>
           
@@ -139,6 +147,7 @@ export default function Home() {
             selectedVideoIds={selectedVideoIds}
             currentVideoId={currentVideoId}
             onCollapse={() => setRightPanelCollapsed(true)}
+            onFrameClick={handleFrameClick}
           />
         </div>
       </div>

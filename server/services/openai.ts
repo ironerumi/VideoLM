@@ -138,7 +138,11 @@ export async function analyzeVideoFrame(base64Frame: string): Promise<VideoAnaly
   }
 }
 
-export async function chatWithVideo(message: string, videoAnalysis: VideoAnalysis, chatHistory: Array<{message: string, response: string}>): Promise<string> {
+export async function chatWithVideo(message: string, videoAnalysis: VideoAnalysis, chatHistory: Array<{message: string, response: string}>): Promise<{
+  response: string;
+  rephrasedQuestion: string;
+  relevantFrame: string | null;
+}> {
   try {
     const context = `
 Video Analysis Context:
@@ -146,6 +150,7 @@ Video Analysis Context:
 - Key Points: ${videoAnalysis.keyPoints.join(", ")}
 - Topics: ${videoAnalysis.topics.join(", ")}
 - Visual Elements: ${videoAnalysis.visualElements.join(", ")}
+- Transcription: ${videoAnalysis.transcription.join("\n")}
 
 Previous Chat History:
 ${chatHistory.map(h => `User: ${h.message}\nAI: ${h.response}`).join("\n\n")}
@@ -156,17 +161,35 @@ ${chatHistory.map(h => `User: ${h.message}\nAI: ${h.response}`).join("\n\n")}
       messages: [
         {
           role: "system",
-          content: "You are an AI assistant specialized in video content analysis. Use the provided video analysis context and chat history to answer questions about the video content. Be specific, informative, and reference the visual elements when relevant."
+          content: `You are an AI assistant specialized in video content analysis. Your task is to:
+          1. Rephrase the user's question into a complete, clear sentence based on the video context
+          2. Provide a detailed answer based on the video analysis
+          3. Identify the most relevant frame from the transcription if applicable
+          
+          Return JSON with this structure:
+          {
+            "rephrasedQuestion": "Complete sentence version of the user's question with video context",
+            "response": "Detailed answer to the question",
+            "relevantFrame": "frame_XXX_YYs.jpg or null if no specific frame is most relevant"
+          }`
         },
         {
           role: "user",
-          content: `${context}\n\nUser Question: ${message}`
+          content: `${context}\n\nUser Question: ${message}
+
+Please rephrase the question into a complete sentence with video context, provide a helpful response based on the video analysis, and identify the most relevant frame filename if applicable (e.g., frame_003_3.0s.jpg).`
         }
       ],
-      max_tokens: 500,
+      response_format: { type: "json_object" },
+      max_tokens: 800,
     });
 
-    return response.choices[0].message.content || "I'm unable to provide a response at the moment.";
+    const result = JSON.parse(response.choices[0].message.content || '{}');
+    return {
+      response: result.response || "I'm unable to provide a response at the moment.",
+      rephrasedQuestion: result.rephrasedQuestion || message,
+      relevantFrame: result.relevantFrame || null
+    };
   } catch (error) {
     console.error("Error in chat response:", error);
     throw new Error("Failed to generate chat response");
