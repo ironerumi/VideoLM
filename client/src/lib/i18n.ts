@@ -257,7 +257,7 @@ const translations: Record<Language, Translations> = {
     askVideoQuestion: 'この動画について何でもお聞きください...',
     
     // Summary Panel
-    videoSummary: '動画要約',
+    videoSummary: '動画概要',
     generateSummary: '要約を生成',
     generating: '生成中...',
     keyPoints: 'キーポイント',

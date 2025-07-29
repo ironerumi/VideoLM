@@ -17,6 +17,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
   const [currentTime, setCurrentTime] = useState(0);
   const [volume, setVolume] = useState(1);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const timelineRef = useRef<HTMLDivElement>(null);
   const { t } = useI18n();
 
   const formatTime = (seconds: number) => {
@@ -77,8 +78,32 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
     if (seekToTime !== undefined && videoRef.current) {
       videoRef.current.currentTime = seekToTime;
       setCurrentTime(seekToTime);
+      
+      // Scroll timeline to show the selected frame as the first visible frame
+      scrollTimelineToFrame(seekToTime);
     }
   }, [seekToTime]);
+
+  // Function to scroll timeline to show specific frame as first visible
+  const scrollTimelineToFrame = (targetTime: number) => {
+    if (!timelineRef.current || !video?.thumbnails?.frames) return;
+    
+    // Find the frame that matches or is closest to the target time
+    const frames = video.thumbnails.frames as any[];
+    const targetFrameIndex = frames.findIndex(frame => Math.abs(frame.timestamp - targetTime) < 0.5);
+    
+    if (targetFrameIndex >= 0) {
+      // Each frame is w-24 (96px) + space-x-2 (8px gap) = 104px per frame
+      const frameWidth = 104;
+      const scrollPosition = targetFrameIndex * frameWidth;
+      
+      // Smooth scroll to position
+      timelineRef.current.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   // Use actual video element duration when available, fallback to database duration
   const actualDuration = videoRef.current?.duration || video?.duration || 0;
@@ -187,7 +212,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
         {/* Thumbnail Timeline - Real Extracted Frames */}
         <div className="p-6 bg-white border-t border-slate-100 flex-shrink-0 min-w-0">
           <h4 className="text-sm font-medium text-slate-700 mb-3">Video Timeline</h4>
-          <div className="overflow-x-auto max-w-full">
+          <div className="overflow-x-auto max-w-full" ref={timelineRef}>
             <div className="flex space-x-2 pb-2 w-max">
             {video?.thumbnails && typeof video.thumbnails === 'object' && 'frames' in video.thumbnails && Array.isArray(video.thumbnails.frames) && video.thumbnails.frames.length > 0 ? (
               video.thumbnails.frames.map((frame: any, index: number) => {
