@@ -119,17 +119,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const frameExtractionResult: FrameExtractionResult = await extractVideoFrames({
         videoPath: req.file.path,
         outputDir: framesDir,
-        framesPerSecond: 1, // Default: 1 frame per second
-        maxFrames: 100 // Hard limit
+        framesPerSecond: 0.5, // Reduced: 1 frame every 2 seconds
+        maxFrames: 30 // Reduced to prevent token overflow
       });
       
       // Prepare ALL extracted frames for AI analysis 
       let analysis: VideoAnalysis;
       if (frameExtractionResult.success && frameExtractionResult.frames.length > 0) {
-        // Use ALL extracted frames for comprehensive analysis
-        console.log(`Analyzing ${frameExtractionResult.frames.length} frames for transcription generation`);
+        // Limit frames sent to OpenAI to prevent token overflow
+        const maxFramesToAnalyze = Math.min(frameExtractionResult.frames.length, 20);
+        const framesToAnalyze = frameExtractionResult.frames.slice(0, maxFramesToAnalyze);
+        console.log(`Analyzing ${framesToAnalyze.length} frames (out of ${frameExtractionResult.frames.length} extracted) for transcription generation`);
         
-        const frameData = frameExtractionResult.frames.map(frame => {
+        const frameData = framesToAnalyze.map(frame => {
           const frameBuffer = fs.readFileSync(frame.filePath);
           return {
             base64: frameBuffer.toString('base64'),
