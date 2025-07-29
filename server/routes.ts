@@ -143,7 +143,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         originalName: decodedOriginalName,
         filePath: req.file.path,
         size: req.file.size,
-        duration: metadata.duration,
+        duration: frameExtractionResult.success ? frameExtractionResult.duration : metadata.duration,
         format: path.extname(decodedOriginalName).slice(1),
         analysis,
         thumbnails: {

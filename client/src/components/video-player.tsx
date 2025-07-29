@@ -40,10 +40,13 @@ export default function VideoPlayer({ video, videos, onVideoSelect }: VideoPlaye
   };
 
   const handleSeek = (value: number[]) => {
-    if (videoRef.current && video?.duration) {
-      const time = (value[0] / 100) * video.duration;
-      videoRef.current.currentTime = time;
-      setCurrentTime(time);
+    if (videoRef.current) {
+      const duration = videoRef.current.duration || video?.duration || 0;
+      if (duration > 0) {
+        const time = (value[0] / 100) * duration;
+        videoRef.current.currentTime = time;
+        setCurrentTime(time);
+      }
     }
   };
 
@@ -66,7 +69,9 @@ export default function VideoPlayer({ video, videos, onVideoSelect }: VideoPlaye
     return gradients[index % gradients.length];
   };
 
-  const progress = video?.duration ? (currentTime / video.duration) * 100 : 0;
+  // Use actual video element duration when available, fallback to database duration
+  const actualDuration = videoRef.current?.duration || video?.duration || 0;
+  const progress = actualDuration > 0 ? (currentTime / actualDuration) * 100 : 0;
 
   return (
     <div className="p-8 h-full flex flex-col min-h-0">
@@ -128,7 +133,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect }: VideoPlaye
                     />
                     <div className="flex justify-between text-xs text-white/80">
                       <span data-testid="text-current-time">{formatTime(currentTime)}</span>
-                      <span data-testid="text-total-time">{video.duration ? formatTime(video.duration) : '0:00'}</span>
+                      <span data-testid="text-total-time">{formatTime(actualDuration)}</span>
                     </div>
                   </div>
                   
@@ -174,7 +179,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect }: VideoPlaye
           <div className="flex space-x-2 overflow-x-auto pb-2">
             {video?.thumbnails && typeof video.thumbnails === 'object' && 'frames' in video.thumbnails && Array.isArray(video.thumbnails.frames) && video.thumbnails.frames.length > 0 ? (
               video.thumbnails.frames.map((frame: any, index: number) => {
-                const frameProgress = video.duration ? (frame.timestamp / video.duration) * 100 : 0;
+                const frameProgress = actualDuration > 0 ? (frame.timestamp / actualDuration) * 100 : 0;
                 const isActive = Math.abs(progress - frameProgress) < 5; // Active within 5% range
                 
                 return (
