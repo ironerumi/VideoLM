@@ -55,6 +55,11 @@ export async function sessionMiddleware(req: Request, res: Response, next: NextF
   
   let sessionId = req.headers['x-session-id'] as string;
   
+  // For video file requests, also check query parameter since HTML video elements can't send custom headers
+  if (!sessionId && req.path.includes('/file') && req.query.session) {
+    sessionId = req.query.session as string;
+  }
+  
   if (!sessionId) {
     // Create new session if none exists
     const session = await storage.createSession();

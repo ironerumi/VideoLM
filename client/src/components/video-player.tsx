@@ -83,9 +83,11 @@ export default function VideoPlayer({ video, videos, onVideoSelect }: VideoPlaye
                 onLoadedMetadata={() => {
                   // Video duration is automatically set when metadata loads
                 }}
-                src={`/api/videos/${video.id}/file`}
                 data-testid="video-element"
-              />
+              >
+                <source src={`/api/videos/${video.id}/file?session=${localStorage.getItem('sessionId')}`} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
               
               {/* Play Button Overlay */}
               <div className="absolute inset-0 flex items-center justify-center">

@@ -205,6 +205,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/videos/:id/file", async (req: MulterRequest, res) => {
     try {
       const video = await storage.getVideo(req.params.id);
+      console.log('Video file request:', {
+        videoId: req.params.id,
+        videoFound: !!video,
+        requestSessionId: req.sessionId,
+        videoSessionId: video?.sessionId,
+        sessionMatch: video?.sessionId === req.sessionId
+      });
+      
       if (!video || video.sessionId !== req.sessionId) {
         return res.status(404).json({ message: "Video not found" });
       }
