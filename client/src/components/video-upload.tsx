@@ -15,6 +15,9 @@ interface VideoUploadProps {
 
 export default function VideoUpload({ onVideoUploaded, onCancel }: VideoUploadProps) {
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [processingStage, setProcessingStage] = useState<string>('');
+  const [frameCount, setFrameCount] = useState<number>(0);
+  const [estimatedFrames, setEstimatedFrames] = useState<number>(0);
   const { toast } = useToast();
   const { t } = useI18n();
 
@@ -23,25 +26,64 @@ export default function VideoUpload({ onVideoUploaded, onCancel }: VideoUploadPr
       const formData = new FormData();
       formData.append('video', file);
 
-      // Simulate upload progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
+      // Estimate processing time based on file size and duration
+      const estimateDuration = (file: File): Promise<number> => {
+        // Create a temporary video element to get duration
+        return new Promise((resolve) => {
+          const video = document.createElement('video');
+          video.preload = 'metadata';
+          video.onloadedmetadata = () => {
+            resolve(video.duration);
+            URL.revokeObjectURL(video.src);
+          };
+          video.src = URL.createObjectURL(file);
         });
-      }, 200);
+      };
 
       try {
+        // Estimate duration and frames
+        const duration = await estimateDuration(file);
+        const estimatedFrameCount = Math.min(Math.floor(duration), 100); // 1 frame per second, max 100
+        setEstimatedFrames(estimatedFrameCount);
+        
+        // Enhanced progress simulation with realistic stages
+        setProcessingStage(t.analyzing);
+        setUploadProgress(10);
+        
+        let currentProgress = 10;
+        const progressInterval = setInterval(() => {
+          currentProgress += Math.random() * 3 + 1; // Random increment 1-4%
+          
+          if (currentProgress >= 15 && currentProgress < 30) {
+            setProcessingStage(t.extractingFrames);
+            setFrameCount(Math.floor((currentProgress - 15) / 15 * estimatedFrameCount * 0.3));
+          } else if (currentProgress >= 30 && currentProgress < 85) {
+            setProcessingStage(`${t.analyzing} ${frameCount}/${estimatedFrameCount} フレーム`);
+            setFrameCount(Math.floor((currentProgress - 30) / 55 * estimatedFrameCount));
+          } else if (currentProgress >= 85) {
+            setProcessingStage('最終処理中...');
+            currentProgress = Math.min(currentProgress, 92);
+          }
+          
+          if (currentProgress >= 92) {
+            clearInterval(progressInterval);
+            setUploadProgress(92);
+            return;
+          }
+          
+          setUploadProgress(Math.min(currentProgress, 92));
+        }, 300);
+
         const response = await uploadFile('/api/videos/upload', formData);
         clearInterval(progressInterval);
         setUploadProgress(100);
+        setProcessingStage(t.analysisComplete);
         return response.json();
       } catch (error) {
-        clearInterval(progressInterval);
         setUploadProgress(0);
+        setProcessingStage('');
+        setFrameCount(0);
+        setEstimatedFrames(0);
         throw error;
       }
     },
@@ -53,6 +95,9 @@ export default function VideoUpload({ onVideoUploaded, onCancel }: VideoUploadPr
       setTimeout(() => {
         onVideoUploaded();
         setUploadProgress(0);
+        setProcessingStage('');
+        setFrameCount(0);
+        setEstimatedFrames(0);
       }, 1000);
     },
     onError: (error: Error) => {
@@ -62,6 +107,9 @@ export default function VideoUpload({ onVideoUploaded, onCancel }: VideoUploadPr
         variant: "destructive",
       });
       setUploadProgress(0);
+      setProcessingStage('');
+      setFrameCount(0);
+      setEstimatedFrames(0);
     },
   });
 
@@ -121,8 +169,13 @@ export default function VideoUpload({ onVideoUploaded, onCancel }: VideoUploadPr
         ) : isUploading ? (
           <div>
             <p className="text-blue-600 font-medium mb-1">{t.uploading}</p>
-            <p className="text-blue-500 text-sm mb-3">{t.analyzing}</p>
-            <Progress value={uploadProgress} className="w-full max-w-xs mx-auto" />
+            <p className="text-blue-500 text-sm mb-3">
+              {processingStage || t.analyzing}
+            </p>
+            <Progress value={uploadProgress} className="w-full max-w-xs mx-auto mb-2" />
+            <p className="text-blue-400 text-xs">
+              {uploadProgress.toFixed(0)}% {t.complete}
+            </p>
           </div>
         ) : (
           <div>

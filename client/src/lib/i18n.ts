@@ -111,7 +111,6 @@ const translations: Record<Language, Translations> = {
     maxFileSize: 'Maximum file size: 100MB',
     uploading: 'Uploading...',
     uploadFailed: 'Upload failed',
-    analyzing: 'Analyzing video...',
     
     // Video List
     selectVideo: 'Select video to analyze',
@@ -169,6 +168,7 @@ const translations: Record<Language, Translations> = {
     extractingFrames: 'Extracting frames...',
     uploadComplete: 'Upload complete',
     analysisComplete: 'Analysis complete',
+    complete: 'complete',
     browserNotSupported: 'Your browser does not support the video tag.',
   },
   
@@ -196,7 +196,6 @@ const translations: Record<Language, Translations> = {
     maxFileSize: '最大ファイルサイズ: 100MB',
     uploading: 'アップロード中...',
     uploadFailed: 'アップロードに失敗しました',
-    analyzing: '動画を分析中...',
     
     // Video List
     selectVideo: '分析する動画を選択',
@@ -254,6 +253,7 @@ const translations: Record<Language, Translations> = {
     extractingFrames: 'フレームを抽出中...',
     uploadComplete: 'アップロード完了',
     analysisComplete: '分析完了',
+    complete: '完了',
     browserNotSupported: 'お使いのブラウザはビデオタグをサポートしていません。',
   },
 };
