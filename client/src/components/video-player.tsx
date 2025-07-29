@@ -85,7 +85,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
   const progress = actualDuration > 0 ? (currentTime / actualDuration) * 100 : 0;
 
   return (
-    <div className="p-8 h-full flex flex-col min-h-0">
+    <div className="p-8 h-full flex flex-col min-h-0 overflow-hidden">
       <div className="bg-white rounded-2xl shadow-premium overflow-hidden flex-1 flex flex-col min-h-0">
         {/* Video Display */}
         <div className="relative bg-black flex-1 flex items-center justify-center min-h-0">
@@ -185,10 +185,10 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
         </div>
 
         {/* Thumbnail Timeline - Real Extracted Frames */}
-        <div className="p-6 bg-white border-t border-slate-100 flex-shrink-0">
+        <div className="p-6 bg-white border-t border-slate-100 flex-shrink-0 min-w-0">
           <h4 className="text-sm font-medium text-slate-700 mb-3">Video Timeline</h4>
-          <div className="overflow-x-auto">
-            <div className="flex space-x-2 pb-2 min-w-max">
+          <div className="overflow-x-auto max-w-full">
+            <div className="flex space-x-2 pb-2 w-max">
             {video?.thumbnails && typeof video.thumbnails === 'object' && 'frames' in video.thumbnails && Array.isArray(video.thumbnails.frames) && video.thumbnails.frames.length > 0 ? (
               video.thumbnails.frames.map((frame: any, index: number) => {
                 const frameProgress = actualDuration > 0 ? (frame.timestamp / actualDuration) * 100 : 0;
