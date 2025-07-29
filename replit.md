@@ -44,7 +44,7 @@ The application follows a monorepo structure with a clear separation between cli
 ### Video Management System
 - **Upload Processing**: Handles video file validation with real FFmpeg-based metadata extraction
 - **Frame Extraction**: Uses FFmpeg to extract frames at 1fps with configurable limits (100 frames max)
-- **AI Analysis**: Integrates with OpenAI's GPT-4o model for real video frame analysis
+- **AI Analysis**: Integrates with OpenAI's GPT-4.1-mini model for real video frame analysis
 - **Storage Interface**: Database storage with session-based file organization and security
 - **Real-time Processing**: Actual video duration extraction and frame-by-frame analysis
 

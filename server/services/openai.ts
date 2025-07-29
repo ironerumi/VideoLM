@@ -15,7 +15,7 @@ export interface VideoAnalysis {
 export async function analyzeVideoFrame(base64Frame: string): Promise<VideoAnalysis> {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      model: "gpt-4.1-mini",
       messages: [
         {
           role: "system",
@@ -31,7 +31,8 @@ export async function analyzeVideoFrame(base64Frame: string): Promise<VideoAnaly
             {
               type: "image_url",
               image_url: {
-                url: `data:image/jpeg;base64,${base64Frame}`
+                url: `data:image/jpeg;base64,${base64Frame}`,
+                "detail": "low"
               }
             }
           ],
@@ -70,7 +71,7 @@ ${chatHistory.map(h => `User: ${h.message}\nAI: ${h.response}`).join("\n\n")}
 `;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      model: "gpt-4.1-mini",
       messages: [
         {
           role: "system",
@@ -98,7 +99,7 @@ export async function generateVideoSummary(videoAnalyses: VideoAnalysis[]): Prom
     ).join("\n\n");
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      model: "gpt-4.1-mini",
       messages: [
         {
           role: "system",
