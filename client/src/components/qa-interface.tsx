@@ -26,6 +26,7 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
   const { data: chatHistory = [] } = useQuery<ChatMessage[]>({
     queryKey: ["/api/videos", videoId, "chat"],
     enabled: !!videoId,
+    refetchOnWindowFocus: false,
   });
 
   const chatMutation = useMutation({
@@ -33,10 +34,15 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
       const response = await apiRequest('POST', `/api/videos/${videoId}/chat`, { message });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/videos", videoId, "chat"] });
       setMessage("");
       setIsWaitingForResponse(false);
+      // Set the new Q&A immediately from the response
+      if (data && data.success) {
+        // The response should contain the new message, we'll let the effect handle it
+        // but we ensure waiting state is cleared
+      }
     },
     onError: () => {
       setIsWaitingForResponse(false);
@@ -82,11 +88,22 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
 
   // Get the latest Q&A pair (most recent message)
   useEffect(() => {
-    if (chatHistory.length > 0 && !isWaitingForResponse) {
+    console.log("Chat history updated:", chatHistory.length, "messages");
+    if (chatHistory.length > 0) {
+      // Always show the most recent message, regardless of waiting state
       const latestMessage = chatHistory[chatHistory.length - 1];
+      console.log("Setting current Q&A to latest message:", latestMessage.id, latestMessage.message);
       setCurrentQA(latestMessage);
+    } else {
+      setCurrentQA(null);
     }
-  }, [chatHistory, isWaitingForResponse]);
+  }, [chatHistory]);
+
+  // Reset current Q&A when video changes
+  useEffect(() => {
+    setCurrentQA(null);
+    setIsWaitingForResponse(false);
+  }, [videoId]);
 
   // Parse frames from relevantFrame field
   const parseFrames = (relevantFrame: string | null) => {
