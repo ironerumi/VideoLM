@@ -45,6 +45,7 @@ The application follows a monorepo structure with a clear separation between cli
 - **Upload Processing**: Handles video file validation with real FFmpeg-based metadata extraction
 - **Frame Extraction**: Uses FFmpeg to extract frames at 1fps with configurable limits (100 frames max)
 - **AI Analysis**: Integrates with OpenAI's GPT-4.1-mini model for real video frame analysis
+- **Transcription Generation**: Analyzes ALL extracted frames to create detailed timestamped descriptions
 - **Storage Interface**: Database storage with session-based file organization and security
 - **Real-time Processing**: Actual video duration extraction and frame-by-frame analysis
 
@@ -97,8 +98,9 @@ The application follows a monorepo structure with a clear separation between cli
 - **Database**: Drizzle ORM with PostgreSQL dialect, Neon serverless driver
 
 ### AI Integration
-- **OpenAI API**: GPT-4o model for video analysis and chat responses
-- **Vision Processing**: Base64 image analysis for video frame insights
+- **OpenAI API**: GPT-4.1-mini model for video analysis and chat responses
+- **Vision Processing**: Base64 image analysis for all video frames with transcription generation
+- **Transcription**: Sherlock Holmes-style scene descriptions with timestamps ([xx:xx] format)
 
 ### UI/UX Libraries
 - **Radix UI**: Accessible component primitives (40+ components)

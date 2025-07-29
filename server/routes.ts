@@ -152,7 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         originalName: decodedOriginalName,
         filePath: req.file.path,
         size: req.file.size,
-        duration: frameExtractionResult.success ? frameExtractionResult.duration : metadata.duration,
+        duration: frameExtractionResult.success ? Math.round(frameExtractionResult.duration) : Math.round(metadata.duration),
         format: path.extname(decodedOriginalName).slice(1),
         analysis,
         thumbnails: {
@@ -165,6 +165,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!validation.success) {
         // Clean up uploaded file if validation fails
         fs.unlinkSync(req.file.path);
+        console.error("Video validation failed:", validation.error.errors);
+        console.error("Video data structure:", JSON.stringify(videoData, null, 2));
         return res.status(400).json({ message: "Invalid video data", errors: validation.error.errors });
       }
 
