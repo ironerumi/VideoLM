@@ -170,8 +170,8 @@ export default function VideoPlayer({ video, videos, onVideoSelect }: VideoPlaye
         <div className="p-6 bg-white border-t border-slate-100 flex-shrink-0">
           <h4 className="text-sm font-medium text-slate-700 mb-3">Video Timeline</h4>
           <div className="flex space-x-2 overflow-x-auto pb-2">
-            {video?.thumbnails?.frames && Array.isArray(video.thumbnails.frames) && video.thumbnails.frames.length > 0 ? (
-              video.thumbnails.frames.map((frame, index) => {
+            {video?.thumbnails && typeof video.thumbnails === 'object' && 'frames' in video.thumbnails && Array.isArray(video.thumbnails.frames) && video.thumbnails.frames.length > 0 ? (
+              video.thumbnails.frames.map((frame: any, index: number) => {
                 const frameProgress = video.duration ? (frame.timestamp / video.duration) * 100 : 0;
                 const isActive = Math.abs(progress - frameProgress) < 5; // Active within 5% range
                 
@@ -192,8 +192,13 @@ export default function VideoPlayer({ video, videos, onVideoSelect }: VideoPlaye
                         // Fallback to gradient if frame loading fails
                         const target = e.target as HTMLImageElement;
                         target.style.display = 'none';
-                        target.parentElement!.classList.add(`bg-gradient-to-br`, getGradient(index));
-                        target.parentElement!.innerHTML += `<div class="w-full h-full flex items-center justify-center"><span class="text-white text-xs">${frame.timestamp.toFixed(1)}s</span></div>`;
+                        const parent = target.parentElement!;
+                        
+                        // Add gradient classes properly by splitting them
+                        const gradientClasses = `bg-gradient-to-br ${getGradient(index)}`.split(' ');
+                        parent.classList.add(...gradientClasses);
+                        
+                        parent.innerHTML += `<div class="w-full h-full flex items-center justify-center"><span class="text-white text-xs">${frame.timestamp.toFixed(1)}s</span></div>`;
                       }}
                     />
                   </div>
