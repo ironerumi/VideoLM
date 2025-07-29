@@ -363,6 +363,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete all chat messages for a video
+  app.delete("/api/videos/:id/chat", async (req: MulterRequest, res) => {
+    try {
+      const video = await storage.getVideo(req.params.id);
+      if (!video || video.sessionId !== req.sessionId) {
+        return res.status(404).json({ message: "Video not found" });
+      }
+
+      await storage.deleteChatMessagesByVideoId(req.params.id);
+      res.json({ success: true, message: "Chat history cleared" });
+    } catch (error) {
+      console.error("Error clearing chat history:", error);
+      res.status(500).json({ message: "Failed to clear chat history" });
+    }
+  });
+
   // Send chat message
   app.post("/api/videos/:id/chat", async (req: MulterRequest, res) => {
     try {

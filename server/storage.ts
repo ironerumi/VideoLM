@@ -30,6 +30,7 @@ export interface IStorage {
   getChatMessagesByVideoId(videoId: string): Promise<ChatMessage[]>;
   getChatMessagesBySessionId(sessionId: string): Promise<ChatMessage[]>;
   createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
+  deleteChatMessagesByVideoId(videoId: string): Promise<void>;
   
   // Video Session operations
   getVideoSession(id: string): Promise<VideoSession | undefined>;
@@ -158,6 +159,15 @@ export class MemStorage implements IStorage {
     };
     this.chatMessages.set(id, message);
     return message;
+  }
+
+  async deleteChatMessagesByVideoId(videoId: string): Promise<void> {
+    const messagesToDelete = Array.from(this.chatMessages.values())
+      .filter(message => message.videoId === videoId);
+    
+    for (const message of messagesToDelete) {
+      this.chatMessages.delete(message.id);
+    }
   }
 
   async getVideoSession(id: string): Promise<VideoSession | undefined> {

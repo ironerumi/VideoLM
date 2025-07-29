@@ -52,6 +52,7 @@ export interface Translations {
   readyToAnalyze: string;
   askAboutVideo: string;
   selectVideoFirst: string;
+  clearHistory: string;
   
   // Summary Panel
   videoSummary: string;
@@ -140,6 +141,7 @@ const translations: Record<Language, Translations> = {
     readyToAnalyze: 'Ready to analyze',
     askAboutVideo: 'Ask me anything about this video',
     selectVideoFirst: 'Select a video first',
+    clearHistory: 'Clear History',
     
     // Summary Panel
     videoSummary: 'Video Summary',
@@ -228,6 +230,7 @@ const translations: Record<Language, Translations> = {
     readyToAnalyze: '分析準備完了',
     askAboutVideo: 'この動画について何でもお聞きください',
     selectVideoFirst: '最初に動画を選択してください',
+    clearHistory: '履歴をクリア',
     
     // Summary Panel
     videoSummary: '動画要約',

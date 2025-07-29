@@ -37,12 +37,29 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
     },
   });
 
+  const clearChatMutation = useMutation({
+    mutationFn: async (videoId: string) => {
+      const response = await apiRequest('DELETE', `/api/videos/${videoId}/chat`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/videos", videoId, "chat"] });
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() || !videoId) return;
     
     chatMutation.mutate({ message: message.trim(), videoId });
   };
+
+  const clearChatHistory = () => {
+    if (!videoId) return;
+    clearChatMutation.mutate(videoId);
+  };
+
+  const isLoading = chatMutation.isPending || clearChatMutation.isPending;
 
   const formatTime = (date: Date | string) => {
     return new Date(date).toLocaleTimeString('en-US', {
@@ -62,8 +79,21 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
       <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex-shrink-0">
-        <h3 className="text-lg font-semibold text-slate-800 mb-1">{t.chatInterface}</h3>
-        <p className="text-sm text-slate-600">{t.askAboutSelectedVideo}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-800 mb-1">{t.chatInterface}</h3>
+            <p className="text-sm text-slate-600">{t.askAboutSelectedVideo}</p>
+          </div>
+          <button
+            onClick={clearChatHistory}
+            disabled={chatHistory.length === 0 || isLoading}
+            className="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 disabled:text-slate-400 disabled:hover:text-slate-400 disabled:hover:bg-transparent rounded-md transition-colors duration-200 border border-slate-300 hover:border-red-300 disabled:border-slate-200"
+            data-testid="button-clear-chat"
+            title={chatHistory.length === 0 ? "No chat history to clear" : "Clear chat history"}
+          >
+            {t.clearHistory}
+          </button>
+        </div>
       </div>
       
       {/* Chat History */}
