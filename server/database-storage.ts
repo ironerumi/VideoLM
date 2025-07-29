@@ -57,7 +57,7 @@ export class DatabaseStorage implements IStorage {
     };
     
     await db.insert(sessions).values(session);
-    this.ensureSessionDir(id);
+    // Only create directory when actually needed (when uploading files)
     return session;
   }
 
@@ -94,6 +94,9 @@ export class DatabaseStorage implements IStorage {
       analysis: insertVideo.analysis ?? null,
       thumbnails: insertVideo.thumbnails ?? null
     };
+    
+    // Ensure session directory exists before creating video record
+    this.ensureSessionDir(insertVideo.sessionId);
     
     await db.insert(videos).values(video);
     return video;
