@@ -163,6 +163,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         analysis = await analyzeVideoFrame(frameBase64);
       }
 
+      // Reduce data size for storage optimization
+      const optimizedAnalysis = {
+        summary: analysis.summary,
+        keyPoints: analysis.keyPoints.slice(0, 5), // Limit key points
+        topics: analysis.topics.slice(0, 3), // Limit topics
+        sentiment: analysis.sentiment,
+        visualElements: analysis.visualElements.slice(0, 5), // Limit visual elements
+        transcription: analysis.transcription.slice(0, 20) // Limit transcription entries
+      };
+
       const videoData = {
         sessionId: req.sessionId,
         filename: req.file.filename,
@@ -171,16 +181,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         size: req.file.size,
         duration: frameExtractionResult.success ? Math.round(frameExtractionResult.duration) : Math.round(metadata.duration),
         format: path.extname(decodedOriginalName).slice(1),
-        analysis,
+        analysis: optimizedAnalysis,
         thumbnails: {
           ...thumbnails,
-          frames: frameExtractionResult.success ? frameExtractionResult.frames : []
+          frames: frameExtractionResult.success ? frameExtractionResult.frames.slice(0, 5) : [] // Limit frames further
         },
       };
 
       console.log('💾 Saving video data to storage...');
-
+      console.log(`📊 Data sizes - Analysis: ${JSON.stringify(optimizedAnalysis).length} chars, Thumbnails: ${JSON.stringify(videoData.thumbnails).length} chars`);
+      
+      const validationStart = Date.now();
       const validation = insertVideoSchema.safeParse(videoData);
+      const validationTime = Date.now() - validationStart;
+      console.log(`✅ Schema validation completed in ${validationTime}ms`);
+      
       if (!validation.success) {
         // Clean up uploaded file if validation fails
         fs.unlinkSync(req.file.path);
@@ -189,7 +204,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid video data", errors: validation.error.errors });
       }
 
+      const dbStart = Date.now();
       const video = await storage.createVideo(validation.data);
+      const dbTime = Date.now() - dbStart;
+      console.log(`💽 Storage operation completed in ${dbTime}ms`);
       console.log(`🎉 Upload completed successfully! Video ID: ${video.id}`);
       
       res.json(video);
