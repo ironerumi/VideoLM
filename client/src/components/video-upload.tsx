@@ -68,6 +68,7 @@ export default function VideoUpload({ onVideoUploaded, onCancel }: VideoUploadPr
           if (currentProgress >= 92) {
             clearInterval(progressInterval);
             setUploadProgress(92);
+            setProcessingStage('AI分析を待機中...');
             return;
           }
           
@@ -174,7 +175,7 @@ export default function VideoUpload({ onVideoUploaded, onCancel }: VideoUploadPr
             </p>
             <Progress value={uploadProgress} className="w-full max-w-xs mx-auto mb-2" />
             <p className="text-blue-400 text-xs">
-              {uploadProgress.toFixed(0)}% {t.complete}
+              {uploadProgress.toFixed(0)}% 完了
             </p>
           </div>
         ) : (

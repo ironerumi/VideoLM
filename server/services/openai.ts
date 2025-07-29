@@ -77,7 +77,30 @@ export async function analyzeVideoFrames(frameData: Array<{base64: string, times
       max_tokens: 4000, // Increased for detailed transcriptions
     });
 
-    const result = JSON.parse(response.choices[0].message.content || "{}");
+    const responseContent = response.choices[0].message.content || "{}";
+    console.log("Raw OpenAI response length:", responseContent.length);
+    console.log("Response preview:", responseContent.substring(0, 200) + "...");
+    
+    let result;
+    try {
+      result = JSON.parse(responseContent);
+    } catch (parseError) {
+      console.error("JSON parsing failed:", parseError);
+      console.error("Content that failed to parse:", responseContent);
+      
+      // Try to extract JSON from potentially malformed response
+      const jsonMatch = responseContent.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          result = JSON.parse(jsonMatch[0]);
+        } catch (fallbackError) {
+          console.error("Fallback JSON parsing also failed:", fallbackError);
+          throw new Error("OpenAI response contains malformed JSON");
+        }
+      } else {
+        throw new Error("No valid JSON found in OpenAI response");
+      }
+    }
     
     return {
       summary: result.summary || "Unable to analyze video content",
@@ -89,6 +112,10 @@ export async function analyzeVideoFrames(frameData: Array<{base64: string, times
     };
   } catch (error) {
     console.error("Error analyzing video frames:", error);
+    const errorMsg = (error as Error).message;
+    if (errorMsg?.includes("JSON") || errorMsg?.includes("parse")) {
+      throw new Error("AI analysis response format error - please try uploading again");
+    }
     throw new Error("Failed to analyze video content");
   }
 }
