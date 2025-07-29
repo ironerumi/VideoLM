@@ -137,7 +137,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
         });
         
-        analysis = await analyzeVideoFrames(frameData);
+        // Detect user's language preference from the request headers
+        const userLanguage = req.headers['x-user-language'] as string || 'en';
+        analysis = await analyzeVideoFrames(frameData, userLanguage);
       } else {
         // If frame extraction fails, use fallback analysis
         const placeholder = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
@@ -356,12 +358,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get chat history
       const chatHistory = await storage.getChatMessagesByVideoId(req.params.id);
       
+      // Detect user's language preference from the request headers
+      const userLanguage = req.headers['x-user-language'] as string || 'en';
+      
       // Generate AI response with rephrased question and relevant frame
       const defaultAnalysis: VideoAnalysis = { summary: "", keyPoints: [], topics: [], sentiment: "neutral", visualElements: [], transcription: [] };
       const aiResult = await chatWithVideo(
         message, 
         (video.analysis as VideoAnalysis) || defaultAnalysis,
-        chatHistory.map(m => ({ message: m.message, response: m.response }))
+        chatHistory.map(m => ({ message: m.message, response: m.response })),
+        userLanguage
       );
 
       const chatData = {
@@ -406,8 +412,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No analyzed videos found for your session" });
       }
 
+      // Detect user's language preference from the request headers
+      const userLanguage = req.headers['x-user-language'] as string || 'en';
+      
       const analyses = validVideos.map(v => v.analysis as VideoAnalysis);
-      const summary = await generateVideoSummary(analyses);
+      const summary = await generateVideoSummary(analyses, userLanguage);
 
       res.json({ summary, videoCount: validVideos.length });
     } catch (error) {

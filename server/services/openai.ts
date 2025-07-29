@@ -14,7 +14,7 @@ export interface VideoAnalysis {
 }
 
 // New function to analyze all frames and generate transcription
-export async function analyzeVideoFrames(frameData: Array<{base64: string, timestamp: number}>): Promise<VideoAnalysis> {
+export async function analyzeVideoFrames(frameData: Array<{base64: string, timestamp: number}>, language: string = 'en'): Promise<VideoAnalysis> {
   try {
     // Prepare images for the request
     const imageContent = frameData.map(frame => ({
@@ -44,7 +44,9 @@ export async function analyzeVideoFrames(frameData: Array<{base64: string, times
           - Spatial relationships and positioning
           - Describe in 20-70 words per frame
           
-          Be extremely observant and describe what you see with forensic precision, like Sherlock Holmes examining a crime scene.`
+          Be extremely observant and describe what you see with forensic precision, like Sherlock Holmes examining a crime scene.
+          
+          ${language === 'ja' ? 'Please respond in Japanese. すべての回答を日本語で書いてください。' : 'Please respond in English.'}`
         },
         {
           role: "user",
@@ -138,7 +140,7 @@ export async function analyzeVideoFrame(base64Frame: string): Promise<VideoAnaly
   }
 }
 
-export async function chatWithVideo(message: string, videoAnalysis: VideoAnalysis, chatHistory: Array<{message: string, response: string}>): Promise<{
+export async function chatWithVideo(message: string, videoAnalysis: VideoAnalysis, chatHistory: Array<{message: string, response: string}>, language: string = 'en'): Promise<{
   response: string;
   rephrasedQuestion: string;
   relevantFrame: string | null;
@@ -165,6 +167,8 @@ ${chatHistory.map(h => `User: ${h.message}\nAI: ${h.response}`).join("\n\n")}
           1. Rephrase the user's question into a complete, clear sentence based on the video context
           2. Provide a detailed answer based on the video analysis
           3. Identify the most relevant frame from the transcription if applicable
+          
+          ${language === 'ja' ? 'すべての回答を日本語で書いてください。質問の言い換えと回答の両方を日本語で提供してください。' : 'Please respond in English.'}
           
           Return JSON with this structure:
           {
@@ -196,7 +200,7 @@ Please rephrase the question into a complete sentence with video context, provid
   }
 }
 
-export async function generateVideoSummary(videoAnalyses: VideoAnalysis[]): Promise<string> {
+export async function generateVideoSummary(videoAnalyses: VideoAnalysis[], language: string = 'en'): Promise<string> {
   try {
     const combinedContext = videoAnalyses.map((analysis, index) => 
       `Video ${index + 1}:\n- Summary: ${analysis.summary}\n- Key Points: ${analysis.keyPoints.join(", ")}\n- Topics: ${analysis.topics.join(", ")}`
@@ -207,7 +211,7 @@ export async function generateVideoSummary(videoAnalyses: VideoAnalysis[]): Prom
       messages: [
         {
           role: "system",
-          content: "You are an expert at creating concise summaries. Create a comprehensive summary of the selected videos, highlighting common themes, key insights, and important visual elements."
+          content: `You are an expert at creating concise summaries. Create a comprehensive summary of the selected videos, highlighting common themes, key insights, and important visual elements. ${language === 'ja' ? 'すべての回答を日本語で書いてください。' : 'Please respond in English.'}`
         },
         {
           role: "user",

@@ -30,7 +30,13 @@ export class SessionManager {
   }
 
   public getSessionHeaders(): Record<string, string> {
-    return this.sessionId ? { 'X-Session-Id': this.sessionId } : {};
+    const language = typeof window !== 'undefined' ? (localStorage.getItem('videolm-language') || 'ja') : 'ja';
+    return this.sessionId ? { 
+      'X-Session-Id': this.sessionId,
+      'X-User-Language': language
+    } : {
+      'X-User-Language': language
+    };
   }
 
   public updateFromResponse(response: Response): void {
