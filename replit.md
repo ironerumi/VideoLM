@@ -42,9 +42,11 @@ The application follows a monorepo structure with a clear separation between cli
 ## Key Components
 
 ### Video Management System
-- **Upload Processing**: Handles video file validation, metadata extraction, and thumbnail generation
-- **AI Analysis**: Integrates with OpenAI's GPT-4o model for video frame analysis
-- **Storage Interface**: Abstracted storage layer supporting both database and in-memory implementations
+- **Upload Processing**: Handles video file validation with real FFmpeg-based metadata extraction
+- **Frame Extraction**: Uses FFmpeg to extract frames at 1fps with configurable limits (100 frames max)
+- **AI Analysis**: Integrates with OpenAI's GPT-4o model for real video frame analysis
+- **Storage Interface**: Database storage with session-based file organization and security
+- **Real-time Processing**: Actual video duration extraction and frame-by-frame analysis
 
 ### Chat System
 - **Contextual Chat**: AI-powered conversations about specific videos using OpenAI API
@@ -70,9 +72,10 @@ The application follows a monorepo structure with a clear separation between cli
    - Client uploads video via drag-and-drop or file picker
    - Server saves file to session-specific folder (uploads/{sessionId}/)
    - File validation and size limits (100MB)
-   - Metadata extraction and thumbnail generation
-   - AI frame analysis using OpenAI Vision API
-   - Database storage with file path and analysis results
+   - Real FFmpeg-based frame extraction (1 frame per second)
+   - Actual video duration calculation from FFmpeg
+   - AI frame analysis using OpenAI Vision API on extracted frames
+   - Database storage with real metadata and extracted frame references
 
 2. **Chat Interaction Flow**:
    - User sends message about selected video

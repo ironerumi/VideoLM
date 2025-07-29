@@ -23,15 +23,9 @@ export const videoUpload = multer({
 });
 
 export function generateThumbnails(videoBuffer: Buffer): Promise<string[]> {
-  // In a real implementation, you would use FFmpeg to extract thumbnails
-  // For now, return mock thumbnail data
-  return Promise.resolve([
-    'thumbnail1.jpg',
-    'thumbnail2.jpg', 
-    'thumbnail3.jpg',
-    'thumbnail4.jpg',
-    'thumbnail5.jpg'
-  ]);
+  // This function is deprecated - thumbnails are now generated via frame extraction
+  // in the upload route using FFmpeg. This returns empty array to maintain compatibility
+  return Promise.resolve([]);
 }
 
 export function getVideoMetadata(videoBuffer: Buffer, filename: string): {
@@ -39,20 +33,19 @@ export function getVideoMetadata(videoBuffer: Buffer, filename: string): {
   format: string;
   size: number;
 } {
-  // In a real implementation, you would use FFmpeg to extract metadata
-  // For now, return mock metadata
+  // This function provides fallback metadata - actual duration comes from FFmpeg frame extraction
+  // The upload route now uses the real duration from frame extraction results
   const ext = path.extname(filename).toLowerCase().slice(1);
   
   return {
-    duration: Math.floor(Math.random() * 300) + 60, // Random duration between 1-6 minutes
+    duration: 0, // Placeholder - real duration comes from frame extraction
     format: ext.toUpperCase(),
     size: videoBuffer.length,
   };
 }
 
-export function extractVideoFrame(videoBuffer: Buffer, timeOffset: number = 0): Promise<string> {
-  // In a real implementation, you would use FFmpeg to extract a frame at the specified time
-  // For now, return a base64 encoded placeholder
-  const placeholder = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
-  return Promise.resolve(placeholder.toString('base64'));
+export async function extractVideoFrame(videoBuffer: Buffer, timeOffset: number = 0): Promise<string> {
+  // This function is deprecated - frame extraction now happens via FFmpeg in frame-extractor.ts
+  // This is only used as a fallback if FFmpeg frame extraction fails
+  throw new Error('Frame extraction fallback not implemented - use FFmpeg frame extraction instead');
 }
