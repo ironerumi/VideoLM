@@ -181,6 +181,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect }: VideoPlaye
               video.thumbnails.frames.map((frame: any, index: number) => {
                 const frameProgress = actualDuration > 0 ? (frame.timestamp / actualDuration) * 100 : 0;
                 const isActive = Math.abs(progress - frameProgress) < 5; // Active within 5% range
+                const isPastFrame = currentTime > frame.timestamp; // Frame has been passed in timeline
                 
                 return (
                   <div
@@ -194,18 +195,22 @@ export default function VideoPlayer({ video, videos, onVideoSelect }: VideoPlaye
                     <img
                       src={`/api/videos/${video.id}/frames/${frame.fileName}?session=${video.sessionId}`}
                       alt={`Frame at ${frame.timestamp.toFixed(1)}s`}
-                      className="w-full h-full object-cover"
+                      className={`w-full h-full object-cover transition-all duration-300 ${
+                        isPastFrame ? 'grayscale opacity-60' : ''
+                      }`}
                       onError={(e) => {
+                        console.error(`Failed to load frame: ${frame.fileName}`);
                         // Fallback to gradient if frame loading fails
                         const target = e.target as HTMLImageElement;
                         target.style.display = 'none';
-                        const parent = target.parentElement!;
-                        
-                        // Add gradient classes properly by splitting them
-                        const gradientClasses = `bg-gradient-to-br ${getGradient(index)}`.split(' ');
-                        parent.classList.add(...gradientClasses);
-                        
-                        parent.innerHTML += `<div class="w-full h-full flex items-center justify-center"><span class="text-white text-xs">${frame.timestamp.toFixed(1)}s</span></div>`;
+                        const parent = target.parentElement;
+                        if (parent) {
+                          // Add gradient classes properly by splitting them
+                          const gradientClasses = `bg-gradient-to-br ${getGradient(index)}`.split(' ');
+                          parent.classList.add(...gradientClasses);
+                          
+                          parent.innerHTML += `<div class="w-full h-full flex items-center justify-center"><span class="text-white text-xs">${frame.timestamp.toFixed(1)}s</span></div>`;
+                        }
                       }}
                     />
                   </div>

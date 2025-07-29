@@ -182,6 +182,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sessionId = req.query.session as string;
       }
       
+      console.log('Frame request:', {
+        videoId: req.params.id,
+        frameName: req.params.frameName,
+        videoFound: !!video,
+        requestSessionId: sessionId,
+        videoSessionId: video?.sessionId,
+        sessionMatch: video?.sessionId === sessionId
+      });
+      
       if (!video || video.sessionId !== sessionId) {
         return res.status(404).json({ message: "Video not found" });
       }
