@@ -57,7 +57,7 @@ p, h1, h2, h3, h4, h5, h6, span, div, input, textarea, button {
   --card-foreground: hsl(20, 14.3%, 4.1%);
   --border: hsl(20, 5.9%, 90%);
   --input: hsl(20, 5.9%, 90%);
-  --primary: hsl(239, 84%, 67%);
+  --primary: hsl(213, 93%, 68%);
   --primary-foreground: hsl(211, 100%, 99%);
   --secondary: hsl(240, 4.8%, 95.9%);
   --secondary-foreground: hsl(24, 9.8%, 10%);
@@ -65,7 +65,7 @@ p, h1, h2, h3, h4, h5, h6, span, div, input, textarea, button {
   --accent-foreground: hsl(24, 9.8%, 10%);
   --destructive: hsl(0, 84.2%, 60.2%);
   --destructive-foreground: hsl(60, 9.1%, 97.8%);
-  --ring: hsl(239, 84%, 67%);
+  --ring: hsl(213, 93%, 68%);
   --radius: 0.75rem;
   
   /* Custom VideoLM colors */
@@ -113,7 +113,7 @@ p, h1, h2, h3, h4, h5, h6, span, div, input, textarea, button {
   --card-foreground: hsl(0, 0%, 98%);
   --border: hsl(240, 3.7%, 15.9%);
   --input: hsl(240, 3.7%, 15.9%);
-  --primary: hsl(239, 84%, 67%);
+  --primary: hsl(213, 93%, 68%);
   --primary-foreground: hsl(211, 100%, 99%);
   --secondary: hsl(240, 3.7%, 15.9%);
   --secondary-foreground: hsl(0, 0%, 98%);

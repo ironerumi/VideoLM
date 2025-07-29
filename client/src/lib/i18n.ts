@@ -213,7 +213,7 @@ const translations: Record<Language, Translations> = {
     
     // Header
     videoLM: 'VideoLM',
-    tagline: 'AI搭載動画理解システム',
+    tagline: '動画と会話するエージェント',
     
     // Video Upload
     uploadTitle: 'アップロード',

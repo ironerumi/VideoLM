@@ -303,7 +303,7 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
             <Button
               type="submit"
               disabled={!message.trim() || !videoId || chatMutation.isPending}
-              className="bg-indigo-500 hover:bg-indigo-600 disabled:bg-slate-300 text-white w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 transform hover:scale-105 disabled:transform-none disabled:hover:scale-100"
+              className="bg-blue-400 hover:bg-blue-500 disabled:bg-slate-300 text-white w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 transform hover:scale-105 disabled:transform-none disabled:hover:scale-100"
               data-testid="button-send-message"
             >
               <Send className="w-4 h-4" />
