@@ -7,11 +7,24 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
-// Set proper character encoding
-app.use((req, res, next) => {
+// Set proper character encoding for API routes only
+app.use('/api', (req, res, next) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   next();
 });
+
+// Serve static files for icons before other middleware
+app.use('/assets', express.static('public/assets', {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.png')) {
+      res.setHeader('Content-Type', 'image/png');
+    } else if (path.endsWith('.svg')) {
+      res.setHeader('Content-Type', 'image/svg+xml');
+    } else if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
+      res.setHeader('Content-Type', 'image/jpeg');
+    }
+  }
+}));
 
 app.use(sessionMiddleware);
 

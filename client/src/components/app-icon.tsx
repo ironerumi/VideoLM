@@ -17,12 +17,18 @@ export default function AppIcon({ className = "w-8 h-8", size = 32 }: AppIconPro
       for (const format of iconFormats) {
         try {
           const iconPath = `/assets/icons/app-icon.${format}`;
-          const response = await fetch(iconPath, { method: 'HEAD' });
-          if (response.ok) {
-            setCustomIcon(iconPath);
-            setIconLoaded(true);
-            return;
-          }
+          // Try to load the image directly to test if it's valid
+          const img = new Image();
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = iconPath;
+          });
+          
+          // If we get here, the image loaded successfully
+          setCustomIcon(iconPath);
+          setIconLoaded(true);
+          return;
         } catch (error) {
           // Continue to next format
         }
@@ -45,12 +51,16 @@ export default function AppIcon({ className = "w-8 h-8", size = 32 }: AppIconPro
   if (customIcon) {
     // Custom icon found
     return (
-      <div className={`${className} rounded-lg overflow-hidden flex items-center justify-center`}>
+      <div className={`${className} rounded-lg overflow-hidden flex items-center justify-center bg-white shadow-sm`}>
         <img 
           src={customIcon} 
           alt="VideoLM"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
           style={{ width: size, height: size }}
+          onError={() => {
+            console.log('Custom icon failed to load:', customIcon);
+            setCustomIcon(null);
+          }}
         />
       </div>
     );
