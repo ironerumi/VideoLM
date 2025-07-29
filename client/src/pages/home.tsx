@@ -28,31 +28,48 @@ export default function Home() {
   const currentVideo = videos.find(v => v.id === currentVideoId);
 
   const handleVideoSelect = (videoId: string, selected: boolean) => {
+    // For single selection, replace the current selection
     if (selected) {
-      setSelectedVideoIds(prev => [...prev, videoId]);
-      if (!currentVideoId) {
-        setCurrentVideoId(videoId);
-      }
+      setSelectedVideoIds([videoId]);
+      setCurrentVideoId(videoId);
     } else {
-      setSelectedVideoIds(prev => prev.filter(id => id !== videoId));
-      if (currentVideoId === videoId) {
-        const remaining = selectedVideoIds.filter(id => id !== videoId);
-        setCurrentVideoId(remaining.length > 0 ? remaining[0] : null);
-      }
+      setSelectedVideoIds([]);
+      setCurrentVideoId(null);
     }
   };
 
   const handleVideoPlay = (videoId: string) => {
     setCurrentVideoId(videoId);
-    if (!selectedVideoIds.includes(videoId)) {
-      setSelectedVideoIds(prev => [...prev, videoId]);
-    }
+    setSelectedVideoIds([videoId]);
   };
 
   const handleFrameClick = (frameTime: number) => {
     setSeekToTime(frameTime);
     // Reset after a short delay to allow the effect to trigger
     setTimeout(() => setSeekToTime(undefined), 100);
+  };
+
+  const handleVideoDelete = async (videoId: string) => {
+    try {
+      const response = await fetch(`/api/videos/${videoId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        // Remove from selected videos and current video if needed
+        if (selectedVideoIds.includes(videoId)) {
+          setSelectedVideoIds([]);
+        }
+        if (currentVideoId === videoId) {
+          setCurrentVideoId(null);
+        }
+        // Refresh the videos list
+        refetchVideos();
+      }
+    } catch (error) {
+      console.error('Failed to delete video:', error);
+    }
   };
 
   const handleDataReset = () => {
@@ -109,6 +126,7 @@ export default function Home() {
                   onVideoSelect={handleVideoSelect}
                   onVideoPlay={handleVideoPlay}
                   onVideoUploaded={refetchVideos}
+                  onVideoDelete={handleVideoDelete}
                   onCollapse={() => setLeftPanelCollapsed(true)}
                 />
               </Panel>

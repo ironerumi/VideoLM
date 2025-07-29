@@ -357,14 +357,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Video not found" });
       }
       
-      // Delete the file from filesystem
+      // Delete chat messages for this video first
+      await storage.deleteChatMessagesByVideoId(req.params.id);
+      
+      // Delete the video file from filesystem
       if (fs.existsSync(video.filePath)) {
         fs.unlinkSync(video.filePath);
       }
       
+      // Delete extracted frames directory
+      const videoNameWithoutExt = path.basename(video.originalName, path.extname(video.originalName));
+      const framesDir = path.join(path.dirname(video.filePath), videoNameWithoutExt);
+      if (fs.existsSync(framesDir)) {
+        try {
+          fs.rmSync(framesDir, { recursive: true, force: true });
+        } catch (frameError) {
+          console.warn('Failed to delete frames directory:', frameError);
+        }
+      }
+      
+      // Delete video record from storage
       const deleted = await storage.deleteVideo(req.params.id);
       res.json({ message: "Video deleted successfully" });
     } catch (error) {
+      console.error('Error deleting video:', error);
       res.status(500).json({ message: "Failed to delete video" });
     }
   });

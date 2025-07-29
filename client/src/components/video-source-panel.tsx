@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Plus, Play, Upload, Film, PanelLeftClose } from "lucide-react";
+import { Plus, Play, Upload, Film, PanelLeftClose, Trash2 } from "lucide-react";
 import VideoUpload from "./video-upload";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { fixJapaneseDisplay } from "../utils/encoding";
 import type { Video } from "@shared/schema";
 import { useI18n } from "@/lib/i18n";
@@ -13,6 +13,7 @@ interface VideoSourcePanelProps {
   onVideoSelect: (videoId: string, selected: boolean) => void;
   onVideoPlay: (videoId: string) => void;
   onVideoUploaded: () => void;
+  onVideoDelete: (videoId: string) => void;
   onCollapse?: () => void;
 }
 
@@ -22,6 +23,7 @@ export default function VideoSourcePanel({
   onVideoSelect,
   onVideoPlay,
   onVideoUploaded,
+  onVideoDelete,
   onCollapse,
 }: VideoSourcePanelProps) {
   const [showUpload, setShowUpload] = useState(false);
@@ -109,21 +111,24 @@ export default function VideoSourcePanel({
           </div>
         )}
 
-        <div className="space-y-3 mt-6">
+        <RadioGroup 
+          value={selectedVideoIds[0] || ""} 
+          onValueChange={(value) => onVideoSelect(value, true)}
+          className="space-y-3 mt-6"
+        >
           {videos.map((video, index) => (
             <div
               key={video.id}
-              className="bg-slate-50 rounded-xl p-4 hover:bg-slate-100 transition-colors cursor-pointer group"
+              className={`bg-slate-50 rounded-xl p-4 hover:bg-slate-100 transition-colors group border-2 ${
+                selectedVideoIds.includes(video.id) ? 'border-indigo-200 bg-indigo-50' : 'border-transparent'
+              }`}
               data-testid={`video-item-${video.id}`}
             >
               <div className="flex items-center space-x-3">
-                <Checkbox
-                  checked={selectedVideoIds.includes(video.id)}
-                  onCheckedChange={(checked) => 
-                    onVideoSelect(video.id, checked as boolean)
-                  }
-                  className="w-4 h-4 text-indigo-500 rounded focus:ring-2 focus:ring-indigo-200"
-                  data-testid={`checkbox-${video.id}`}
+                <RadioGroupItem
+                  value={video.id}
+                  className="w-4 h-4 text-indigo-500"
+                  data-testid={`radio-${video.id}`}
                 />
                 <div 
                   className={`w-12 h-8 bg-gradient-to-br ${getGradient(index)} rounded flex items-center justify-center cursor-pointer hover:scale-105 transition-transform`}
@@ -147,15 +152,22 @@ export default function VideoSourcePanel({
                     {video.duration ? formatDuration(video.duration) : 'Unknown'}
                   </p>
                 </div>
-                <div className={`w-2 h-2 rounded-full transition-opacity ${
-                  selectedVideoIds.includes(video.id) 
-                    ? 'bg-green-400 opacity-100' 
-                    : 'bg-slate-300 opacity-0 group-hover:opacity-100'
-                }`} />
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onVideoDelete(video.id);
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-red-500 hover:bg-red-50"
+                  data-testid={`button-delete-${video.id}`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </div>
             </div>
           ))}
-        </div>
+        </RadioGroup>
       </div>
     </div>
   );
