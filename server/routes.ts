@@ -222,7 +222,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const videoNameWithoutExt = path.basename(video.originalName, path.extname(video.originalName));
       const framesDir = path.join(path.dirname(video.filePath), videoNameWithoutExt);
-      const framePath = path.join(framesDir, req.params.frameName);
+      
+      // Try to find the actual frame file - handle different timestamp formats
+      let framePath = path.join(framesDir, req.params.frameName);
+      
+      // If exact match doesn't exist, try with .0 added for integer seconds
+      if (!fs.existsSync(framePath)) {
+        const frameNameParts = req.params.frameName.match(/^(frame_\d+_)(\d+)(s\.jpg)$/);
+        if (frameNameParts) {
+          const alternativeFrameName = `${frameNameParts[1]}${frameNameParts[2]}.0${frameNameParts[3]}`;
+          const alternativeFramePath = path.join(framesDir, alternativeFrameName);
+          if (fs.existsSync(alternativeFramePath)) {
+            framePath = alternativeFramePath;
+          }
+        }
+      }
       
       // Security check - ensure frame is within the session directory
       if (!framePath.startsWith(framesDir)) {
@@ -230,6 +244,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (!fs.existsSync(framePath)) {
+        console.log('Frame file not found:', {
+          requestedFrame: req.params.frameName,
+          framePath,
+          framesDir,
+          dirExists: fs.existsSync(framesDir),
+          dirContents: fs.existsSync(framesDir) ? fs.readdirSync(framesDir).slice(0, 5) : []
+        });
         return res.status(404).json({ message: "Frame not found" });
       }
       
