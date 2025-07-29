@@ -98,14 +98,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Upload video
+  // Upload video with enhanced progress logging
   app.post("/api/videos/upload", sessionVideoUpload.single('video'), async (req: MulterRequest, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No video file provided" });
       }
 
+      console.log('🚀 Upload started:', req.file.originalname);
+
       // Read the uploaded file for processing
+      console.log('📁 Reading file and generating metadata...');
       const fileBuffer = fs.readFileSync(req.file.path);
       const metadata = getVideoMetadata(fileBuffer, req.file.originalname);
       const thumbnails = await generateThumbnails(fileBuffer);
@@ -115,7 +118,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const videoNameWithoutExt = path.basename(decodedOriginalName, path.extname(decodedOriginalName));
       const framesDir = path.join(path.dirname(req.file.path), videoNameWithoutExt);
       
-      console.log(`Extracting frames to: ${framesDir}`);
+      console.log(`🎬 Extracting frames to: ${framesDir}`);
+      console.log('⚙️ Frame extraction settings: 0.5fps, max 30 frames');
       const frameExtractionResult: FrameExtractionResult = await extractVideoFrames({
         videoPath: req.file.path,
         outputDir: framesDir,
@@ -123,13 +127,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxFrames: 30 // Reduced to prevent token overflow
       });
       
-      // Prepare ALL extracted frames for AI analysis 
+      console.log(`✅ Frame extraction complete: ${frameExtractionResult.frames?.length || 0} frames extracted`);
+      
+      // Prepare frames for AI batch analysis 
       let analysis: VideoAnalysis;
       if (frameExtractionResult.success && frameExtractionResult.frames.length > 0) {
         // Limit frames sent to OpenAI to prevent token overflow
         const maxFramesToAnalyze = Math.min(frameExtractionResult.frames.length, 20);
         const framesToAnalyze = frameExtractionResult.frames.slice(0, maxFramesToAnalyze);
-        console.log(`Analyzing ${framesToAnalyze.length} frames (out of ${frameExtractionResult.frames.length} extracted) for transcription generation`);
+        console.log(`🤖 AI Batch Analysis: Processing ${framesToAnalyze.length} frames (out of ${frameExtractionResult.frames.length} extracted)`);
+        console.log(`📊 Timestamps: ${framesToAnalyze.map(f => `${Math.floor(f.timestamp/60)}:${String(Math.floor(f.timestamp%60)).padStart(2,'0')}`).join(', ')}`);
         
         const frameData = framesToAnalyze.map(frame => {
           const frameBuffer = fs.readFileSync(frame.filePath);
@@ -141,12 +148,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Detect user's language preference from the request headers
         const userLanguage = req.headers['x-user-language'] as string || 'en';
+        console.log(`🌐 Language preference: ${userLanguage}`);
+        
+        console.log(`🔄 Starting OpenAI batch processing...`);
+        const startTime = Date.now();
         analysis = await analyzeVideoFrames(frameData, userLanguage);
+        const processingTime = Date.now() - startTime;
+        console.log(`✨ OpenAI analysis completed in ${processingTime}ms`);
+        console.log(`📝 Generated transcription with ${analysis.transcription.length} entries`);
       } else {
-        // If frame extraction fails, use fallback analysis
+        console.warn('⚠️ Frame extraction failed, using fallback analysis');
         const placeholder = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
         const frameBase64 = placeholder.toString('base64');
-        console.warn('Frame extraction failed, using placeholder image for AI analysis');
         analysis = await analyzeVideoFrame(frameBase64);
       }
 
@@ -165,23 +178,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       };
 
+      console.log('💾 Saving video data to storage...');
+
       const validation = insertVideoSchema.safeParse(videoData);
       if (!validation.success) {
         // Clean up uploaded file if validation fails
         fs.unlinkSync(req.file.path);
-        console.error("Video validation failed:", validation.error.errors);
-        console.error("Video data structure:", JSON.stringify(videoData, null, 2));
+        console.error("❌ Video validation failed:", validation.error.errors);
+        console.error("📋 Video data structure:", JSON.stringify(videoData, null, 2));
         return res.status(400).json({ message: "Invalid video data", errors: validation.error.errors });
       }
 
       const video = await storage.createVideo(validation.data);
+      console.log(`🎉 Upload completed successfully! Video ID: ${video.id}`);
+      
       res.json(video);
     } catch (error) {
-      console.error("Upload error:", error);
+      console.error("💥 Upload error:", error);
+      
       // Clean up uploaded file on error
       if (req.file?.path && fs.existsSync(req.file.path)) {
         fs.unlinkSync(req.file.path);
       }
+      
       res.status(500).json({ message: "Failed to upload video" });
     }
   });

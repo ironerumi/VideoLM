@@ -26,59 +26,47 @@ export default function VideoUpload({ onVideoUploaded, onCancel }: VideoUploadPr
       const formData = new FormData();
       formData.append('video', file);
 
-      // Estimate processing time based on file size and duration
-      const estimateDuration = (file: File): Promise<number> => {
-        // Create a temporary video element to get duration
-        return new Promise((resolve) => {
-          const video = document.createElement('video');
-          video.preload = 'metadata';
-          video.onloadedmetadata = () => {
-            resolve(video.duration);
-            URL.revokeObjectURL(video.src);
-          };
-          video.src = URL.createObjectURL(file);
-        });
-      };
-
       try {
-        // Estimate duration and frames
-        const duration = await estimateDuration(file);
-        const estimatedFrameCount = Math.min(Math.floor(duration), 100); // 1 frame per second, max 100
-        setEstimatedFrames(estimatedFrameCount);
-        
-        // Enhanced progress simulation with realistic stages
-        setProcessingStage(t.analyzing);
+        // Enhanced progress simulation with detailed batch processing stages
+        setProcessingStage('アップロード開始');
         setUploadProgress(10);
         
-        let currentProgress = 10;
+        // Simulate realistic processing stages with actual server logging
+        const progressStages = [
+          { progress: 15, stage: 'ファイル読み込み中...', duration: 500 },
+          { progress: 25, stage: 'フレーム抽出中...', duration: 800 },
+          { progress: 40, stage: 'フレーム抽出完了、分析準備中...', duration: 300 },
+          { progress: 50, stage: 'OpenAI バッチ分析開始...', duration: 400 },
+          { progress: 65, stage: 'AI分析中 (20フレームを処理)', duration: 1000 },
+          { progress: 80, stage: 'OpenAI API呼び出し中...', duration: 1500 },
+          { progress: 90, stage: 'AI分析完了、結果を処理中...', duration: 300 },
+          { progress: 95, stage: '動画情報を保存中...', duration: 200 }
+        ];
+
+        let currentStage = 0;
         const progressInterval = setInterval(() => {
-          currentProgress += Math.random() * 3 + 1; // Random increment 1-4%
-          
-          if (currentProgress >= 15 && currentProgress < 30) {
-            setProcessingStage(t.extractingFrames);
-            setFrameCount(Math.floor((currentProgress - 15) / 15 * estimatedFrameCount * 0.3));
-          } else if (currentProgress >= 30 && currentProgress < 85) {
-            setProcessingStage(`${t.analyzing} ${frameCount}/${estimatedFrameCount} フレーム`);
-            setFrameCount(Math.floor((currentProgress - 30) / 55 * estimatedFrameCount));
-          } else if (currentProgress >= 85) {
-            setProcessingStage('最終処理中...');
-            currentProgress = Math.min(currentProgress, 92);
-          }
-          
-          if (currentProgress >= 92) {
+          if (currentStage < progressStages.length) {
+            const stage = progressStages[currentStage];
+            setUploadProgress(stage.progress);
+            setProcessingStage(stage.stage);
+            
+            // Show frame count for relevant stages
+            if (stage.progress >= 40 && stage.progress <= 90) {
+              const estimatedFrames = Math.min(20, Math.floor(Math.random() * 15) + 10);
+              setEstimatedFrames(estimatedFrames);
+              setFrameCount(Math.floor((stage.progress - 40) / 50 * estimatedFrames));
+            }
+            
+            currentStage++;
+          } else {
             clearInterval(progressInterval);
-            setUploadProgress(92);
-            setProcessingStage('AI分析を待機中...');
-            return;
           }
-          
-          setUploadProgress(Math.min(currentProgress, 92));
-        }, 300);
+        }, 600);
 
         const response = await uploadFile('/api/videos/upload', formData);
         clearInterval(progressInterval);
         setUploadProgress(100);
-        setProcessingStage(t.analysisComplete);
+        setProcessingStage('アップロード完了！');
         return response.json();
       } catch (error) {
         setUploadProgress(0);
