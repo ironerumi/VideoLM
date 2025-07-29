@@ -95,20 +95,27 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
             </div>
           )}
 
-          {/* Show all interactions in Q&A format */}
-          {chatHistory.length > 0 && chatHistory.map((chat) => {
-            const rephrasedQuestion = (chat as any).rephrasedQuestion || chat.message;
-            const relevantFrame = (chat as any).relevantFrame;
+          {/* Show only the latest interaction in Q&A format */}
+          {chatHistory.length > 0 && (() => {
+            const latestChat = chatHistory[chatHistory.length - 1];
+            const rephrasedQuestion = (latestChat as any).rephrasedQuestion || latestChat.message;
+            const relevantFrame = (latestChat as any).relevantFrame;
             
-            // Debug logging
-            console.log('Chat data:', {
-              id: chat.id,
-              message: chat.message,
-              response: chat.response,
-              rephrasedQuestion,
-              relevantFrame,
-              frameUrl: relevantFrame ? `/api/videos/${videoId}/frames/${relevantFrame}?session=${sessionManager.getSessionId()}` : null
-            });
+            // Extract multiple timestamps from response text
+            const extractTimestampsFromResponse = (response: string): number[] => {
+              const timestampRegex = /(\d{1,2}):(\d{2})/g;
+              const timestamps: number[] = [];
+              let match;
+              
+              while ((match = timestampRegex.exec(response)) !== null) {
+                const minutes = parseInt(match[1]);
+                const seconds = parseInt(match[2]);
+                const totalSeconds = minutes * 60 + seconds;
+                timestamps.push(totalSeconds);
+              }
+              
+              return [...new Set(timestamps)]; // Remove duplicates
+            };
             
             // Extract frame timestamp from filename if available
             const getFrameTimeFromFilename = (filename: string | null) => {
@@ -118,16 +125,17 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
             };
             
             const frameTime = getFrameTimeFromFilename(relevantFrame);
+            const mentionedTimestamps = extractTimestampsFromResponse(latestChat.response);
 
             return (
-              <div key={chat.id} className="space-y-6 mb-8 last:mb-0" data-testid={`qa-${chat.id}`}>
+              <div className="space-y-6" data-testid={`qa-latest-${latestChat.id}`}>
                 {/* Question */}
                 <div className="border-b border-slate-200 pb-4">
                   <h2 className="text-lg font-semibold text-slate-800 leading-relaxed">
                     {rephrasedQuestion}
                   </h2>
                   <p className="text-xs text-slate-500 mt-2">
-                    {formatTime(chat.timestamp)}
+                    {formatTime(latestChat.timestamp)}
                   </p>
                 </div>
 
@@ -140,52 +148,90 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-slate-700 leading-relaxed japanese-filename">
-                          {chat.response}
+                          {latestChat.response}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Frame Thumbnail */}
-                  {relevantFrame && videoId && (
-                    <div className="flex justify-center pt-2">
-                      <button
-                        onClick={() => frameTime && onFrameClick?.(frameTime)}
-                        className="relative group"
-                        data-testid={`frame-thumbnail-${chat.id}`}
-                      >
-                        <img
-                          src={`/api/videos/${videoId}/frames/${relevantFrame}?session=${sessionManager.getSessionId()}`}
-                          alt="Relevant frame"
-                          className="w-32 h-24 object-cover rounded-lg shadow-sm group-hover:shadow-md transition-all duration-200 group-hover:scale-105"
-                          onError={(e) => {
-                            console.error('Frame image failed to load:', relevantFrame);
-                            const target = e.target as HTMLElement;
-                            target.style.display = 'none';
-                            // Show fallback message
-                            const fallback = document.createElement('div');
-                            fallback.className = 'text-xs text-slate-400 bg-slate-100 px-3 py-2 rounded';
-                            fallback.textContent = 'Frame not found';
-                            target.parentNode?.appendChild(fallback);
-                          }}
-                          onLoad={() => {
-                            console.log('Frame image loaded successfully:', relevantFrame);
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-lg transition-all duration-200 flex items-center justify-center">
-                          <div className="w-8 h-8 bg-white/0 group-hover:bg-white/90 rounded-full flex items-center justify-center transition-all duration-200">
-                            <svg className="w-3 h-3 text-transparent group-hover:text-slate-700" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M8 5v14l11-7z"/>
-                            </svg>
+                  {/* Frame Thumbnails - Show primary frame and additional mentioned timestamps */}
+                  <div className="flex flex-col space-y-3 pt-2">
+                    {/* Primary relevant frame */}
+                    {relevantFrame && videoId && (
+                      <div className="flex justify-center">
+                        <button
+                          onClick={() => frameTime && onFrameClick?.(frameTime)}
+                          className="relative group"
+                          data-testid={`frame-thumbnail-primary-${latestChat.id}`}
+                        >
+                          <img
+                            src={`/api/videos/${videoId}/frames/${relevantFrame}?session=${sessionManager.getSessionId()}`}
+                            alt="Primary relevant frame"
+                            className="w-32 h-24 object-cover rounded-lg shadow-sm group-hover:shadow-md transition-all duration-200 group-hover:scale-105"
+                            onError={(e) => {
+                              console.error('Frame image failed to load:', relevantFrame);
+                              (e.target as HTMLElement).style.display = 'none';
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-lg transition-all duration-200 flex items-center justify-center">
+                            <div className="w-8 h-8 bg-white/0 group-hover:bg-white/90 rounded-full flex items-center justify-center transition-all duration-200">
+                              <svg className="w-3 h-3 text-transparent group-hover:text-slate-700" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"/>
+                              </svg>
+                            </div>
                           </div>
+                          <div className="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                            Primary
+                          </div>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Additional timestamp frames */}
+                    {mentionedTimestamps.length > 1 && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-slate-500 text-center">Referenced moments:</p>
+                        <div className="flex flex-wrap justify-center gap-2">
+                          {mentionedTimestamps.slice(0, 6).map((timestamp, index) => {
+                            const frameNumber = String(Math.floor(timestamp)).padStart(3, '0');
+                            const frameName = `frame_${frameNumber}_${timestamp}s.jpg`;
+                            
+                            return (
+                              <button
+                                key={`${timestamp}-${index}`}
+                                onClick={() => onFrameClick?.(timestamp)}
+                                className="relative group"
+                                data-testid={`frame-thumbnail-${timestamp}-${latestChat.id}`}
+                              >
+                                <img
+                                  src={`/api/videos/${videoId}/frames/${frameName}?session=${sessionManager.getSessionId()}`}
+                                  alt={`Frame at ${Math.floor(timestamp / 60)}:${String(timestamp % 60).padStart(2, '0')}`}
+                                  className="w-20 h-15 object-cover rounded shadow-sm group-hover:shadow-md transition-all duration-200 group-hover:scale-105"
+                                  onError={(e) => {
+                                    (e.target as HTMLElement).style.display = 'none';
+                                  }}
+                                />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded transition-all duration-200 flex items-center justify-center">
+                                  <div className="w-6 h-6 bg-white/0 group-hover:bg-white/90 rounded-full flex items-center justify-center transition-all duration-200">
+                                    <svg className="w-2 h-2 text-transparent group-hover:text-slate-700" fill="currentColor" viewBox="0 0 24 24">
+                                      <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                  </div>
+                                </div>
+                                <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-xs px-1 py-0.5 rounded-b text-center">
+                                  {Math.floor(timestamp / 60)}:{String(timestamp % 60).padStart(2, '0')}
+                                </div>
+                              </button>
+                            );
+                          })}
                         </div>
-                      </button>
-                    </div>
-                  )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             );
-          })}
+          })()}
 
           {chatMutation.isPending && (
             <div className="flex justify-start mt-4">
