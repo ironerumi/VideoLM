@@ -119,12 +119,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const framesDir = path.join(path.dirname(req.file.path), videoNameWithoutExt);
       
       console.log(`🎬 Extracting frames to: ${framesDir}`);
-      console.log('⚙️ Frame extraction settings: 0.5fps, max 30 frames');
+      console.log('⚙️ Frame extraction settings: 1fps, max 100 frames');
       const frameExtractionResult: FrameExtractionResult = await extractVideoFrames({
         videoPath: req.file.path,
         outputDir: framesDir,
-        framesPerSecond: 0.5, // Reduced: 1 frame every 2 seconds
-        maxFrames: 30 // Reduced to prevent token overflow
+        framesPerSecond: 1, // 1 frame per second for better timeline coverage
+        maxFrames: 100 // Increase to allow more frames for longer videos
       });
       
       console.log(`✅ Frame extraction complete: ${frameExtractionResult.frames?.length || 0} frames extracted`);
@@ -184,7 +184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         analysis: optimizedAnalysis,
         thumbnails: {
           ...thumbnails,
-          frames: frameExtractionResult.success ? frameExtractionResult.frames.slice(0, 5) : [] // Limit frames further
+          frames: frameExtractionResult.success ? frameExtractionResult.frames : [] // Store all extracted frames
         },
       };
 
