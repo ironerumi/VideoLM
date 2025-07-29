@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { storage } from '../storage';
+import fs from 'fs';
+import path from 'path';
 
 declare global {
   namespace Express {
@@ -9,9 +11,47 @@ declare global {
   }
 }
 
+// Clean up empty session directories
+async function cleanupEmptySessions() {
+  try {
+    const uploadsDir = path.join(process.cwd(), 'uploads');
+    if (!fs.existsSync(uploadsDir)) return;
+
+    const entries = fs.readdirSync(uploadsDir, { withFileTypes: true });
+    let cleanedUp = 0;
+
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        const sessionDir = path.join(uploadsDir, entry.name);
+        try {
+          const files = fs.readdirSync(sessionDir);
+          // If directory is empty, remove it
+          if (files.length === 0) {
+            fs.rmdirSync(sessionDir);
+            cleanedUp++;
+          }
+        } catch (error) {
+          // Directory might not exist or be inaccessible, skip it
+        }
+      }
+    }
+
+    if (cleanedUp > 0) {
+      console.log(`Cleaned up ${cleanedUp} empty session directories`);
+    }
+  } catch (error) {
+    console.warn('Failed to cleanup empty sessions:', error);
+  }
+}
+
+// Run cleanup on startup
+cleanupEmptySessions();
+
 export async function sessionMiddleware(req: Request, res: Response, next: NextFunction) {
-  // Set UTF-8 encoding headers
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  // Set UTF-8 encoding headers for JSON responses only
+  if (req.path.startsWith('/api/') && !req.path.includes('/videos/') && !req.path.includes('/file/')) {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  }
   
   let sessionId = req.headers['x-session-id'] as string;
   
