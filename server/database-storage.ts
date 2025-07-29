@@ -148,6 +148,10 @@ export class DatabaseStorage implements IStorage {
     return message;
   }
 
+  async deleteChatMessagesByVideoId(videoId: string): Promise<void> {
+    await db.delete(chatMessages).where(eq(chatMessages.videoId, videoId));
+  }
+
   // Video Session operations
   async getVideoSession(id: string): Promise<VideoSession | undefined> {
     const [session] = await db.select().from(videoSessions).where(eq(videoSessions.id, id));

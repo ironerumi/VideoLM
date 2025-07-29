@@ -79,11 +79,14 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
       <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-slate-800 mb-1">{t.chatInterface}</h3>
-            <p className="text-sm text-slate-600">{t.askAboutSelectedVideo}</p>
-          </div>
+        <h3 className="text-lg font-semibold text-slate-800 mb-1">{t.chatInterface}</h3>
+        <p className="text-sm text-slate-600">{t.askAboutSelectedVideo}</p>
+      </div>
+      
+      {/* Chat History */}
+      <div className="flex-1 overflow-hidden min-h-0">
+        <div className="flex items-center justify-between px-6 py-3 border-b border-slate-100">
+          <h4 className="text-sm font-medium text-slate-700">{t.chatHistory}</h4>
           <button
             onClick={clearChatHistory}
             disabled={chatHistory.length === 0 || isLoading}
@@ -94,10 +97,6 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
             {t.clearHistory}
           </button>
         </div>
-      </div>
-      
-      {/* Chat History */}
-      <div className="flex-1 overflow-hidden min-h-0">
         <ScrollArea className="h-full p-6" ref={scrollRef}>
           {chatHistory.length === 0 && !videoId && (
             <div className="text-center py-12">
