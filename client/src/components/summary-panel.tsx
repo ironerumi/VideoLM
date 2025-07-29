@@ -104,7 +104,9 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
           </div>
         ) : currentVideo?.analysis ? (
           <div className="bg-slate-50 rounded-xl p-4">
-            <div className="space-y-3">
+            {/* Key Points Section */}
+            <div className="space-y-3 mb-6">
+              <h4 className="text-sm font-medium text-slate-700 mb-3">Key Points</h4>
               {(currentVideo.analysis as any)?.keyPoints?.map((point: string, index: number) => (
                 <div key={index} className="flex items-center space-x-2">
                   <div className={`w-2 h-2 rounded-full ${
@@ -118,6 +120,20 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                 </div>
               ))}
             </div>
+
+            {/* Transcription Section */}
+            {(currentVideo.analysis as any)?.transcription?.length > 0 && (
+              <div className="space-y-3 mb-6">
+                <h4 className="text-sm font-medium text-slate-700 mb-3">Transcription</h4>
+                <div className="max-h-64 overflow-y-auto space-y-2">
+                  {(currentVideo.analysis as any).transcription.map((line: string, index: number) => (
+                    <div key={index} className="text-sm text-slate-600 leading-relaxed" data-testid={`transcription-line-${index}`}>
+                      {line}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             
             {currentVideo && (
               <div className="mt-4 pt-4 border-t border-slate-200">

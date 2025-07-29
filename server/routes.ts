@@ -2,7 +2,7 @@ import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { videoUpload, generateThumbnails, getVideoMetadata, extractVideoFrame } from "./services/video";
-import { analyzeVideoFrame, chatWithVideo, generateVideoSummary, type VideoAnalysis } from "./services/openai";
+import { analyzeVideoFrame, analyzeVideoFrames, chatWithVideo, generateVideoSummary, type VideoAnalysis } from "./services/openai";
 import { extractVideoFrames, type FrameExtractionResult } from "./utils/frame-extractor";
 import { insertVideoSchema, insertChatMessageSchema } from "@shared/schema";
 import { decodeFilename, encodeFilename, fixJapaneseEncoding } from "./utils/encoding";
@@ -123,21 +123,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxFrames: 100 // Hard limit
       });
       
-      // Extract a frame for AI analysis (use first extracted frame or fallback)
-      let frameBase64: string;
+      // Prepare ALL extracted frames for AI analysis 
+      let analysis: VideoAnalysis;
       if (frameExtractionResult.success && frameExtractionResult.frames.length > 0) {
-        // Use first extracted frame for analysis
-        const firstFrame = frameExtractionResult.frames[0];
-        const frameBuffer = fs.readFileSync(firstFrame.filePath);
-        frameBase64 = frameBuffer.toString('base64');
+        // Use ALL extracted frames for comprehensive analysis
+        console.log(`Analyzing ${frameExtractionResult.frames.length} frames for transcription generation`);
+        
+        const frameData = frameExtractionResult.frames.map(frame => {
+          const frameBuffer = fs.readFileSync(frame.filePath);
+          return {
+            base64: frameBuffer.toString('base64'),
+            timestamp: frame.timestamp
+          };
+        });
+        
+        analysis = await analyzeVideoFrames(frameData);
       } else {
-        // If frame extraction fails, generate a placeholder base64 image
+        // If frame extraction fails, use fallback analysis
         const placeholder = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
-        frameBase64 = placeholder.toString('base64');
+        const frameBase64 = placeholder.toString('base64');
         console.warn('Frame extraction failed, using placeholder image for AI analysis');
+        analysis = await analyzeVideoFrame(frameBase64);
       }
-      
-      const analysis = await analyzeVideoFrame(frameBase64);
 
       const videoData = {
         sessionId: req.sessionId,
@@ -348,7 +355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const chatHistory = await storage.getChatMessagesByVideoId(req.params.id);
       
       // Generate AI response
-      const defaultAnalysis: VideoAnalysis = { summary: "", keyPoints: [], topics: [], sentiment: "neutral", visualElements: [] };
+      const defaultAnalysis: VideoAnalysis = { summary: "", keyPoints: [], topics: [], sentiment: "neutral", visualElements: [], transcription: [] };
       const response = await chatWithVideo(
         message, 
         (video.analysis as VideoAnalysis) || defaultAnalysis,
