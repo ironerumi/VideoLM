@@ -10,9 +10,10 @@ import type { ChatMessage } from "@shared/schema";
 interface ChatInterfaceProps {
   videoId: string | null;
   selectedVideoCount: number;
+  onFrameClick?: (frameTime: number) => void;
 }
 
-export default function ChatInterface({ videoId, selectedVideoCount }: ChatInterfaceProps) {
+export default function ChatInterface({ videoId, selectedVideoCount, onFrameClick }: ChatInterfaceProps) {
   const [message, setMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
@@ -86,36 +87,78 @@ export default function ChatInterface({ videoId, selectedVideoCount }: ChatInter
             </div>
           )}
 
-          <div className="space-y-4">
-            {chatHistory.map((chat) => (
-              <div key={chat.id} className="space-y-3">
-                {/* User Message */}
-                <div className="flex justify-end" data-testid={`user-message-${chat.id}`}>
-                  <div className="bg-indigo-500 text-white rounded-xl rounded-br-sm px-4 py-2 max-w-xs lg:max-w-md">
-                    <p className="text-sm japanese-filename">{chat.message}</p>
-                    <p className="text-xs text-indigo-200 mt-1">
-                      {formatTime(chat.timestamp)}
-                    </p>
-                  </div>
+          {/* Show only the latest interaction in Q&A format */}
+          {chatHistory.length > 0 && (() => {
+            const latestChat = chatHistory[chatHistory.length - 1];
+            const rephrasedQuestion = (latestChat as any).rephrasedQuestion || latestChat.message;
+            const relevantFrame = (latestChat as any).relevantFrame;
+            
+            // Extract frame timestamp from filename if available
+            const getFrameTimeFromFilename = (filename: string | null) => {
+              if (!filename) return null;
+              const match = filename.match(/frame_\d+_(\d+(\.\d+)?)s/);
+              return match ? parseFloat(match[1]) : null;
+            };
+            
+            const frameTime = getFrameTimeFromFilename(relevantFrame);
+
+            return (
+              <div className="space-y-6" data-testid={`qa-latest-${latestChat.id}`}>
+                {/* Question */}
+                <div className="border-b border-slate-200 pb-4">
+                  <h2 className="text-lg font-semibold text-slate-800 leading-relaxed">
+                    {rephrasedQuestion}
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-2">
+                    {formatTime(latestChat.timestamp)}
+                  </p>
                 </div>
 
-                {/* AI Response */}
-                <div className="flex justify-start" data-testid={`ai-response-${chat.id}`}>
-                  <div className="flex items-start space-x-3 max-w-xs lg:max-w-md">
-                    <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <Bot className="w-4 h-4 text-slate-600" />
-                    </div>
-                    <div className="bg-slate-100 text-slate-700 rounded-xl rounded-bl-sm px-4 py-2">
-                      <p className="text-sm leading-relaxed japanese-filename">{chat.response}</p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        {formatTime(chat.timestamp)}
-                      </p>
+                {/* Answer */}
+                <div className="space-y-4">
+                  <div className="bg-slate-50 rounded-lg p-4 w-full">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                        <Bot className="w-4 h-4 text-indigo-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-slate-700 leading-relaxed japanese-filename">
+                          {latestChat.response}
+                        </p>
+                      </div>
                     </div>
                   </div>
+
+                  {/* Frame Thumbnail */}
+                  {relevantFrame && videoId && (
+                    <div className="flex justify-center pt-2">
+                      <button
+                        onClick={() => frameTime && onFrameClick?.(frameTime)}
+                        className="relative group"
+                        data-testid={`frame-thumbnail-${latestChat.id}`}
+                      >
+                        <img
+                          src={`/api/videos/${videoId}/frames/${relevantFrame}`}
+                          alt="Relevant frame"
+                          className="w-32 h-24 object-cover rounded-lg shadow-sm group-hover:shadow-md transition-all duration-200 group-hover:scale-105"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = 'none';
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-lg transition-all duration-200 flex items-center justify-center">
+                          <div className="w-8 h-8 bg-white/0 group-hover:bg-white/90 rounded-full flex items-center justify-center transition-all duration-200">
+                            <svg className="w-3 h-3 text-transparent group-hover:text-slate-700" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M8 5v14l11-7z"/>
+                            </svg>
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })()}
 
           {chatMutation.isPending && (
             <div className="flex justify-start mt-4">

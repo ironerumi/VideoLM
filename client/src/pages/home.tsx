@@ -129,6 +129,7 @@ export default function Home() {
             <ChatInterface
               videoId={currentVideoId}
               selectedVideoCount={selectedVideoIds.length}
+              onFrameClick={handleFrameClick}
             />
           </div>
         </div>
