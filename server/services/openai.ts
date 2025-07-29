@@ -42,6 +42,7 @@ export async function analyzeVideoFrames(frameData: Array<{base64: string, times
           - Facial expressions and body language
           - Tools, objects, and their usage
           - Spatial relationships and positioning
+          - Describe in 20-70 words per frame
           
           Be extremely observant and describe what you see with forensic precision, like Sherlock Holmes examining a crime scene.`
         },

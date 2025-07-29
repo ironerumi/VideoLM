@@ -2,8 +2,9 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, FileText, Clock, Database, HardDrive, PanelRightClose } from "lucide-react";
+import { RefreshCw, FileText, Clock, Database, HardDrive, PanelRightClose, GripHorizontal } from "lucide-react";
 import type { Video, ChatMessage } from "@shared/schema";
+import { useState, useRef, useEffect } from "react";
 
 interface SummaryPanelProps {
   selectedVideoIds: string[];
@@ -12,6 +13,10 @@ interface SummaryPanelProps {
 }
 
 export default function SummaryPanel({ selectedVideoIds, currentVideoId, onCollapse }: SummaryPanelProps) {
+  const [summaryHeight, setSummaryHeight] = useState(400); // Default height in pixels
+  const [isResizing, setIsResizing] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
   const { data: videos = [] } = useQuery<Video[]>({
     queryKey: ["/api/videos"],
   });
@@ -56,13 +61,54 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
     }
   };
 
+  // Resizing functionality
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsResizing(true);
+    e.preventDefault();
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isResizing || !containerRef.current) return;
+    
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const newHeight = e.clientY - containerRect.top;
+    const minHeight = 200; // Minimum summary height
+    const maxHeight = containerRect.height - 200; // Leave at least 200px for chat
+    
+    setSummaryHeight(Math.min(Math.max(newHeight, minHeight), maxHeight));
+  };
+
+  const handleMouseUp = () => {
+    setIsResizing(false);
+  };
+
+  // Add event listeners for mouse move and up
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
+
   return (
-    <div className="w-80 bg-white border-l border-slate-200/60 flex flex-col h-full">
+    <div ref={containerRef} className="w-80 bg-white border-l border-slate-200/60 flex flex-col h-full">
       {/* Summary Section */}
-      <div className="p-6 border-b border-slate-100">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-slate-800">Summary</h3>
-          <div className="flex items-center space-x-2">
+      <div 
+        className="border-b border-slate-100 overflow-hidden flex flex-col"
+        style={{ height: `${summaryHeight}px` }}
+      >
+        <div className="p-6 flex-1 overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-slate-800">Summary</h3>
+            <div className="flex items-center space-x-2">
             {selectedVideoIds.length > 0 && (
               <Button
                 onClick={handleGenerateSummary}
@@ -90,107 +136,119 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                 <PanelRightClose className="w-4 h-4" />
               </Button>
             )}
-          </div>
-        </div>
-
-        {summaryMutation.data ? (
-          <div className="bg-slate-50 rounded-xl p-4">
-            <p className="text-sm text-slate-700 leading-relaxed mb-3" data-testid="text-generated-summary">
-              {summaryMutation.data.summary}
-            </p>
-            <div className="text-xs text-slate-500">
-              Based on {summaryMutation.data.videoCount} video{summaryMutation.data.videoCount !== 1 ? 's' : ''}
             </div>
           </div>
-        ) : currentVideo?.analysis ? (
-          <div className="bg-slate-50 rounded-xl p-4">
-            {/* Key Points Section */}
-            <div className="space-y-3 mb-6">
-              <h4 className="text-sm font-medium text-slate-700 mb-3">Key Points</h4>
-              {(currentVideo.analysis as any)?.keyPoints?.map((point: string, index: number) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    index % 4 === 0 ? 'bg-indigo-400' :
-                    index % 4 === 1 ? 'bg-purple-400' :
-                    index % 4 === 2 ? 'bg-pink-400' : 'bg-blue-400'
-                  }`}></div>
-                  <span className="text-sm text-slate-600" data-testid={`key-point-${index}`}>
-                    {point}
-                  </span>
-                </div>
-              ))}
-            </div>
 
-            {/* Transcription Section */}
-            {(currentVideo.analysis as any)?.transcription?.length > 0 && (
-              <div className="space-y-3 mb-6">
-                <h4 className="text-sm font-medium text-slate-700 mb-3">Transcription</h4>
-                <div className="max-h-64 overflow-y-auto space-y-2">
-                  {(currentVideo.analysis as any).transcription.map((line: string, index: number) => (
-                    <div key={index} className="text-sm text-slate-600 leading-relaxed" data-testid={`transcription-line-${index}`}>
-                      {line}
+          {summaryMutation.data ? (
+            <div className="bg-slate-50 rounded-xl p-4">
+              <p className="text-sm text-slate-700 leading-relaxed mb-3" data-testid="text-generated-summary">
+                {summaryMutation.data.summary}
+              </p>
+              <div className="text-xs text-slate-500">
+                Based on {summaryMutation.data.videoCount} video{summaryMutation.data.videoCount !== 1 ? 's' : ''}
+              </div>
+            </div>
+          ) : currentVideo?.analysis ? (
+            <div className="bg-slate-50 rounded-xl p-4 flex-1 overflow-hidden flex flex-col">
+              {/* Key Points Section */}
+              <div className="space-y-3 mb-6 flex-shrink-0">
+                <h4 className="text-sm font-medium text-slate-700 mb-3">Key Points</h4>
+                {(currentVideo.analysis as any)?.keyPoints?.map((point: string, index: number) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <div className={`w-2 h-2 rounded-full ${
+                      index % 4 === 0 ? 'bg-indigo-400' :
+                      index % 4 === 1 ? 'bg-purple-400' :
+                      index % 4 === 2 ? 'bg-pink-400' : 'bg-blue-400'
+                    }`}></div>
+                    <span className="text-sm text-slate-600" data-testid={`key-point-${index}`}>
+                      {point}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Transcription Section */}
+              {(currentVideo.analysis as any)?.transcription?.length > 0 && (
+                <div className="space-y-3 mb-6 flex-1 min-h-0">
+                  <h4 className="text-sm font-medium text-slate-700 mb-3">Transcription</h4>
+                  <ScrollArea className="flex-1 min-h-0">
+                    <div className="space-y-2 pr-4">
+                      {(currentVideo.analysis as any).transcription.map((line: string, index: number) => (
+                        <div key={index} className="text-sm text-slate-600 leading-relaxed" data-testid={`transcription-line-${index}`}>
+                          {line}
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </ScrollArea>
                 </div>
-              </div>
-            )}
-            
-            {currentVideo && (
-              <div className="mt-4 pt-4 border-t border-slate-200">
-                <div className="flex justify-between text-xs text-slate-500 mb-2">
-                  <span>Duration</span>
-                  <span data-testid="text-video-duration">
-                    {currentVideo.duration ? formatDuration(currentVideo.duration) : 'Unknown'}
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs text-slate-500 mb-2">
-                  <span>Format</span>
-                  <span data-testid="text-video-format">{currentVideo.format}</span>
-                </div>
-                <div className="flex justify-between text-xs text-slate-500">
-                  <span>Size</span>
-                  <span data-testid="text-video-size">{formatFileSize(currentVideo.size)}</span>
-                </div>
-              </div>
-            )}
-          </div>
-        ) : selectedVideoIds.length > 0 ? (
-          <div className="bg-slate-50 rounded-xl p-4 text-center">
-            <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-3">
-              <FileText className="w-6 h-6 text-slate-400" />
-            </div>
-            <p className="text-slate-600 font-medium mb-2">Generate Summary</p>
-            <p className="text-slate-400 text-sm mb-3">
-              Create a comprehensive summary of your {selectedVideoIds.length} selected video{selectedVideoIds.length !== 1 ? 's' : ''}
-            </p>
-            <Button
-              onClick={handleGenerateSummary}
-              disabled={summaryMutation.isPending}
-              size="sm"
-              data-testid="button-create-summary"
-            >
-              {summaryMutation.isPending ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <FileText className="w-4 h-4 mr-2" />
-                  Create Summary
-                </>
               )}
-            </Button>
-          </div>
-        ) : (
-          <div className="bg-slate-50 rounded-xl p-4 text-center">
-            <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-3">
-              <FileText className="w-6 h-6 text-slate-400" />
+              
+              {currentVideo && (
+                <div className="mt-4 pt-4 border-t border-slate-200 flex-shrink-0">
+                  <div className="flex justify-between text-xs text-slate-500 mb-2">
+                    <span>Duration</span>
+                    <span data-testid="text-video-duration">
+                      {currentVideo.duration ? formatDuration(currentVideo.duration) : 'Unknown'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-500 mb-2">
+                    <span>Format</span>
+                    <span data-testid="text-video-format">{currentVideo.format}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>Size</span>
+                    <span data-testid="text-video-size">{formatFileSize(currentVideo.size)}</span>
+                  </div>
+                </div>
+              )}
             </div>
-            <p className="text-slate-500 font-medium mb-2">No videos selected</p>
-            <p className="text-slate-400 text-sm">Select videos to see their analysis summary</p>
-          </div>
-        )}
+          ) : selectedVideoIds.length > 0 ? (
+            <div className="bg-slate-50 rounded-xl p-4 text-center">
+              <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                <FileText className="w-6 h-6 text-slate-400" />
+              </div>
+              <p className="text-slate-600 font-medium mb-2">Generate Summary</p>
+              <p className="text-slate-400 text-sm mb-3">
+                Create a comprehensive summary of your {selectedVideoIds.length} selected video{selectedVideoIds.length !== 1 ? 's' : ''}
+              </p>
+              <Button
+                onClick={handleGenerateSummary}
+                disabled={summaryMutation.isPending}
+                size="sm"
+                data-testid="button-create-summary"
+              >
+                {summaryMutation.isPending ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Create Summary
+                  </>
+                )}
+              </Button>
+            </div>
+          ) : (
+            <div className="bg-slate-50 rounded-xl p-4 text-center">
+              <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                <FileText className="w-6 h-6 text-slate-400" />
+              </div>
+              <p className="text-slate-500 font-medium mb-2">No videos selected</p>
+              <p className="text-slate-400 text-sm">Select videos to see their analysis summary</p>
+            </div>
+          )}
+        </div>
+        
+        {/* Resizer */}
+        <div 
+          className={`h-2 bg-slate-100 hover:bg-slate-200 cursor-row-resize flex items-center justify-center group transition-colors ${isResizing ? 'bg-slate-300' : ''}`}
+          onMouseDown={handleMouseDown}
+          data-testid="summary-resizer"
+        >
+          <GripHorizontal className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
+        </div>
       </div>
 
       {/* Chat History */}
