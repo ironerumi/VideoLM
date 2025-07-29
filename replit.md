@@ -50,6 +50,14 @@ The application follows a monorepo structure with a clear separation between cli
 - **Storage Interface**: Database storage with session-based file organization and security
 - **Real-time Processing**: Actual video duration extraction and frame-by-frame analysis
 
+### Resizable Panel System
+- **Fully Adjustable Layout**: React Resizable Panels implementation with three-way split
+- **Horizontal Resizers**: Between source panel and video area, video area and summary panel
+- **Vertical Resizer**: Between video player and chat interface within center panel
+- **Panel Collapse/Expand**: Toggle buttons for left and right panels with persistent unfold buttons
+- **Responsive Constraints**: Minimum and maximum size limits for optimal usability
+- **Panel Persistence**: Proper ID and order management to prevent layout issues
+
 ### Chat System
 - **Enhanced Chat Interface**: Redesigned with rephrased questions displayed at top and full-width answers below
 - **Contextual Chat**: AI-powered conversations about specific videos using OpenAI API

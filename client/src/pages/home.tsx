@@ -91,12 +91,19 @@ export default function Home() {
       </header>
 
       {/* Main Content - Resizable Panels */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden relative">
         <PanelGroup direction="horizontal" className="h-full">
           {/* Left Panel - Video Sources */}
           {!leftPanelCollapsed && (
             <>
-              <Panel defaultSize={25} minSize={15} maxSize={40} className="min-w-64">
+              <Panel 
+                id="left-panel"
+                order={1}
+                defaultSize={25} 
+                minSize={15} 
+                maxSize={40} 
+                className="min-w-64"
+              >
                 <VideoSourcePanel
                   videos={videos}
                   selectedVideoIds={selectedVideoIds}
@@ -111,10 +118,21 @@ export default function Home() {
           )}
 
           {/* Center Panel - Video Player and Chat */}
-          <Panel defaultSize={leftPanelCollapsed ? (rightPanelCollapsed ? 100 : 75) : (rightPanelCollapsed ? 75 : 50)} minSize={30}>
+          <Panel 
+            id="center-panel"
+            order={2}
+            defaultSize={leftPanelCollapsed ? (rightPanelCollapsed ? 100 : 75) : (rightPanelCollapsed ? 75 : 50)} 
+            minSize={30}
+          >
             <PanelGroup direction="vertical" className="h-full">
               {/* Video Player */}
-              <Panel defaultSize={60} minSize={30} maxSize={80}>
+              <Panel 
+                id="video-panel"
+                order={1}
+                defaultSize={60} 
+                minSize={30} 
+                maxSize={80}
+              >
                 <VideoPlayer
                   video={currentVideo}
                   videos={videos}
@@ -127,7 +145,13 @@ export default function Home() {
               <PanelResizeHandle className="h-1 bg-slate-200 hover:bg-slate-300 transition-colors data-[resize-handle-active]:bg-slate-400" />
               
               {/* Chat Interface */}
-              <Panel defaultSize={40} minSize={20} maxSize={70}>
+              <Panel 
+                id="chat-panel"
+                order={2}
+                defaultSize={40} 
+                minSize={20} 
+                maxSize={70}
+              >
                 <ChatInterface
                   videoId={currentVideoId}
                   selectedVideoCount={selectedVideoIds.length}
@@ -141,7 +165,14 @@ export default function Home() {
           {!rightPanelCollapsed && (
             <>
               <PanelResizeHandle className="w-1 bg-slate-200 hover:bg-slate-300 transition-colors data-[resize-handle-active]:bg-slate-400" />
-              <Panel defaultSize={25} minSize={15} maxSize={40} className="min-w-64">
+              <Panel 
+                id="right-panel"
+                order={3}
+                defaultSize={25} 
+                minSize={15} 
+                maxSize={40} 
+                className="min-w-64"
+              >
                 <SummaryPanel
                   selectedVideoIds={selectedVideoIds}
                   currentVideoId={currentVideoId}
@@ -153,13 +184,13 @@ export default function Home() {
           )}
         </PanelGroup>
 
-        {/* Panel Toggle Buttons */}
+        {/* Panel Toggle Buttons - Always visible when panels are collapsed */}
         {leftPanelCollapsed && (
           <Button
             onClick={() => setLeftPanelCollapsed(false)}
             variant="ghost"
             size="sm"
-            className="absolute left-2 top-4 z-10 bg-white/80 backdrop-blur-sm hover:bg-white/90 shadow-soft"
+            className="absolute left-2 top-4 z-50 bg-white/90 backdrop-blur-sm hover:bg-white shadow-md border border-slate-200"
             data-testid="button-expand-left-panel"
           >
             <ChevronRight className="w-4 h-4" />
@@ -171,7 +202,7 @@ export default function Home() {
             onClick={() => setRightPanelCollapsed(false)}
             variant="ghost"
             size="sm"
-            className="absolute right-2 top-4 z-10 bg-white/80 backdrop-blur-sm hover:bg-white/90 shadow-soft"
+            className="absolute right-2 top-4 z-50 bg-white/90 backdrop-blur-sm hover:bg-white shadow-md border border-slate-200"
             data-testid="button-expand-right-panel"
           >
             <ChevronLeft className="w-4 h-4" />
