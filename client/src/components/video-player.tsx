@@ -75,27 +75,15 @@ export default function VideoPlayer({ video, videos, onVideoSelect }: VideoPlaye
         <div className="relative bg-black flex-1 flex items-center justify-center min-h-0">
           {video ? (
             <>
-              {/* Abstract flowing background - matching the design */}
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-blue-500 to-pink-500 opacity-90"></div>
-              <div 
-                className="absolute inset-0" 
-                style={{
-                  background: `
-                    radial-gradient(circle at 30% 70%, rgba(139, 92, 246, 0.8) 0%, transparent 50%), 
-                    radial-gradient(circle at 70% 30%, rgba(99, 102, 241, 0.8) 0%, transparent 50%), 
-                    radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.6) 0%, transparent 50%)
-                  `
-                }}
-              ></div>
-              
-              {/* Hidden video element for functionality */}
+              {/* Actual video element */}
               <video
                 ref={videoRef}
-                className="hidden"
+                className="w-full h-full object-contain"
                 onTimeUpdate={handleTimeUpdate}
                 onLoadedMetadata={() => {
                   // Video duration is automatically set when metadata loads
                 }}
+                src={`/api/videos/${video.id}/file`}
                 data-testid="video-element"
               />
               
@@ -178,38 +166,44 @@ export default function VideoPlayer({ video, videos, onVideoSelect }: VideoPlaye
           )}
         </div>
 
-        {/* Thumbnail Timeline */}
+        {/* Thumbnail Timeline - Real Extracted Frames */}
         <div className="p-6 bg-white border-t border-slate-100 flex-shrink-0">
           <h4 className="text-sm font-medium text-slate-700 mb-3">Video Timeline</h4>
           <div className="flex space-x-2 overflow-x-auto pb-2">
-            {video?.thumbnails && Array.isArray(video.thumbnails) ? (
-              video.thumbnails.map((thumb, index) => (
-                <div
-                  key={index}
-                  className={`flex-shrink-0 w-24 h-14 bg-gradient-to-br ${getGradient(index)} rounded-lg cursor-pointer transition-all duration-200 transform hover:scale-105 ${
-                    Math.floor(progress / 20) === index ? 'ring-2 ring-indigo-400' : 'hover:ring-2 hover:ring-indigo-300'
-                  }`}
-                  onClick={() => handleSeek([index * 20])}
-                  data-testid={`thumbnail-${index}`}
-                >
-                  <div className="w-full h-full rounded-lg bg-black/10 flex items-center justify-center">
-                    <span className="text-white text-xs font-medium">{index * 20}%</span>
+            {video?.thumbnails?.frames && Array.isArray(video.thumbnails.frames) && video.thumbnails.frames.length > 0 ? (
+              video.thumbnails.frames.map((frame, index) => {
+                const frameProgress = video.duration ? (frame.timestamp / video.duration) * 100 : 0;
+                const isActive = Math.abs(progress - frameProgress) < 5; // Active within 5% range
+                
+                return (
+                  <div
+                    key={frame.frameNumber}
+                    className={`flex-shrink-0 w-24 h-14 rounded-lg cursor-pointer transition-all duration-200 transform hover:scale-105 overflow-hidden ${
+                      isActive ? 'ring-2 ring-indigo-400' : 'hover:ring-2 hover:ring-indigo-300'
+                    }`}
+                    onClick={() => handleSeek([frameProgress])}
+                    data-testid={`thumbnail-${index}`}
+                  >
+                    <img
+                      src={`/api/videos/${video.id}/frames/${frame.fileName}`}
+                      alt={`Frame at ${frame.timestamp.toFixed(1)}s`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback to gradient if frame loading fails
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        target.parentElement!.classList.add(`bg-gradient-to-br`, getGradient(index));
+                        target.parentElement!.innerHTML += `<div class="w-full h-full flex items-center justify-center"><span class="text-white text-xs">${frame.timestamp.toFixed(1)}s</span></div>`;
+                      }}
+                    />
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
-              // Placeholder thumbnails when no video is selected
-              Array.from({ length: 5 }, (_, index) => (
-                <div
-                  key={index}
-                  className={`flex-shrink-0 w-24 h-14 bg-gradient-to-br ${getGradient(index)} rounded-lg opacity-50`}
-                  data-testid={`placeholder-thumbnail-${index}`}
-                >
-                  <div className="w-full h-full rounded-lg bg-black/10 flex items-center justify-center">
-                    <span className="text-white text-xs opacity-60">{index + 1}</span>
-                  </div>
-                </div>
-              ))
+              // Show message when no frames are available
+              <div className="flex items-center justify-center w-full py-4">
+                <span className="text-slate-500 text-sm">No frames extracted yet</span>
+              </div>
             )}
           </div>
         </div>
