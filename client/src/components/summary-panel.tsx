@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, FileText, Clock, Database, HardDrive, PanelRightClose, GripHorizontal, ChevronDown, ChevronRight } from "lucide-react";
 import type { Video, ChatMessage } from "@shared/schema";
 import { useState, useRef, useEffect } from "react";
+import { useI18n } from "@/lib/i18n";
 
 interface SummaryPanelProps {
   selectedVideoIds: string[];
@@ -19,6 +20,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
   const [isKeyPointsExpanded, setIsKeyPointsExpanded] = useState(true);
   const [isTranscriptionExpanded, setIsTranscriptionExpanded] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { t } = useI18n();
   
   const { data: videos = [] } = useQuery<Video[]>({
     queryKey: ["/api/videos"],
@@ -110,7 +112,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
       >
         <div className="p-6 flex-1 overflow-hidden flex flex-col">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-slate-800">Summary</h3>
+            <h3 className="text-lg font-semibold text-slate-800">{t.videoSummary}</h3>
             <div className="flex items-center space-x-2">
             {selectedVideoIds.length > 0 && (
               <Button

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { CloudUpload, X, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useI18n } from "@/lib/i18n";
 
 interface VideoUploadProps {
   onVideoUploaded: () => void;
@@ -15,6 +16,7 @@ interface VideoUploadProps {
 export default function VideoUpload({ onVideoUploaded, onCancel }: VideoUploadProps) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const { toast } = useToast();
+  const { t } = useI18n();
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -45,8 +47,8 @@ export default function VideoUpload({ onVideoUploaded, onCancel }: VideoUploadPr
     },
     onSuccess: () => {
       toast({
-        title: "Upload successful",
-        description: "Your video has been uploaded and analyzed.",
+        title: t.uploadComplete,
+        description: t.analysisComplete,
       });
       setTimeout(() => {
         onVideoUploaded();
@@ -55,8 +57,8 @@ export default function VideoUpload({ onVideoUploaded, onCancel }: VideoUploadPr
     },
     onError: (error: Error) => {
       toast({
-        title: "Upload failed",
-        description: error.message || "Failed to upload video. Please try again.",
+        title: t.uploadFailed,
+        description: error.message || t.uploadFailed,
         variant: "destructive",
       });
       setUploadProgress(0);
@@ -113,22 +115,22 @@ export default function VideoUpload({ onVideoUploaded, onCancel }: VideoUploadPr
 
         {isCompleted ? (
           <div>
-            <p className="text-green-600 font-medium mb-1">Upload completed!</p>
-            <p className="text-green-500 text-sm">Video analyzed and ready to use</p>
+            <p className="text-green-600 font-medium mb-1">{t.uploadComplete}</p>
+            <p className="text-green-500 text-sm">{t.analysisComplete}</p>
           </div>
         ) : isUploading ? (
           <div>
-            <p className="text-blue-600 font-medium mb-1">Uploading and analyzing...</p>
-            <p className="text-blue-500 text-sm mb-3">Please wait while we process your video</p>
+            <p className="text-blue-600 font-medium mb-1">{t.uploading}</p>
+            <p className="text-blue-500 text-sm mb-3">{t.analyzing}</p>
             <Progress value={uploadProgress} className="w-full max-w-xs mx-auto" />
           </div>
         ) : (
           <div>
             <p className="text-slate-600 font-medium mb-1">
-              {isDragActive ? 'Drop your video here' : 'Drag & drop videos here'}
+              {t.dropZoneText}
             </p>
-            <p className="text-slate-400 text-sm">or click to browse</p>
-            <p className="text-slate-400 text-xs mt-3">MP4, MOV, AVI up to 100MB</p>
+            <p className="text-slate-400 text-sm">{t.browseFiles}</p>
+            <p className="text-slate-400 text-xs mt-3">{t.supportedFormats}</p>
           </div>
         )}
       </div>
@@ -140,7 +142,7 @@ export default function VideoUpload({ onVideoUploaded, onCancel }: VideoUploadPr
           disabled={isUploading}
           data-testid="button-cancel-upload"
         >
-          Cancel
+          {t.cancel}
         </Button>
       </div>
     </div>

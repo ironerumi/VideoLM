@@ -7,9 +7,9 @@ interface I18nProviderProps {
 
 export default function I18nProvider({ children }: I18nProviderProps) {
   const [language, setLanguage] = useState<Language>(() => {
-    // Get saved language from localStorage or default to English
+    // Get saved language from localStorage or default to Japanese
     const saved = localStorage.getItem('videolm-language');
-    return (saved as Language) || 'en';
+    return (saved as Language) || 'ja';
   });
 
   // Save language preference to localStorage

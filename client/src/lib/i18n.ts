@@ -24,6 +24,8 @@ export interface Translations {
   browseFiles: string;
   supportedFormats: string;
   maxFileSize: string;
+  uploading: string;
+  uploadFailed: string;
   
   // Video List
   selectVideo: string;
@@ -32,6 +34,8 @@ export interface Translations {
   duration: string;
   fileSize: string;
   uploadedAt: string;
+  videos: string;
+  selected: string;
   
   // Video Player
   noVideoSelected: string;
@@ -53,6 +57,9 @@ export interface Translations {
   keyPoints: string;
   transcription: string;
   chatHistory: string;
+  sources: string;
+  videoDetails: string;
+  analysisResults: string;
   
   // Settings
   settingsTitle: string;
@@ -76,6 +83,7 @@ export interface Translations {
   extractingFrames: string;
   uploadComplete: string;
   analysisComplete: string;
+  browserNotSupported: string;
 }
 
 const translations: Record<Language, Translations> = {
@@ -101,6 +109,9 @@ const translations: Record<Language, Translations> = {
     browseFiles: 'Browse Files',
     supportedFormats: 'Supported formats: MP4, AVI, MOV, WMV',
     maxFileSize: 'Maximum file size: 100MB',
+    uploading: 'Uploading...',
+    uploadFailed: 'Upload failed',
+    analyzing: 'Analyzing video...',
     
     // Video List
     selectVideo: 'Select video to analyze',
@@ -109,6 +120,8 @@ const translations: Record<Language, Translations> = {
     duration: 'Duration',
     fileSize: 'File size',
     uploadedAt: 'Uploaded',
+    videos: 'Videos',
+    selected: 'selected',
     
     // Video Player
     noVideoSelected: 'No video selected',
@@ -130,6 +143,9 @@ const translations: Record<Language, Translations> = {
     keyPoints: 'Key Points',
     transcription: 'Transcription',
     chatHistory: 'Chat History',
+    sources: 'sources',
+    videoDetails: 'Video Details',
+    analysisResults: 'Analysis Results',
     
     // Settings
     settingsTitle: 'Settings',
@@ -153,6 +169,7 @@ const translations: Record<Language, Translations> = {
     extractingFrames: 'Extracting frames...',
     uploadComplete: 'Upload complete',
     analysisComplete: 'Analysis complete',
+    browserNotSupported: 'Your browser does not support the video tag.',
   },
   
   ja: {
@@ -177,6 +194,9 @@ const translations: Record<Language, Translations> = {
     browseFiles: 'ファイルを選択',
     supportedFormats: '対応形式: MP4, AVI, MOV, WMV',
     maxFileSize: '最大ファイルサイズ: 100MB',
+    uploading: 'アップロード中...',
+    uploadFailed: 'アップロードに失敗しました',
+    analyzing: '動画を分析中...',
     
     // Video List
     selectVideo: '分析する動画を選択',
@@ -185,6 +205,8 @@ const translations: Record<Language, Translations> = {
     duration: '再生時間',
     fileSize: 'ファイルサイズ',
     uploadedAt: 'アップロード日時',
+    videos: '動画',
+    selected: '選択済み',
     
     // Video Player
     noVideoSelected: '動画が選択されていません',
@@ -206,6 +228,9 @@ const translations: Record<Language, Translations> = {
     keyPoints: 'キーポイント',
     transcription: '文字起こし',
     chatHistory: 'チャット履歴',
+    sources: 'ソース',
+    videoDetails: '動画詳細',
+    analysisResults: '分析結果',
     
     // Settings
     settingsTitle: '設定',
@@ -229,6 +254,7 @@ const translations: Record<Language, Translations> = {
     extractingFrames: 'フレームを抽出中...',
     uploadComplete: 'アップロード完了',
     analysisComplete: '分析完了',
+    browserNotSupported: 'お使いのブラウザはビデオタグをサポートしていません。',
   },
 };
 

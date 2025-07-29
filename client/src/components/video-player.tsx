@@ -3,6 +3,7 @@ import { Play, Pause, Volume2, Maximize, SkipBack, SkipForward } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import type { Video } from "@shared/schema";
+import { useI18n } from "@/lib/i18n";
 
 interface VideoPlayerProps {
   video: Video | undefined;
@@ -16,6 +17,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
   const [currentTime, setCurrentTime] = useState(0);
   const [volume, setVolume] = useState(1);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const { t } = useI18n();
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -100,7 +102,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
                 data-testid="video-element"
               >
                 <source src={`/api/videos/${video.id}/file?session=${video.sessionId}`} type="video/mp4" />
-                Your browser does not support the video tag.
+                {t.browserNotSupported || 'Your browser does not support the video tag.'}
               </video>
               
               {/* Play Button Overlay */}

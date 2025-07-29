@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { fixJapaneseDisplay } from "../utils/encoding";
 import type { Video } from "@shared/schema";
+import { useI18n } from "@/lib/i18n";
 
 interface VideoSourcePanelProps {
   videos: Video[];
@@ -24,6 +25,7 @@ export default function VideoSourcePanel({
   onCollapse,
 }: VideoSourcePanelProps) {
   const [showUpload, setShowUpload] = useState(false);
+  const { t } = useI18n();
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -48,7 +50,7 @@ export default function VideoSourcePanel({
       {/* Header */}
       <div className="p-6 border-b border-slate-100">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-slate-800">Sources</h2>
+          <h2 className="text-lg font-semibold text-slate-800">{t.sources}</h2>
           <div className="flex items-center space-x-2">
             <Button
               onClick={() => setShowUpload(true)}
@@ -56,7 +58,7 @@ export default function VideoSourcePanel({
               data-testid="button-add-source"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add
+              {t.uploadTitle}
             </Button>
             {onCollapse && (
               <Button
@@ -93,8 +95,8 @@ export default function VideoSourcePanel({
             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Film className="w-8 h-8 text-slate-400" />
             </div>
-            <p className="text-slate-500 font-medium mb-2">No videos uploaded</p>
-            <p className="text-slate-400 text-sm mb-4">Upload your first video to get started</p>
+            <p className="text-slate-500 font-medium mb-2">{t.noVideos}</p>
+            <p className="text-slate-400 text-sm mb-4">{t.uploadFirst}</p>
             <Button
               onClick={() => setShowUpload(true)}
               variant="outline"
@@ -102,7 +104,7 @@ export default function VideoSourcePanel({
               data-testid="button-upload-first"
             >
               <Upload className="w-4 h-4 mr-2" />
-              Upload Video
+              {t.uploadTitle}
             </Button>
           </div>
         )}
