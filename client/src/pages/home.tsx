@@ -7,6 +7,7 @@ import ChatInterface from "@/components/chat-interface";
 import SettingsModal from "@/components/settings-modal";
 import { Settings, User, ChevronLeft, ChevronRight, PanelLeftClose, PanelRightClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import type { Video } from "@shared/schema";
 import { useI18n } from "@/lib/i18n";
 
@@ -89,23 +90,70 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="flex-1 flex relative min-h-0">
-        {/* Left Panel - Video Sources */}
-        <div className={`transition-all duration-300 ease-in-out ${
-          leftPanelCollapsed ? 'w-0' : 'w-80'
-        } overflow-hidden`}>
-          <VideoSourcePanel
-            videos={videos}
-            selectedVideoIds={selectedVideoIds}
-            onVideoSelect={handleVideoSelect}
-            onVideoPlay={handleVideoPlay}
-            onVideoUploaded={refetchVideos}
-            onCollapse={() => setLeftPanelCollapsed(true)}
-          />
-        </div>
+      {/* Main Content - Resizable Panels */}
+      <div className="flex-1 overflow-hidden">
+        <PanelGroup direction="horizontal" className="h-full">
+          {/* Left Panel - Video Sources */}
+          {!leftPanelCollapsed && (
+            <>
+              <Panel defaultSize={25} minSize={15} maxSize={40} className="min-w-64">
+                <VideoSourcePanel
+                  videos={videos}
+                  selectedVideoIds={selectedVideoIds}
+                  onVideoSelect={handleVideoSelect}
+                  onVideoPlay={handleVideoPlay}
+                  onVideoUploaded={refetchVideos}
+                  onCollapse={() => setLeftPanelCollapsed(true)}
+                />
+              </Panel>
+              <PanelResizeHandle className="w-1 bg-slate-200 hover:bg-slate-300 transition-colors data-[resize-handle-active]:bg-slate-400" />
+            </>
+          )}
 
-        {/* Left Panel Toggle Button */}
+          {/* Center Panel - Video Player and Chat */}
+          <Panel defaultSize={leftPanelCollapsed ? (rightPanelCollapsed ? 100 : 75) : (rightPanelCollapsed ? 75 : 50)} minSize={30}>
+            <PanelGroup direction="vertical" className="h-full">
+              {/* Video Player */}
+              <Panel defaultSize={60} minSize={30} maxSize={80}>
+                <VideoPlayer
+                  video={currentVideo}
+                  videos={videos}
+                  onVideoSelect={setCurrentVideoId}
+                  seekToTime={seekToTime}
+                />
+              </Panel>
+              
+              {/* Vertical Resize Handle */}
+              <PanelResizeHandle className="h-1 bg-slate-200 hover:bg-slate-300 transition-colors data-[resize-handle-active]:bg-slate-400" />
+              
+              {/* Chat Interface */}
+              <Panel defaultSize={40} minSize={20} maxSize={70}>
+                <ChatInterface
+                  videoId={currentVideoId}
+                  selectedVideoCount={selectedVideoIds.length}
+                  onFrameClick={handleFrameClick}
+                />
+              </Panel>
+            </PanelGroup>
+          </Panel>
+
+          {/* Right Panel - Summary */}
+          {!rightPanelCollapsed && (
+            <>
+              <PanelResizeHandle className="w-1 bg-slate-200 hover:bg-slate-300 transition-colors data-[resize-handle-active]:bg-slate-400" />
+              <Panel defaultSize={25} minSize={15} maxSize={40} className="min-w-64">
+                <SummaryPanel
+                  selectedVideoIds={selectedVideoIds}
+                  currentVideoId={currentVideoId}
+                  onCollapse={() => setRightPanelCollapsed(true)}
+                  onFrameClick={handleFrameClick}
+                />
+              </Panel>
+            </>
+          )}
+        </PanelGroup>
+
+        {/* Panel Toggle Buttons */}
         {leftPanelCollapsed && (
           <Button
             onClick={() => setLeftPanelCollapsed(false)}
@@ -118,28 +166,6 @@ export default function Home() {
           </Button>
         )}
 
-        {/* Center Panel - Video Player */}
-        <div className="flex-1 flex flex-col relative min-h-0 overflow-hidden">
-          <div className="flex-1 min-h-0 overflow-hidden">
-            <VideoPlayer
-              video={currentVideo}
-              videos={videos}
-              onVideoSelect={setCurrentVideoId}
-              seekToTime={seekToTime}
-            />
-          </div>
-          
-          {/* Chat Interface */}
-          <div className="flex-shrink-0">
-            <ChatInterface
-              videoId={currentVideoId}
-              selectedVideoCount={selectedVideoIds.length}
-              onFrameClick={handleFrameClick}
-            />
-          </div>
-        </div>
-
-        {/* Right Panel Toggle Button */}
         {rightPanelCollapsed && (
           <Button
             onClick={() => setRightPanelCollapsed(false)}
@@ -151,18 +177,6 @@ export default function Home() {
             <ChevronLeft className="w-4 h-4" />
           </Button>
         )}
-
-        {/* Right Panel - Summary */}
-        <div className={`transition-all duration-300 ease-in-out ${
-          rightPanelCollapsed ? 'w-0' : 'w-80'
-        } overflow-hidden`}>
-          <SummaryPanel
-            selectedVideoIds={selectedVideoIds}
-            currentVideoId={currentVideoId}
-            onCollapse={() => setRightPanelCollapsed(true)}
-            onFrameClick={handleFrameClick}
-          />
-        </div>
       </div>
 
       {/* Settings Modal */}

@@ -42,6 +42,8 @@ export interface Translations {
   selectToPlay: string;
   
   // Chat Interface
+  chatInterface: string;
+  askAboutSelectedVideo: string;
   noVideoSelectedChat: string;
   selectVideoToChat: string;
   aiAnalysisReady: string;
@@ -49,6 +51,7 @@ export interface Translations {
   askAnything: string;
   readyToAnalyze: string;
   askAboutVideo: string;
+  selectVideoFirst: string;
   
   // Summary Panel
   videoSummary: string;
@@ -127,6 +130,8 @@ const translations: Record<Language, Translations> = {
     selectToPlay: 'Select a video from the left panel to play',
     
     // Chat Interface
+    chatInterface: 'Chat Interface',
+    askAboutSelectedVideo: 'Ask about your selected video',
     noVideoSelectedChat: 'No video selected',
     selectVideoToChat: 'Select a video to start chatting about its content',
     aiAnalysisReady: 'AI Analysis Ready',
@@ -134,6 +139,7 @@ const translations: Record<Language, Translations> = {
     askAnything: 'Ask anything about the video...',
     readyToAnalyze: 'Ready to analyze',
     askAboutVideo: 'Ask me anything about this video',
+    selectVideoFirst: 'Select a video first',
     
     // Summary Panel
     videoSummary: 'Video Summary',
@@ -212,6 +218,8 @@ const translations: Record<Language, Translations> = {
     selectToPlay: '左パネルから動画を選択して再生',
     
     // Chat Interface
+    chatInterface: 'チャットインターフェース',
+    askAboutSelectedVideo: '選択した動画について質問',
     noVideoSelectedChat: '動画が選択されていません',
     selectVideoToChat: '動画を選択してコンテンツについて会話を開始',
     aiAnalysisReady: 'AI分析準備完了',
@@ -219,6 +227,7 @@ const translations: Record<Language, Translations> = {
     askAnything: '動画について何でもお聞きください...',
     readyToAnalyze: '分析準備完了',
     askAboutVideo: 'この動画について何でもお聞きください',
+    selectVideoFirst: '最初に動画を選択してください',
     
     // Summary Panel
     videoSummary: '動画要約',
