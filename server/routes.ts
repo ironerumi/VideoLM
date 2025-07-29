@@ -311,6 +311,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reset all data for current session
+  app.post("/api/reset", async (req: MulterRequest, res) => {
+    try {
+      const sessionId = req.sessionId;
+      
+      // Delete all videos and their files for this session
+      const videos = await storage.getVideosBySession(sessionId);
+      
+      // Delete physical video files
+      for (const video of videos) {
+        try {
+          if (fs.existsSync(video.filePath)) {
+            fs.unlinkSync(video.filePath);
+          }
+        } catch (fileError) {
+          console.warn(`Failed to delete video file: ${video.filePath}`, fileError);
+        }
+      }
+      
+      // Delete session directory if it exists
+      const sessionDir = path.join(process.cwd(), 'uploads', sessionId);
+      if (fs.existsSync(sessionDir)) {
+        try {
+          fs.rmSync(sessionDir, { recursive: true, force: true });
+        } catch (dirError) {
+          console.warn(`Failed to delete session directory: ${sessionDir}`, dirError);
+        }
+      }
+      
+      // Clear all session data from storage
+      await storage.clearSessionData(sessionId);
+      
+      res.json({ message: "All data has been reset successfully" });
+    } catch (error: any) {
+      console.error("Error resetting data:", error);
+      res.status(500).json({ message: error.message || "Failed to reset data" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

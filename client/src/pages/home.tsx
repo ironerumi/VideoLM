@@ -4,6 +4,7 @@ import VideoSourcePanel from "@/components/video-source-panel";
 import VideoPlayer from "@/components/video-player";
 import SummaryPanel from "@/components/summary-panel";
 import ChatInterface from "@/components/chat-interface";
+import SettingsModal from "@/components/settings-modal";
 import { Settings, User, ChevronLeft, ChevronRight, PanelLeftClose, PanelRightClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Video } from "@shared/schema";
@@ -13,6 +14,7 @@ export default function Home() {
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const { data: videos = [], refetch: refetchVideos } = useQuery<Video[]>({
     queryKey: ["/api/videos"],
@@ -56,6 +58,7 @@ export default function Home() {
           <div className="flex items-center space-x-4">
             <button 
               className="text-slate-500 hover:text-slate-700 transition-colors"
+              onClick={() => setSettingsOpen(true)}
               data-testid="button-settings"
             >
               <Settings className="w-5 h-5" />
@@ -139,6 +142,12 @@ export default function Home() {
           />
         </div>
       </div>
+
+      {/* Settings Modal */}
+      <SettingsModal 
+        open={settingsOpen} 
+        onOpenChange={setSettingsOpen} 
+      />
     </div>
   );
 }

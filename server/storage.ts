@@ -35,6 +35,10 @@ export interface IStorage {
   getVideoSession(id: string): Promise<VideoSession | undefined>;
   createVideoSession(session: InsertVideoSession): Promise<VideoSession>;
   updateVideoSession(id: string, updates: Partial<VideoSession>): Promise<VideoSession | undefined>;
+  
+  // Additional methods for reset functionality  
+  getVideosBySession(sessionId: string): Promise<Video[]>;
+  clearSessionData(sessionId: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -166,7 +170,8 @@ export class MemStorage implements IStorage {
       ...insertSession, 
       id, 
       createdAt: new Date(),
-      summary: insertSession.summary ?? null
+      summary: insertSession.summary ?? null,
+      selectedVideoIds: insertSession.selectedVideoIds || []
     };
     this.videoSessions.set(id, session);
     return session;
@@ -179,6 +184,36 @@ export class MemStorage implements IStorage {
     const updatedSession = { ...session, ...updates };
     this.videoSessions.set(id, updatedSession);
     return updatedSession;
+  }
+
+  async getVideosBySession(sessionId: string): Promise<Video[]> {
+    return Array.from(this.videos.values()).filter(video => video.sessionId === sessionId);
+  }
+
+  async clearSessionData(sessionId: string): Promise<void> {
+    // Remove all videos for this session
+    const videosToDelete = Array.from(this.videos.entries())
+      .filter(([_, video]) => video.sessionId === sessionId)
+      .map(([id, _]) => id);
+    
+    videosToDelete.forEach(id => this.videos.delete(id));
+    
+    // Remove all chat messages for this session
+    const messagesToDelete = Array.from(this.chatMessages.entries())
+      .filter(([_, message]) => message.sessionId === sessionId)
+      .map(([id, _]) => id);
+    
+    messagesToDelete.forEach(id => this.chatMessages.delete(id));
+    
+    // Remove all video sessions for this session
+    const sessionsToDelete = Array.from(this.videoSessions.entries())
+      .filter(([_, videoSession]) => videoSession.sessionId === sessionId)
+      .map(([id, _]) => id);
+    
+    sessionsToDelete.forEach(id => this.videoSessions.delete(id));
+    
+    // Remove the session itself
+    this.sessions.delete(sessionId);
   }
 }
 
