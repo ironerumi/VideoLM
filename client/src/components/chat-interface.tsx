@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Send, Bot, User } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { ChatMessage } from "@shared/schema";
+import { useI18n } from "@/lib/i18n";
 
 interface ChatInterfaceProps {
   videoId: string | null;
@@ -17,6 +18,7 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
   const [message, setMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   const { data: chatHistory = [] } = useQuery<ChatMessage[]>({
     queryKey: ["/api/videos", videoId, "chat"],
@@ -65,8 +67,8 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
               <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Bot className="w-8 h-8 text-slate-400" />
               </div>
-              <p className="text-slate-500 font-medium mb-2">No video selected</p>
-              <p className="text-slate-400 text-sm">Select a video to start chatting about its content</p>
+              <p className="text-slate-500 font-medium mb-2">{t.noVideoSelectedChat}</p>
+              <p className="text-slate-400 text-sm">{t.selectVideoToChat}</p>
             </div>
           )}
 
@@ -77,10 +79,9 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
                   <Bot className="w-4 h-4" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium mb-2">AI Analysis Ready</p>
+                  <p className="font-medium mb-2">{t.aiAnalysisReady}</p>
                   <p className="text-sm text-white/90 leading-relaxed">
-                    I've analyzed your video and I'm ready to answer questions about its content, 
-                    visual elements, and any other aspects you'd like to explore. What would you like to know?
+                    {t.aiReadyDescription}
                   </p>
                 </div>
               </div>
@@ -183,7 +184,7 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
           <form onSubmit={handleSubmit} className="relative">
             <Input
               type="text"
-              placeholder={videoId ? "Ask anything about the video..." : "Select a video to start chatting"}
+              placeholder={videoId ? t.askAnything : t.selectVideoToChat}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               disabled={!videoId || chatMutation.isPending}

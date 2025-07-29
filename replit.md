@@ -7,6 +7,7 @@ VideoLM is a modern full-stack web application that combines video upload, AI-po
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Localization: Full support for English and Japanese with language switcher in settings.
 
 ## System Architecture
 
@@ -61,7 +62,9 @@ The application follows a monorepo structure with a clear separation between cli
 - **Component Library**: Comprehensive set of reusable UI components
 - **Theme System**: CSS custom properties for consistent design tokens
 - **Interactive Elements**: Drag-and-drop upload, video player controls, real-time chat
-- **Internationalization**: Full support for Japanese and double-byte characters with proper font fallbacks
+- **Internationalization**: Full support for English and Japanese localization with language switcher
+- **Localization System**: React Context-based i18n with localStorage persistence and comprehensive translations
+- **Language Switching**: Settings modal includes language selector for runtime language changes
 - **Viewport Optimization**: Full-height layout that fits within browser viewport without scrollbars
 
 ## Data Flow

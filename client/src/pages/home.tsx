@@ -8,6 +8,7 @@ import SettingsModal from "@/components/settings-modal";
 import { Settings, User, ChevronLeft, ChevronRight, PanelLeftClose, PanelRightClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Video } from "@shared/schema";
+import { useI18n } from "@/lib/i18n";
 
 export default function Home() {
   const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
@@ -16,6 +17,7 @@ export default function Home() {
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [seekToTime, setSeekToTime] = useState<number | undefined>(undefined);
+  const { t } = useI18n();
 
   const { data: videos = [], refetch: refetchVideos } = useQuery<Video[]>({
     queryKey: ["/api/videos"],
@@ -67,7 +69,10 @@ export default function Home() {
             <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
               <i className="fas fa-video text-white text-sm"></i>
             </div>
-            <h1 className="text-xl font-semibold text-slate-800">VideoLM</h1>
+            <div>
+              <h1 className="text-xl font-semibold text-slate-800">{t.videoLM}</h1>
+              <p className="text-xs text-slate-500 -mt-1">{t.tagline}</p>
+            </div>
           </div>
           <div className="flex items-center space-x-4">
             <button 

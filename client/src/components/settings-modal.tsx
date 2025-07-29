@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Trash2, AlertTriangle, X } from "lucide-react";
+import { Trash2, AlertTriangle, X, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,9 +8,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useI18n } from "@/lib/i18n";
 
 interface SettingsModalProps {
   open: boolean;
@@ -22,6 +30,7 @@ export default function SettingsModal({ open, onOpenChange, onDataReset }: Setti
   const [showConfirmation, setShowConfirmation] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { language, setLanguage, t } = useI18n();
 
   const resetMutation = useMutation({
     mutationFn: () => apiRequest('POST', '/api/reset'),
@@ -30,16 +39,16 @@ export default function SettingsModal({ open, onOpenChange, onDataReset }: Setti
       queryClient.clear();
       onDataReset?.();
       toast({
-        title: "Reset Complete",
-        description: "All videos and data have been cleared successfully.",
+        title: t.resetComplete,
+        description: t.resetSuccess,
       });
       setShowConfirmation(false);
       onOpenChange(false);
     },
     onError: (error) => {
       toast({
-        title: "Reset Failed",
-        description: error instanceof Error ? error.message : "Failed to reset data",
+        title: t.error,
+        description: error instanceof Error ? error.message : t.resetFailed,
         variant: "destructive",
       });
     }
@@ -54,25 +63,43 @@ export default function SettingsModal({ open, onOpenChange, onDataReset }: Setti
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <span>Settings</span>
+            <span>{t.settings}</span>
           </DialogTitle>
           <DialogDescription>
-            Manage your VideoLM preferences and data.
+            {t.settingsDescription}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          {/* Language Section */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-slate-900 flex items-center gap-2">
+              <Globe className="w-4 h-4" />
+              {t.language}
+            </h3>
+            <p className="text-xs text-slate-600">{t.languageDescription}</p>
+            <Select value={language} onValueChange={(value) => setLanguage(value as any)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en">{t.english}</SelectItem>
+                <SelectItem value="ja">{t.japanese}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Reset Section */}
           <div className="space-y-3">
-            <h3 className="text-sm font-medium text-slate-900">Data Management</h3>
+            <h3 className="text-sm font-medium text-slate-900">{t.dataManagement}</h3>
             
             {!showConfirmation ? (
               <div className="flex items-start gap-3 p-3 border border-red-200 rounded-lg bg-red-50">
                 <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-red-800 font-medium">Reset All Data</p>
+                  <p className="text-sm text-red-800 font-medium">{t.resetAllData}</p>
                   <p className="text-xs text-red-700 mt-1">
-                    This will permanently delete all uploaded videos, chat messages, and session data.
+                    {t.resetWarning}
                   </p>
                   <Button
                     onClick={() => setShowConfirmation(true)}
@@ -82,7 +109,7 @@ export default function SettingsModal({ open, onOpenChange, onDataReset }: Setti
                     data-testid="button-reset-data"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Reset Data
+                    {t.reset}
                   </Button>
                 </div>
               </div>
@@ -91,11 +118,11 @@ export default function SettingsModal({ open, onOpenChange, onDataReset }: Setti
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5 text-red-600" />
                   <p className="text-sm font-semibold text-red-800">
-                    Are you absolutely sure?
+                    {t.confirmTitle}
                   </p>
                 </div>
                 <p className="text-xs text-red-700">
-                  This action cannot be undone. All your videos, chat history, and session data will be permanently deleted.
+                  {t.resetWarning}
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -105,7 +132,7 @@ export default function SettingsModal({ open, onOpenChange, onDataReset }: Setti
                     disabled={resetMutation.isPending}
                     data-testid="button-confirm-reset"
                   >
-                    {resetMutation.isPending ? "Resetting..." : "Yes, Delete Everything"}
+                    {resetMutation.isPending ? t.processing : t.confirmReset}
                   </Button>
                   <Button
                     onClick={() => setShowConfirmation(false)}
@@ -113,7 +140,7 @@ export default function SettingsModal({ open, onOpenChange, onDataReset }: Setti
                     size="sm"
                     data-testid="button-cancel-reset"
                   >
-                    Cancel
+                    {t.cancel}
                   </Button>
                 </div>
               </div>
