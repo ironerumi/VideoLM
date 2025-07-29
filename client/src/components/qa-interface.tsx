@@ -168,34 +168,34 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
               </div>
             </div>
           ) : currentQA ? (
-            // Display the latest Q&A in three sections
-            <div className="p-6 space-y-6">
-              {/* Section 1: Rephrased Question */}
-              <div className="bg-slate-50 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-slate-700 mb-2 flex items-center">
-                  <User className="h-4 w-4 mr-2" />
-                  {t.rephrasedQuestion}
-                </h4>
-                <div className="text-slate-800 bg-white rounded-md p-3 border">
-                  {currentQA.rephrasedQuestion || currentQA.message}
+            // Display the latest Q&A in three horizontal sections
+            <div className="p-6">
+              <div className="grid grid-cols-3 gap-4 h-full">
+                {/* Section 1: Rephrased Question */}
+                <div className="bg-slate-50 rounded-lg p-4 flex flex-col">
+                  <h4 className="text-sm font-medium text-slate-700 mb-2 flex items-center flex-shrink-0">
+                    <User className="h-4 w-4 mr-2" />
+                    {t.rephrasedQuestion}
+                  </h4>
+                  <div className="text-slate-800 bg-white rounded-md p-3 border flex-1 overflow-y-auto text-sm">
+                    {currentQA.rephrasedQuestion || currentQA.message}
+                  </div>
                 </div>
-              </div>
 
-              {/* Section 2: Bot Response */}
-              <div className="bg-blue-50 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-blue-700 mb-2 flex items-center">
-                  <Bot className="h-4 w-4 mr-2" />
-                  {t.botResponse}
-                </h4>
-                <div className="text-slate-800 bg-white rounded-md p-3 border">
-                  {currentQA.response}
+                {/* Section 2: Bot Response */}
+                <div className="bg-blue-50 rounded-lg p-4 flex flex-col">
+                  <h4 className="text-sm font-medium text-blue-700 mb-2 flex items-center flex-shrink-0">
+                    <Bot className="h-4 w-4 mr-2" />
+                    {t.botResponse}
+                  </h4>
+                  <div className="text-slate-800 bg-white rounded-md p-3 border flex-1 overflow-y-auto text-sm">
+                    {currentQA.response}
+                  </div>
                 </div>
-              </div>
 
-              {/* Section 3: Related Frames */}
-              {currentQA.relevantFrame && (
-                <div className="bg-amber-50 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-amber-700 mb-3 flex items-center">
+                {/* Section 3: Related Frames */}
+                <div className="bg-amber-50 rounded-lg p-4 flex flex-col">
+                  <h4 className="text-sm font-medium text-amber-700 mb-3 flex items-center flex-shrink-0">
                     <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                       <circle cx="8.5" cy="8.5" r="1.5"/>
@@ -203,33 +203,39 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
                     </svg>
                     {t.relatedFrames}
                   </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {sortFramesChronologically(parseFrames(currentQA.relevantFrame)).map((frameName, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleFrameClick(frameName)}
-                        className="group relative overflow-hidden rounded-lg border-2 border-transparent hover:border-blue-500 transition-all duration-200"
-                        data-testid={`frame-thumbnail-${index}`}
-                      >
-                        <img
-                          src={`/api/videos/${videoId}/frames/${frameName}?session=${sessionManager.getSessionId()}`}
-                          alt={`Frame at ${extractTimestamp(frameName)}s`}
-                          className="w-16 h-12 object-cover rounded-md"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
-                          <span className="text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            {extractTimestamp(frameName)}s
-                          </span>
-                        </div>
-                      </button>
-                    ))}
+                  <div className="flex-1 overflow-y-auto">
+                    {currentQA.relevantFrame ? (
+                      <div className="flex flex-wrap gap-2">
+                        {sortFramesChronologically(parseFrames(currentQA.relevantFrame)).map((frameName, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleFrameClick(frameName)}
+                            className="group relative overflow-hidden rounded-lg border-2 border-transparent hover:border-blue-500 transition-all duration-200"
+                            data-testid={`frame-thumbnail-${index}`}
+                          >
+                            <img
+                              src={`/api/videos/${videoId}/frames/${frameName}?session=${sessionManager.getSessionId()}`}
+                              alt={`Frame at ${extractTimestamp(frameName)}s`}
+                              className="w-16 h-12 object-cover rounded-md"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                              <span className="text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                {extractTimestamp(frameName)}s
+                              </span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-slate-400 text-sm">No related frames</div>
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           ) : isWaitingForResponse ? (
             <div className="flex items-center justify-center h-full p-6">
