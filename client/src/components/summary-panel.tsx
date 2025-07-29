@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
   const [isTranscriptionExpanded, setIsTranscriptionExpanded] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const { t } = useI18n();
+  const queryClient = useQueryClient();
   
   const { data: videos = [] } = useQuery<Video[]>({
     queryKey: ["/api/videos"],
@@ -38,6 +39,21 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
       return response.json();
     },
   });
+
+  const clearChatMutation = useMutation({
+    mutationFn: async (videoId: string) => {
+      const response = await apiRequest('DELETE', `/api/videos/${videoId}/chat`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/videos", currentVideoId, "chat"] });
+    },
+  });
+
+  const clearChatHistory = () => {
+    if (!currentVideoId) return;
+    clearChatMutation.mutate(currentVideoId);
+  };
 
   const currentVideo = videos.find(v => v.id === currentVideoId);
   const selectedVideos = videos.filter(v => selectedVideoIds.includes(v.id));
@@ -293,7 +309,18 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
 
       {/* Chat History */}
       <div className="flex-1 flex flex-col p-6 min-h-0">
-        <h3 className="text-lg font-semibold text-slate-800 mb-4 flex-shrink-0">Chat History</h3>
+        <div className="flex items-center justify-between mb-4 flex-shrink-0">
+          <h3 className="text-lg font-semibold text-slate-800">Chat History</h3>
+          <button
+            onClick={clearChatHistory}
+            disabled={chatHistory.length === 0 || clearChatMutation.isPending}
+            className="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 disabled:text-slate-400 disabled:hover:text-slate-400 disabled:hover:bg-transparent rounded-md transition-colors duration-200 border border-slate-300 hover:border-red-300 disabled:border-slate-200"
+            data-testid="button-clear-chat"
+            title={chatHistory.length === 0 ? "No chat history to clear" : "Clear chat history"}
+          >
+            {t.clearHistory}
+          </button>
+        </div>
         
         {chatHistory.length === 0 ? (
           <div className="text-center py-8">

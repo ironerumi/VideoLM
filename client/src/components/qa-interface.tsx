@@ -233,45 +233,7 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
         </ScrollArea>
       </div>
 
-      {/* Chat History Section */}
-      <div className="border-t border-slate-100">
-        <div className="flex items-center justify-between px-6 py-3 border-b border-slate-100 bg-slate-50/30">
-          <h4 className="text-sm font-medium text-slate-700">{t.chatHistoryPanel}</h4>
-          <button
-            onClick={clearChatHistory}
-            disabled={chatHistory.length === 0 || isLoading}
-            className="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 disabled:text-slate-400 disabled:hover:text-slate-400 disabled:hover:bg-transparent rounded-md transition-colors duration-200 border border-slate-300 hover:border-red-300 disabled:border-slate-200"
-            data-testid="button-clear-chat"
-            title={chatHistory.length === 0 ? "No chat history to clear" : "Clear chat history"}
-          >
-            {t.clearHistory}
-          </button>
-        </div>
-        
-        <ScrollArea className="h-32 p-4">
-          {chatHistory.length === 0 ? (
-            <p className="text-slate-400 text-sm italic">No previous conversations</p>
-          ) : (
-            <div className="space-y-2">
-              {chatHistory.map((msg, index) => (
-                <div
-                  key={msg.id}
-                  onClick={() => setCurrentQA(msg)}
-                  className={`p-2 rounded-md border cursor-pointer transition-colors duration-200 ${
-                    currentQA?.id === msg.id 
-                      ? 'bg-blue-50 border-blue-200' 
-                      : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
-                  }`}
-                  data-testid={`chat-history-item-${index}`}
-                >
-                  <p className="text-xs text-slate-500 mb-1">{formatTime(msg.timestamp)}</p>
-                  <p className="text-sm text-slate-700 truncate">{msg.rephrasedQuestion || msg.message}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
-      </div>
+
 
       {/* Input Section */}
       <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex-shrink-0">
