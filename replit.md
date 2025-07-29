@@ -149,3 +149,13 @@ The application follows a monorepo structure with a clear separation between cli
 - **Environment**: NODE_ENV for development/production switching
 
 The application is designed for deployment on platforms like Replit, Vercel, or traditional VPS environments with PostgreSQL support.
+
+## Recent Changes
+
+### July 29, 2025 - Custom App Icon System
+- **Feature**: Added customizable app icon system with automatic detection
+- **Location**: `public/assets/icons/` folder created for custom icons  
+- **Component**: New `AppIcon` component with fallback to default gradient icon
+- **Formats**: Supports SVG (preferred), PNG, JPG formats
+- **Usage**: Upload `app-icon.svg/png/jpg` to replace default icon automatically
+- **Enhancement**: Transparent batch progress indicators with detailed server logging

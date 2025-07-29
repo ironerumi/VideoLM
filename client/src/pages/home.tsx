@@ -5,6 +5,7 @@ import VideoPlayer from "@/components/video-player";
 import SummaryPanel from "@/components/summary-panel";
 import QAInterface from "@/components/qa-interface";
 import SettingsModal from "@/components/settings-modal";
+import AppIcon from "@/components/app-icon";
 import { Settings, User, ChevronLeft, ChevronRight, PanelLeftClose, PanelRightClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
@@ -67,9 +68,7 @@ export default function Home() {
       <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-6 py-4 flex-shrink-0 z-50">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <i className="fas fa-video text-white text-sm"></i>
-            </div>
+            <AppIcon className="w-8 h-8" size={32} />
             <div>
               <h1 className="text-xl font-semibold text-slate-800">{t.videoLM}</h1>
               <p className="text-xs text-slate-500 -mt-1">{t.tagline}</p>
