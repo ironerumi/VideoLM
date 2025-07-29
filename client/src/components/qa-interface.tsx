@@ -172,16 +172,16 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
             <div className="p-6 space-y-4">
               {/* Section 1: Rephrased Question */}
               <div className="bg-slate-50 rounded-lg p-4">
-                <div className="text-slate-800 bg-white rounded-md p-3 border relative pr-10">
-                  <User className="h-4 w-4 absolute top-3 right-3 text-slate-500" />
+                <div className="text-slate-800 bg-white rounded-md p-3 border relative pl-10">
+                  <User className="h-4 w-4 absolute top-3 left-3 text-slate-500" />
                   {currentQA.rephrasedQuestion || currentQA.message}
                 </div>
               </div>
 
               {/* Section 2: Bot Response */}
               <div className="bg-blue-50 rounded-lg p-4">
-                <div className="text-slate-800 bg-white rounded-md p-3 border relative pr-10">
-                  <Bot className="h-4 w-4 absolute top-3 right-3 text-slate-500" />
+                <div className="text-slate-800 bg-white rounded-md p-3 border relative pl-10">
+                  <Bot className="h-4 w-4 absolute top-3 left-3 text-slate-500" />
                   {currentQA.response}
                 </div>
               </div>
@@ -189,8 +189,8 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
               {/* Section 3: Related Frames */}
               {currentQA.relevantFrame && (
                 <div className="bg-amber-50 rounded-lg p-4">
-                  <div className="relative pr-6">
-                    <svg className="h-4 w-4 absolute top-1 right-0 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <div className="relative pl-6">
+                    <svg className="h-4 w-4 absolute top-1 left-0 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                       <circle cx="8.5" cy="8.5" r="1.5"/>
                       <polyline points="21,15 16,10 5,21"/>
