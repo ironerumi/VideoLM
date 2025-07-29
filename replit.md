@@ -50,9 +50,11 @@ The application follows a monorepo structure with a clear separation between cli
 - **Real-time Processing**: Actual video duration extraction and frame-by-frame analysis
 
 ### Chat System
+- **Enhanced Chat Interface**: Redesigned with rephrased questions displayed at top and full-width answers below
 - **Contextual Chat**: AI-powered conversations about specific videos using OpenAI API
-- **Message Persistence**: Chat history stored per video with timestamps
-- **Real-time UI**: Instant message display with loading states
+- **Clickable Frame Thumbnails**: Chat responses include relevant frame thumbnails that seek video to specific moments
+- **Message Persistence**: Chat history stored per video with timestamps and rephrased questions
+- **Real-time UI**: Instant message display with loading states and proper state management
 
 ### UI Architecture
 - **Responsive Design**: Mobile-first approach with custom breakpoints
@@ -98,9 +100,11 @@ The application follows a monorepo structure with a clear separation between cli
 - **Database**: Drizzle ORM with PostgreSQL dialect, Neon serverless driver
 
 ### AI Integration
-- **OpenAI API**: GPT-4.1-mini model for video analysis and chat responses
+- **OpenAI API**: GPT-4.1-mini model for video analysis and enhanced chat responses
 - **Vision Processing**: Base64 image analysis for all video frames with transcription generation
 - **Transcription**: Sherlock Holmes-style scene descriptions with timestamps ([xx:xx] format)
+- **Smart Responses**: AI generates rephrased questions and identifies relevant frames for chat responses
+- **Frame Association**: Automatic linking of chat responses to specific video frames with clickable navigation
 
 ### UI/UX Libraries
 - **Radix UI**: Accessible component primitives (40+ components)

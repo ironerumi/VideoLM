@@ -15,9 +15,10 @@ import { useToast } from "@/hooks/use-toast";
 interface SettingsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onDataReset?: () => void;
 }
 
-export default function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
+export default function SettingsModal({ open, onOpenChange, onDataReset }: SettingsModalProps) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -25,8 +26,9 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
   const resetMutation = useMutation({
     mutationFn: () => apiRequest('POST', '/api/reset'),
     onSuccess: () => {
-      // Invalidate all queries to refresh the UI
-      queryClient.invalidateQueries();
+      // Clear all cached queries and local state
+      queryClient.clear();
+      onDataReset?.();
       toast({
         title: "Reset Complete",
         description: "All videos and data have been cleared successfully.",

@@ -51,6 +51,13 @@ export default function Home() {
     setTimeout(() => setSeekToTime(undefined), 100);
   };
 
+  const handleDataReset = () => {
+    // Clear all local state when data is reset
+    setSelectedVideoIds([]);
+    setCurrentVideoId(null);
+    setSeekToTime(undefined);
+  };
+
   return (
     <div className="h-screen flex flex-col bg-slate-50 overflow-hidden">
       {/* Header */}
@@ -155,7 +162,8 @@ export default function Home() {
       {/* Settings Modal */}
       <SettingsModal 
         open={settingsOpen} 
-        onOpenChange={setSettingsOpen} 
+        onOpenChange={setSettingsOpen}
+        onDataReset={handleDataReset}
       />
     </div>
   );
