@@ -171,7 +171,9 @@ export class MemStorage implements IStorage {
       id, 
       createdAt: new Date(),
       summary: insertSession.summary ?? null,
-      selectedVideoIds: insertSession.selectedVideoIds || []
+      selectedVideoIds: Array.isArray(insertSession.selectedVideoIds) 
+        ? insertSession.selectedVideoIds 
+        : []
     };
     this.videoSessions.set(id, session);
     return session;
@@ -217,4 +219,6 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+import { DatabaseStorage } from './database-storage';
+
+export const storage = new DatabaseStorage();
