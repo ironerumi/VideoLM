@@ -51,27 +51,27 @@ export async function analyzeVideoFrames(frameData: Array<{base64: string, times
             {
               type: "text",
               text: `Analyze these ${frameData.length} video frames taken at timestamps ${timestamps.join(', ')} and provide:
-              1. A comprehensive video analysis
-              2. A detailed transcription where each line starts with [${timestamps[0]}], [${timestamps[1] || '00:01'}], etc.
+              1. A comprehensive video analysis covering the full duration
+              2. A complete transcription with entries for ALL ${frameData.length} frames using timestamps: [${timestamps[0]}], [${timestamps[1] || '00:01'}], etc.
               
               Return JSON with this structure:
               {
-                "summary": "Overall video summary",
+                "summary": "Comprehensive summary covering entire video duration",
                 "keyPoints": ["key observation 1", "key observation 2", "key observation 3"],
                 "topics": ["main topic 1", "main topic 2"],
                 "sentiment": "overall mood/sentiment",
                 "visualElements": ["visual element 1", "visual element 2"],
-                "transcription": ["[00:00] brief description", "[00:01] brief description", "[00:02] brief description"]
+                "transcription": ["[00:00] description", "[00:01] description", "... for ALL frames"]
               }
               
-              IMPORTANT: Keep transcription entries SHORT (10-20 words each) to avoid token limits. Focus on key actions and changes only.`
+              CRITICAL: Create transcription entries for ALL ${frameData.length} frames. Keep each entry 8-12 words for full coverage.`
             },
             ...imageContent
           ],
         },
       ],
       response_format: { type: "json_object" },
-      max_tokens: 3000, // Reduced to prevent truncation issues
+      max_tokens: 4000, // Increased to accommodate more transcription entries
     });
 
     const responseContent = response.choices[0].message.content || "{}";

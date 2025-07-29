@@ -132,8 +132,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Prepare frames for AI batch analysis 
       let analysis: VideoAnalysis;
       if (frameExtractionResult.success && frameExtractionResult.frames.length > 0) {
-        // Limit frames sent to OpenAI to prevent token overflow
-        const maxFramesToAnalyze = Math.min(frameExtractionResult.frames.length, 20);
+        // Analyze more frames for better transcription coverage (increased from 20 to 50)
+        const maxFramesToAnalyze = Math.min(frameExtractionResult.frames.length, 50);
         const framesToAnalyze = frameExtractionResult.frames.slice(0, maxFramesToAnalyze);
         console.log(`🤖 AI Batch Analysis: Processing ${framesToAnalyze.length} frames (out of ${frameExtractionResult.frames.length} extracted)`);
         console.log(`📊 Timestamps: ${framesToAnalyze.map(f => `${Math.floor(f.timestamp/60)}:${String(Math.floor(f.timestamp%60)).padStart(2,'0')}`).join(', ')}`);
@@ -170,7 +170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         topics: analysis.topics.slice(0, 3), // Limit topics
         sentiment: analysis.sentiment,
         visualElements: analysis.visualElements.slice(0, 5), // Limit visual elements
-        transcription: analysis.transcription.slice(0, 20) // Limit transcription entries
+        transcription: analysis.transcription.slice(0, 50) // Increased transcription entries for better coverage
       };
 
       const videoData = {
