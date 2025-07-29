@@ -171,10 +171,10 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
               </div>
             </div>
           ) : currentVideo?.analysis ? (
-            <ScrollArea className="flex-1 min-h-0">
-              <div className="bg-slate-50 rounded-xl p-4 space-y-4">
+            <div className="flex-1 min-h-0 flex flex-col">
+              <div className="bg-slate-50 rounded-xl p-4 flex-1 min-h-0 flex flex-col space-y-4">
                 {/* Key Points Section */}
-                <div className="border-b border-slate-200 pb-4 last:border-b-0 last:pb-0">
+                <div className="flex-shrink-0">
                   <button
                     onClick={() => setIsKeyPointsExpanded(!isKeyPointsExpanded)}
                     className="flex items-center justify-between w-full text-left hover:bg-slate-100 rounded-lg p-2 -m-2 transition-colors"
@@ -188,29 +188,31 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                     )}
                   </button>
                   {isKeyPointsExpanded && (
-                    <div className="mt-3 space-y-2 max-h-48 overflow-y-auto">
-                      {(currentVideo.analysis as any)?.keyPoints?.map((point: string, index: number) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                            index % 4 === 0 ? 'bg-indigo-400' :
-                            index % 4 === 1 ? 'bg-purple-400' :
-                            index % 4 === 2 ? 'bg-pink-400' : 'bg-blue-400'
-                          }`}></div>
-                          <span className="text-sm text-slate-600" data-testid={`key-point-${index}`}>
-                            {point}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                    <ScrollArea className="mt-3 max-h-48">
+                      <div className="space-y-2 pr-2">
+                        {(currentVideo.analysis as any)?.keyPoints?.map((point: string, index: number) => (
+                          <div key={index} className="flex items-center space-x-2">
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                              index % 4 === 0 ? 'bg-indigo-400' :
+                              index % 4 === 1 ? 'bg-purple-400' :
+                              index % 4 === 2 ? 'bg-pink-400' : 'bg-blue-400'
+                            }`}></div>
+                            <span className="text-sm text-slate-600" data-testid={`key-point-${index}`}>
+                              {point}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
                   )}
                 </div>
 
                 {/* Transcription Section */}
                 {(currentVideo.analysis as any)?.transcription?.length > 0 && (
-                  <div className="border-b border-slate-200 pb-4 last:border-b-0 last:pb-0">
+                  <div className="flex-1 min-h-0 flex flex-col border-t border-slate-200 pt-4">
                     <button
                       onClick={() => setIsTranscriptionExpanded(!isTranscriptionExpanded)}
-                      className="flex items-center justify-between w-full text-left hover:bg-slate-100 rounded-lg p-2 -m-2 transition-colors"
+                      className="flex items-center justify-between w-full text-left hover:bg-slate-100 rounded-lg p-2 -m-2 transition-colors flex-shrink-0"
                       data-testid="button-toggle-transcription"
                     >
                       <h4 className="text-sm font-medium text-slate-700">Transcription</h4>
@@ -221,7 +223,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                       )}
                     </button>
                     {isTranscriptionExpanded && (
-                      <div className="mt-3 max-h-64 overflow-y-auto">
+                      <ScrollArea className="flex-1 min-h-0 mt-3">
                         <div className="space-y-2 pr-2">
                           {(currentVideo.analysis as any).transcription.map((line: string, index: number) => (
                             <div key={index} className="text-sm text-slate-600 leading-relaxed" data-testid={`transcription-line-${index}`}>
@@ -229,7 +231,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                             </div>
                           ))}
                         </div>
-                      </div>
+                      </ScrollArea>
                     )}
                   </div>
                 )}
@@ -257,7 +259,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                   </div>
                 )}
               </div>
-            </ScrollArea>
+            </div>
           ) : selectedVideoIds.length > 0 ? (
             <div className="bg-slate-50 rounded-xl p-4 text-center">
               <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-3">
