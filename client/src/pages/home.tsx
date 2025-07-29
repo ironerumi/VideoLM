@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import VideoSourcePanel from "@/components/video-source-panel";
 import VideoPlayer from "@/components/video-player";
 import SummaryPanel from "@/components/summary-panel";
-import ChatInterface from "@/components/chat-interface";
+import QAInterface from "@/components/qa-interface";
 import SettingsModal from "@/components/settings-modal";
 import { Settings, User, ChevronLeft, ChevronRight, PanelLeftClose, PanelRightClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -152,7 +152,7 @@ export default function Home() {
                 minSize={20} 
                 maxSize={70}
               >
-                <ChatInterface
+                <QAInterface
                   videoId={currentVideoId}
                   selectedVideoCount={selectedVideoIds.length}
                   onFrameClick={handleFrameClick}

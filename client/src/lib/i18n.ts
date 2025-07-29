@@ -54,6 +54,14 @@ export interface Translations {
   selectVideoFirst: string;
   clearHistory: string;
   
+  // Q&A Interface
+  qaInterface: string;
+  chatHistoryPanel: string;
+  rephrasedQuestion: string;
+  botResponse: string;
+  relatedFrames: string;
+  askVideoQuestion: string;
+  
   // Summary Panel
   videoSummary: string;
   generateSummary: string;
@@ -142,6 +150,14 @@ const translations: Record<Language, Translations> = {
     askAboutVideo: 'Ask me anything about this video',
     selectVideoFirst: 'Select a video first',
     clearHistory: 'Clear History',
+    
+    // Q&A Interface
+    qaInterface: 'Q&A',
+    chatHistoryPanel: 'Chat History',
+    rephrasedQuestion: 'Question',
+    botResponse: 'Response',
+    relatedFrames: 'Related Frames',
+    askVideoQuestion: 'Ask about this video...',
     
     // Summary Panel
     videoSummary: 'Video Summary',
@@ -232,13 +248,21 @@ const translations: Record<Language, Translations> = {
     selectVideoFirst: '最初に動画を選択してください',
     clearHistory: '履歴をクリア',
     
+    // Q&A Interface
+    qaInterface: 'Q&A',
+    chatHistoryPanel: 'チャット履歴',
+    rephrasedQuestion: '質問',
+    botResponse: '回答',
+    relatedFrames: '関連フレーム',
+    askVideoQuestion: 'この動画について何でもお聞きください...',
+    
     // Summary Panel
     videoSummary: '動画要約',
     generateSummary: '要約を生成',
     generating: '生成中...',
     keyPoints: 'キーポイント',
     transcription: '文字起こし',
-    chatHistory: 'チャット履歴',
+    chatHistoryTab: 'チャット履歴',
     sources: 'ソース',
     videoDetails: '動画詳細',
     analysisResults: '分析結果',
