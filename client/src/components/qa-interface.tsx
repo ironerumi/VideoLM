@@ -132,8 +132,8 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
   };
 
   const extractTimestamp = (frameName: string) => {
-    const match = frameName.match(/frame_(\d+)_(\d+)s/);
-    return match ? parseInt(match[2]) : 0;
+    const match = frameName.match(/frame_\d+_(\d+(\.\d+)?)s/);
+    return match ? parseFloat(match[1]) : 0;
   };
 
   const handleFrameClick = (frameName: string) => {
@@ -217,8 +217,11 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
                           />
                           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
                             <span className="text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                              {extractTimestamp(frameName)}s
+                              {Math.floor(extractTimestamp(frameName))}s
                             </span>
+                          </div>
+                          <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 py-0.5 rounded">
+                            {Math.floor(extractTimestamp(frameName))}s
                           </div>
                         </button>
                       ))}
