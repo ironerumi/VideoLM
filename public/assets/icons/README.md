@@ -18,10 +18,11 @@ To replace the default app icon:
 
 3. **The application will automatically detect and use your custom icon** - no restart required!
 
-## Example Icons
+## Current Setup
 
-- `sample-icon.svg` - Example SVG icon you can use as a template
-- Copy `sample-icon.svg` to `app-icon.svg` to use it as your app icon
+- `datarobot_favicon.png` - DataRobot favicon (source file)
+- `app-icon.png` - Active app icon (currently using DataRobot favicon)
+- Favicon configured in HTML to use DataRobot favicon
 
 ## Default Fallback
 
