@@ -109,7 +109,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteVideo(id: string): Promise<boolean> {
     const result = await db.delete(videos).where(eq(videos.id, id));
-    return result.rowCount > 0;
+    return result.changes > 0;
   }
 
   // Chat operations

@@ -1,43 +1,43 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, json, integer, boolean } from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer, blob } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const sessions = pgTable("sessions", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  lastAccessedAt: timestamp("last_accessed_at").defaultNow().notNull(),
+export const sessions = sqliteTable("sessions", {
+  id: text("id").primaryKey(),
+  createdAt: integer("created_at", { mode: 'timestamp' }).notNull().default(sql`(unixepoch() * 1000)`),
+  lastAccessedAt: integer("last_accessed_at", { mode: 'timestamp' }).notNull().default(sql`(unixepoch() * 1000)`),
 });
 
-export const videos = pgTable("videos", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  sessionId: varchar("session_id").references(() => sessions.id).notNull(),
+export const videos = sqliteTable("videos", {
+  id: text("id").primaryKey(),
+  sessionId: text("session_id").references(() => sessions.id).notNull(),
   filename: text("filename").notNull(),
   originalName: text("original_name").notNull(),
   filePath: text("file_path").notNull(), // path to stored video file
   size: integer("size").notNull(),
   duration: integer("duration"), // in seconds
   format: text("format").notNull(),
-  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
-  analysis: json("analysis"), // AI analysis results
-  thumbnails: json("thumbnails"), // array of thumbnail URLs/data
+  uploadedAt: integer("uploaded_at", { mode: 'timestamp' }).notNull().default(sql`(unixepoch() * 1000)`),
+  analysis: text("analysis", { mode: 'json' }), // AI analysis results as JSON
+  thumbnails: text("thumbnails", { mode: 'json' }), // array of thumbnail URLs/data as JSON
 });
 
-export const chatMessages = pgTable("chat_messages", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  sessionId: varchar("session_id").references(() => sessions.id).notNull(),
-  videoId: varchar("video_id").references(() => videos.id),
+export const chatMessages = sqliteTable("chat_messages", {
+  id: text("id").primaryKey(),
+  sessionId: text("session_id").references(() => sessions.id).notNull(),
+  videoId: text("video_id").references(() => videos.id),
   message: text("message").notNull(),
   response: text("response").notNull(),
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  timestamp: integer("timestamp", { mode: 'timestamp' }).notNull().default(sql`(unixepoch() * 1000)`),
 });
 
-export const videoSessions = pgTable("video_sessions", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  sessionId: varchar("session_id").references(() => sessions.id).notNull(),
-  selectedVideoIds: json("selected_video_ids").$type<string[]>().notNull().default([]),
+export const videoSessions = sqliteTable("video_sessions", {
+  id: text("id").primaryKey(),
+  sessionId: text("session_id").references(() => sessions.id).notNull(),
+  selectedVideoIds: text("selected_video_ids", { mode: 'json' }).$type<string[]>().notNull().default(sql`'[]'`),
   summary: text("summary"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: integer("created_at", { mode: 'timestamp' }).notNull().default(sql`(unixepoch() * 1000)`),
 });
 
 export const insertSessionSchema = createInsertSchema(sessions).omit({

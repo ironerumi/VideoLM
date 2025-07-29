@@ -1,15 +1,70 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import Database from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
 import * as schema from "@shared/schema";
+import path from 'path';
 
-neonConfig.webSocketConstructor = ws;
+// Create SQLite database in the project root
+const dbPath = path.join(process.cwd(), 'database.sqlite');
+const sqlite = new Database(dbPath);
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
-}
+// Enable WAL mode for better performance
+sqlite.pragma('journal_mode = WAL');
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
+// Initialize database tables if they don't exist
+const initializeTables = () => {
+  try {
+    // Check if sessions table exists
+    const tablesExist = sqlite.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='sessions'").get();
+    
+    if (!tablesExist) {
+      // Create tables
+      sqlite.exec(`
+        CREATE TABLE sessions (
+          id TEXT PRIMARY KEY,
+          created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+          last_accessed_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
+        );
+
+        CREATE TABLE videos (
+          id TEXT PRIMARY KEY,
+          session_id TEXT NOT NULL REFERENCES sessions(id),
+          filename TEXT NOT NULL,
+          original_name TEXT NOT NULL,
+          file_path TEXT NOT NULL,
+          size INTEGER NOT NULL,
+          duration INTEGER,
+          format TEXT NOT NULL,
+          uploaded_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+          analysis TEXT,
+          thumbnails TEXT
+        );
+
+        CREATE TABLE chat_messages (
+          id TEXT PRIMARY KEY,
+          session_id TEXT NOT NULL REFERENCES sessions(id),
+          video_id TEXT REFERENCES videos(id),
+          message TEXT NOT NULL,
+          response TEXT NOT NULL,
+          timestamp INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
+        );
+
+        CREATE TABLE video_sessions (
+          id TEXT PRIMARY KEY,
+          session_id TEXT NOT NULL REFERENCES sessions(id),
+          selected_video_ids TEXT NOT NULL DEFAULT '[]',
+          summary TEXT,
+          created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
+        );
+      `);
+      console.log('✓ SQLite database tables created successfully');
+    }
+  } catch (error) {
+    console.error('Error initializing database tables:', error);
+  }
+};
+
+// Initialize tables on startup
+initializeTables();
+
+export const db = drizzle(sqlite, { schema });
+export { sqlite };

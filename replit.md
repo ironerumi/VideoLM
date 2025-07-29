@@ -23,8 +23,8 @@ The application follows a monorepo structure with a clear separation between cli
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js framework
 - **Language**: TypeScript with ESM modules
-- **Database**: PostgreSQL with Drizzle ORM
-- **Database Provider**: Neon Database (@neondatabase/serverless)
+- **Database**: SQLite with Drizzle ORM
+- **Database Provider**: better-sqlite3 with local file storage
 - **File Upload**: Multer with session-based disk storage
 - **Session Management**: Custom middleware for session tracking
 - **File Serving**: Express static serving with session validation
@@ -33,10 +33,10 @@ The application follows a monorepo structure with a clear separation between cli
 ### Data Storage Strategy
 - **Session Management**: Each user gets a unique session ID stored in localStorage
 - **File Storage**: Videos saved to session-specific folders in `uploads/{sessionId}/`
-- **Database Schema**: PostgreSQL with four main tables (sessions, videos, chatMessages, videoSessions)
-- **In-Memory Fallback**: MemStorage class provides in-memory storage during development
+- **Database Schema**: SQLite with four main tables (sessions, videos, chatMessages, videoSessions)
+- **Database File**: Local SQLite database stored as `database.sqlite` in project root
 - **File Handling**: Videos stored as files on disk with metadata in database
-- **Schema Management**: Drizzle Kit for database migrations and schema changes
+- **Schema Management**: Custom table initialization with better-sqlite3
 - **Session Security**: All video access restricted to session owner
 
 ## Key Components
