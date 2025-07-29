@@ -153,8 +153,7 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
       <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex-shrink-0">
-        <h3 className="text-lg font-semibold text-slate-800 mb-1">{t.qaInterface}</h3>
-        <p className="text-sm text-slate-600">{t.askAboutSelectedVideo}</p>
+        <h3 className="text-lg font-semibold text-slate-800">{t.qaInterface}</h3>
       </div>
       
       {/* Q&A Display Area */}
