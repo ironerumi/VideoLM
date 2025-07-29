@@ -59,7 +59,7 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
   }, [chatHistory]);
 
   return (
-    <div className="h-full flex flex-col bg-white overflow-hidden">
+    <div className="h-full flex flex-col bg-white">
       {/* Header */}
       <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex-shrink-0">
         <h3 className="text-lg font-semibold text-slate-800 mb-1">{t.chatInterface}</h3>
@@ -67,7 +67,7 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
       </div>
       
       {/* Chat History */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden min-h-0">
         <ScrollArea className="h-full p-6" ref={scrollRef}>
           {chatHistory.length === 0 && !videoId && (
             <div className="text-center py-12">
@@ -185,37 +185,37 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
             </div>
           )}
         </ScrollArea>
+      </div>
 
-        {/* Chat Input */}
-        <div className="p-6 border-t border-slate-100">
-          <form onSubmit={handleSubmit} className="relative">
-            <Input
-              type="text"
-              placeholder={videoId ? t.askAnything : t.selectVideoToChat}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              disabled={!videoId || chatMutation.isPending}
-              className="w-full bg-slate-50 border-0 rounded-xl px-6 py-4 pr-24 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:bg-white transition-all duration-200"
-              data-testid="input-chat-message"
-            />
-            
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
-              {selectedVideoCount > 0 && (
-                <span className="text-xs text-slate-400" data-testid="text-source-count">
-                  {selectedVideoCount} source{selectedVideoCount !== 1 ? 's' : ''}
-                </span>
-              )}
-              <Button
-                type="submit"
-                disabled={!message.trim() || !videoId || chatMutation.isPending}
-                className="bg-indigo-500 hover:bg-indigo-600 disabled:bg-slate-300 text-white w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 transform hover:scale-105 disabled:transform-none disabled:hover:scale-100"
-                data-testid="button-send-message"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
-          </form>
-        </div>
+      {/* Chat Input - Fixed at bottom */}
+      <div className="flex-shrink-0 p-6 border-t border-slate-100 bg-white">
+        <form onSubmit={handleSubmit} className="relative">
+          <Input
+            type="text"
+            placeholder={videoId ? t.askAnything : t.selectVideoToChat}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            disabled={!videoId || chatMutation.isPending}
+            className="w-full bg-slate-50 border-0 rounded-xl px-6 py-4 pr-24 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:bg-white transition-all duration-200"
+            data-testid="input-chat-message"
+          />
+          
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+            {selectedVideoCount > 0 && (
+              <span className="text-xs text-slate-400" data-testid="text-source-count">
+                {selectedVideoCount} source{selectedVideoCount !== 1 ? 's' : ''}
+              </span>
+            )}
+            <Button
+              type="submit"
+              disabled={!message.trim() || !videoId || chatMutation.isPending}
+              className="bg-indigo-500 hover:bg-indigo-600 disabled:bg-slate-300 text-white w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 transform hover:scale-105 disabled:transform-none disabled:hover:scale-100"
+              data-testid="button-send-message"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          </div>
+        </form>
       </div>
     </div>
   );

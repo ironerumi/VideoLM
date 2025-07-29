@@ -194,7 +194,7 @@ const translations: Record<Language, Translations> = {
     tagline: 'AI搭載動画理解システム',
     
     // Video Upload
-    uploadTitle: '動画をアップロード',
+    uploadTitle: 'アップロード',
     uploadDescription: 'AIで分析する動画を追加',
     dropZoneText: '動画ファイルをここにドロップするか、クリックして選択',
     browseFiles: 'ファイルを選択',
