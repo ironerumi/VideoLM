@@ -4,3 +4,19 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+# Ignore video files
+*.mp4
+*.mov
+*.avi
+*.wmv
+*.flv
+*.mkv
+
+# Ignore image files
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.svg

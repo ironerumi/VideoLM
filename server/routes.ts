@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { videoUpload, generateThumbnails, getVideoMetadata, extractVideoFrame } from "./services/video";
 import { analyzeVideoFrame, chatWithVideo, generateVideoSummary, type VideoAnalysis } from "./services/openai";
+import { extractVideoFrames, type FrameExtractionResult } from "./utils/frame-extractor";
 import { insertVideoSchema, insertChatMessageSchema } from "@shared/schema";
 import { decodeFilename, encodeFilename, fixJapaneseEncoding } from "./utils/encoding";
 import multer from 'multer';
@@ -109,11 +110,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const metadata = getVideoMetadata(fileBuffer, req.file.originalname);
       const thumbnails = await generateThumbnails(fileBuffer);
       
-      // Extract a frame for AI analysis
-      const frameBase64 = await extractVideoFrame(fileBuffer);
+      // Extract frames from video
+      const decodedOriginalName = decodeMultipartFilename(req.file.originalname);
+      const videoNameWithoutExt = path.basename(decodedOriginalName, path.extname(decodedOriginalName));
+      const framesDir = path.join(path.dirname(req.file.path), videoNameWithoutExt);
+      
+      console.log(`Extracting frames to: ${framesDir}`);
+      const frameExtractionResult: FrameExtractionResult = await extractVideoFrames({
+        videoPath: req.file.path,
+        outputDir: framesDir,
+        framesPerSecond: 1, // Default: 1 frame per second
+        maxFrames: 100 // Hard limit
+      });
+      
+      // Extract a frame for AI analysis (use first extracted frame or fallback)
+      let frameBase64: string;
+      if (frameExtractionResult.success && frameExtractionResult.frames.length > 0) {
+        // Use first extracted frame for analysis
+        const firstFrame = frameExtractionResult.frames[0];
+        const frameBuffer = fs.readFileSync(firstFrame.filePath);
+        frameBase64 = frameBuffer.toString('base64');
+      } else {
+        // Fallback to original frame extraction method
+        frameBase64 = await extractVideoFrame(fileBuffer);
+      }
+      
       const analysis = await analyzeVideoFrame(frameBase64);
 
-      const decodedOriginalName = decodeMultipartFilename(req.file.originalname);
       const videoData = {
         sessionId: req.sessionId,
         filename: req.file.filename,
@@ -123,7 +146,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         duration: metadata.duration,
         format: path.extname(decodedOriginalName).slice(1),
         analysis,
-        thumbnails,
+        thumbnails: {
+          ...thumbnails,
+          frames: frameExtractionResult.success ? frameExtractionResult.frames : []
+        },
       };
 
       const validation = insertVideoSchema.safeParse(videoData);
@@ -142,6 +168,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fs.unlinkSync(req.file.path);
       }
       res.status(500).json({ message: "Failed to upload video" });
+    }
+  });
+
+  // Serve extracted frame files
+  app.get("/api/videos/:id/frames/:frameName", async (req: MulterRequest, res) => {
+    try {
+      const video = await storage.getVideo(req.params.id);
+      if (!video || video.sessionId !== req.sessionId) {
+        return res.status(404).json({ message: "Video not found" });
+      }
+      
+      const videoNameWithoutExt = path.basename(video.originalName, path.extname(video.originalName));
+      const framesDir = path.join(path.dirname(video.filePath), videoNameWithoutExt);
+      const framePath = path.join(framesDir, req.params.frameName);
+      
+      // Security check - ensure frame is within the session directory
+      if (!framePath.startsWith(framesDir)) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      if (!fs.existsSync(framePath)) {
+        return res.status(404).json({ message: "Frame not found" });
+      }
+      
+      res.setHeader('Content-Type', 'image/jpeg');
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+      res.sendFile(framePath);
+    } catch (error) {
+      console.error('Error serving frame:', error);
+      res.status(500).json({ message: "Failed to serve frame" });
     }
   });
 
