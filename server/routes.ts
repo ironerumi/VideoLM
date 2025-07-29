@@ -176,11 +176,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const video = await storage.getVideo(req.params.id);
       
-      // Check session from query parameter if not in header (for images in HTML)
-      let sessionId = req.sessionId;
-      if (!sessionId && req.query.session) {
-        sessionId = req.query.session as string;
-      }
+      // For image requests, prioritize query parameter session over header
+      let sessionId = req.query.session as string || req.sessionId;
       
       console.log('Frame request:', {
         videoId: req.params.id,
@@ -188,10 +185,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         videoFound: !!video,
         requestSessionId: sessionId,
         videoSessionId: video?.sessionId,
-        sessionMatch: video?.sessionId === sessionId
+        sessionMatch: video?.sessionId === sessionId,
+        querySession: req.query.session,
+        headerSession: req.sessionId
       });
       
-      if (!video || video.sessionId !== sessionId) {
+      if (!video) {
+        return res.status(404).json({ message: "Video not found" });
+      }
+      
+      // Check if the video's session matches either the query parameter or current session
+      const querySession = req.query.session as string;
+      const isValidSession = video.sessionId === querySession || video.sessionId === req.sessionId;
+      
+      if (!isValidSession) {
+        console.log('Session validation failed:', {
+          videoSession: video.sessionId,
+          querySession,
+          requestSession: req.sessionId
+        });
         return res.status(404).json({ message: "Video not found" });
       }
       
