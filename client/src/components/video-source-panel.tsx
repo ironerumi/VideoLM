@@ -46,7 +46,7 @@ export default function VideoSourcePanel({
   };
 
   return (
-    <div className="w-80 bg-white border-r border-slate-200/60 flex flex-col h-full">
+    <div className="w-full bg-white border-r border-slate-200/60 flex flex-col h-full">
       {/* Header */}
       <div className="p-6 border-b border-slate-100">
         <div className="flex items-center justify-between mb-4">

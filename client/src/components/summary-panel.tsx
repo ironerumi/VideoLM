@@ -121,7 +121,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
   }, [isResizing]);
 
   return (
-    <div ref={containerRef} className="w-80 bg-white border-l border-slate-200/60 flex flex-col h-full">
+    <div ref={containerRef} className="w-full bg-white border-l border-slate-200/60 flex flex-col h-full">
       {/* Summary Section */}
       <div 
         className="border-b border-slate-100 overflow-hidden flex flex-col"
