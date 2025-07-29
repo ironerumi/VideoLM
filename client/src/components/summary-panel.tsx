@@ -6,6 +6,7 @@ import { RefreshCw, FileText, Clock, Database, HardDrive, PanelRightClose, GripH
 import type { Video, ChatMessage } from "@shared/schema";
 import { useState, useRef, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
+import { sessionManager } from "@/lib/session";
 
 interface SummaryPanelProps {
   selectedVideoIds: string[];
@@ -338,7 +339,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                             data-testid={`frame-thumbnail-${chat.id}`}
                           >
                             <img
-                              src={`/api/videos/${currentVideoId}/frames/${(chat as any).relevantFrame}`}
+                              src={`/api/videos/${currentVideoId}/frames/${(chat as any).relevantFrame}?session=${sessionManager.getSessionId()}`}
                               alt="Relevant frame"
                               className="w-full h-full object-cover"
                               onError={(e) => {

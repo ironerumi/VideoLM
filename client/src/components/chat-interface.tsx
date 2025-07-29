@@ -7,6 +7,7 @@ import { Send, Bot, User } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { ChatMessage } from "@shared/schema";
 import { useI18n } from "@/lib/i18n";
+import { sessionManager } from "@/lib/session";
 
 interface ChatInterfaceProps {
   videoId: string | null;
@@ -139,7 +140,7 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
                         data-testid={`frame-thumbnail-${latestChat.id}`}
                       >
                         <img
-                          src={`/api/videos/${videoId}/frames/${relevantFrame}`}
+                          src={`/api/videos/${videoId}/frames/${relevantFrame}?session=${sessionManager.getSessionId()}`}
                           alt="Relevant frame"
                           className="w-32 h-24 object-cover rounded-lg shadow-sm group-hover:shadow-md transition-all duration-200 group-hover:scale-105"
                           onError={(e) => {
