@@ -23,7 +23,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
   const queryClient = useQueryClient();
 
   const resetMutation = useMutation({
-    mutationFn: () => apiRequest('/api/reset', 'POST'),
+    mutationFn: () => apiRequest('POST', '/api/reset'),
     onSuccess: () => {
       // Invalidate all queries to refresh the UI
       queryClient.invalidateQueries();
