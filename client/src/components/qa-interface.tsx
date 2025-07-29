@@ -88,11 +88,12 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
 
   // Get the latest Q&A pair (most recent message)
   useEffect(() => {
-    console.log("Chat history updated:", chatHistory.length, "messages");
     if (chatHistory.length > 0) {
-      // Always show the most recent message, regardless of waiting state
-      const latestMessage = chatHistory[chatHistory.length - 1];
-      console.log("Setting current Q&A to latest message:", latestMessage.id, latestMessage.message);
+      // Sort by timestamp to ensure we get the most recent
+      const sortedHistory = [...chatHistory].sort((a, b) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      const latestMessage = sortedHistory[0];
       setCurrentQA(latestMessage);
     } else {
       setCurrentQA(null);
