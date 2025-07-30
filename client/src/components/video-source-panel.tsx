@@ -56,10 +56,10 @@ export default function VideoSourcePanel({
           <div className="flex items-center space-x-2">
             <Button
               onClick={() => setShowUpload(true)}
-              className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 shadow-soft"
+              className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 shadow-soft"
               data-testid="button-add-source"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 mr-1" />
               {t.uploadTitle}
             </Button>
             {onCollapse && (
