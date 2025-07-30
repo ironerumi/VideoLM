@@ -72,7 +72,6 @@ export interface Translations {
   keyPoints: string;
   transcription: string;
   chatHistoryTab: string;
-  sources: string;
   videoDetails: string;
   analysisResults: string;
   
@@ -97,8 +96,6 @@ export interface Translations {
   analyzing: string;
   extractingFrames: string;
   uploadComplete: string;
-  analysisComplete: string;
-  complete: string;
   browserNotSupported: string;
 }
 
@@ -173,7 +170,6 @@ const translations: Record<Language, Translations> = {
     keyPoints: 'Key Points',
     transcription: 'Transcription',
     chatHistoryTab: 'Chat History',
-    sources: 'sources',
     videoDetails: 'Video Details',
     analysisResults: 'Analysis Results',
     
@@ -199,8 +195,6 @@ const translations: Record<Language, Translations> = {
     extractingFrames: 'Extracting frames...',
     uploadComplete: 'Upload complete',
     analysisComplete: 'Analysis complete',
-    complete: 'complete',
-    complete: 'complete',
     browserNotSupported: 'Your browser does not support the video tag.',
   },
   
@@ -274,7 +268,6 @@ const translations: Record<Language, Translations> = {
     keyPoints: 'キーポイント',
     transcription: '文字起こし',
     chatHistoryTab: 'チャット履歴',
-    sources: 'ソース',
     videoDetails: '動画詳細',
     analysisResults: '分析結果',
     
@@ -300,8 +293,6 @@ const translations: Record<Language, Translations> = {
     extractingFrames: 'フレームを抽出中...',
     uploadComplete: 'アップロード完了',
     analysisComplete: '分析完了',
-    complete: '完了',
-    complete: '完了',
     browserNotSupported: 'お使いのブラウザはビデオタグをサポートしていません。',
   },
 };
