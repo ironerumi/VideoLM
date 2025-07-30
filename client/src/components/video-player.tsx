@@ -211,7 +211,6 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
 
         {/* Thumbnail Timeline - Real Extracted Frames */}
         <div className="p-6 bg-white border-t border-slate-100 flex-shrink-0 min-w-0">
-          <h4 className="text-sm font-medium text-slate-700 mb-3">動画タイムライン</h4>
           <div className="overflow-x-auto max-w-full" ref={timelineRef}>
             <div className="flex space-x-2 pb-2 w-max">
             {video?.thumbnails && typeof video.thumbnails === 'object' && 'frames' in video.thumbnails && Array.isArray(video.thumbnails.frames) && video.thumbnails.frames.length > 0 ? (
