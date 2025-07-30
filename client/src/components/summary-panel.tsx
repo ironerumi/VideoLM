@@ -168,7 +168,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                 {summaryMutation.data.summary}
               </p>
               <div className="text-xs text-slate-500">
-                {summaryMutation.data.videoCount}個の動画に基づく
+                Based on {summaryMutation.data.videoCount} video{summaryMutation.data.videoCount !== 1 ? 's' : ''}
               </div>
             </div>
           ) : currentVideo?.analysis ? (
@@ -193,17 +193,17 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                       <div className="space-y-2 pr-2">
                         {(currentVideo.analysis as any)?.keyPoints?.map((point: string, index: number) => (
                           <div key={index} className="flex items-center space-x-2">
-                    <span>{t.duration}</span>
+                            <div className={`w-2 h-2 rounded-full ${
                               index % 4 === 0 ? 'bg-indigo-400' :
                               index % 4 === 1 ? 'bg-purple-400' :
                               index % 4 === 2 ? 'bg-pink-400' : 'bg-blue-400'
                             }`}></div>
-                            <span className="text-sm text-slate-600" data-testid={`key-point-${index}`}>
-                    <span>{t.format}</span>
+                            <span className="text-sm text-slate-600" data-testid={\`key-point-${index}`}>
+                              {point}
                             </span>
                           </div>
                         ))}
-                    <span>{t.fileSize}</span>
+                      </div>
                     </ScrollArea>
                   )}
                 </div>
@@ -227,7 +227,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                       <ScrollArea className="flex-1 min-h-0 mt-3">
                         <div className="space-y-2 pr-2">
                           {(currentVideo.analysis as any).transcription.map((line: string, index: number) => (
-                            <div key={index} className="text-sm text-slate-600 leading-relaxed" data-testid={`transcription-line-${index}`}>
+                            <div key={index} className="text-sm text-slate-600 leading-relaxed" data-testid={\`transcription-line-${index}`}>
                               {line}
                             </div>
                           ))}
@@ -255,17 +255,17 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                     {isVideoDetailsExpanded && (
                       <div className="space-y-2">
                         <div className="flex justify-between text-xs text-slate-500">
-                          <span>Duration</span>
+                          <span>{t.duration}</span>
                           <span data-testid="text-video-duration">
                             {currentVideo.duration ? formatDuration(currentVideo.duration) : 'Unknown'}
                           </span>
                         </div>
                         <div className="flex justify-between text-xs text-slate-500">
-                          <span>Format</span>
+                          <span>{t.format}</span>
                           <span data-testid="text-video-format">{currentVideo.format}</span>
                         </div>
                         <div className="flex justify-between text-xs text-slate-500">
-                          <span>Size</span>
+                          <span>{t.fileSize}</span>
                           <span data-testid="text-video-size">{formatFileSize(currentVideo.size)}</span>
                         </div>
                       </div>
@@ -315,7 +315,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
         
         {/* Resizer */}
         <div 
-          className={`h-2 bg-slate-100 hover:bg-slate-200 cursor-row-resize flex items-center justify-center group transition-colors ${isResizing ? 'bg-slate-300' : ''}`}
+          className={\`h-2 bg-slate-100 hover:bg-slate-200 cursor-row-resize flex items-center justify-center group transition-colors ${isResizing ? 'bg-slate-300' : ''}`}
           onMouseDown={handleMouseDown}
           data-testid="summary-resizer"
         >
@@ -360,7 +360,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                 const frameTime = getFrameTimeFromFilename((chat as any).relevantFrame);
 
                 return (
-                  <div key={chat.id} className="space-y-3" data-testid={`chat-item-${chat.id}`}>
+                  <div key={chat.id} className="space-y-3" data-testid={\`chat-item-${chat.id}`}>
                     {/* Rephrased Question */}
                     <div className="border-b border-slate-100 pb-3">
                       <h4 className="text-sm font-medium text-slate-800 leading-relaxed">
@@ -379,7 +379,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                           <button
                             onClick={() => frameTime && onFrameClick?.(frameTime)}
                             className="flex-shrink-0 w-16 h-12 bg-slate-200 rounded-lg overflow-hidden hover:ring-2 hover:ring-indigo-300 transition-all duration-200 transform hover:scale-105"
-                            data-testid={`frame-thumbnail-${chat.id}`}
+                            data-testid={\`frame-thumbnail-${chat.id}`}
                           >
                             <img
                               src={`/api/videos/${currentVideoId}/frames/${(chat as any).relevantFrame}?session=${sessionManager.getSessionId()}`}
