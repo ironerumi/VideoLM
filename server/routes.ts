@@ -20,35 +20,28 @@ function decodeMultipartFilename(originalname: string): string {
   try {
     console.log('Original filename received:', originalname);
     
-    // Always treat as potential double-byte encoding issue first
-    // Most file uploads with Japanese names come through as UTF-8 bytes interpreted as Latin-1
-    try {
-      // Convert from Latin-1 back to bytes, then decode as UTF-8
-      const bytes = new Uint8Array(originalname.length);
-      for (let i = 0; i < originalname.length; i++) {
-        bytes[i] = originalname.charCodeAt(i) & 0xFF;
-      }
-      const decoder = new TextDecoder('utf-8', { fatal: false });
-      const decoded = decoder.decode(bytes);
-      
-      console.log('Attempted UTF-8 decode:', decoded);
-      
-      // Check if decoded version contains valid Japanese characters
-      if (/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(decoded)) {
-        console.log('Successfully decoded Japanese filename:', decoded);
-        return decoded;
-      }
-      
-      // Check if decoded version looks more reasonable (less mojibake patterns)
-      const originalMojibake = (originalname.match(/[À-ÿ]/g) || []).length;
-      const decodedMojibake = (decoded.match(/[À-ÿ]/g) || []).length;
-      
-      if (decodedMojibake < originalMojibake && decoded.length > 0) {
-        console.log('Decoded version has fewer mojibake characters:', decoded);
-        return decoded;
-      }
-    } catch (error) {
-      console.log('UTF-8 decode failed:', error.message);
+    // Log character codes to understand the encoding issue
+    const charCodes = [];
+    for (let i = 0; i < originalname.length; i++) {
+      charCodes.push(originalname.charCodeAt(i));
+    }
+    console.log('Character codes:', charCodes);
+    
+    // Convert the string back to bytes (treating each character as a byte)
+    const bytes = new Uint8Array(originalname.length);
+    for (let i = 0; i < originalname.length; i++) {
+      bytes[i] = originalname.charCodeAt(i);
+    }
+    
+    // Decode as UTF-8
+    const decoder = new TextDecoder('utf-8');
+    const decoded = decoder.decode(bytes);
+    console.log('UTF-8 decoded filename:', decoded);
+    
+    // Check if the decoded version contains Japanese characters
+    if (/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(decoded)) {
+      console.log('Successfully decoded Japanese filename:', decoded);
+      return decoded;
     }
     
     // Try URL decoding if it contains % characters
@@ -62,12 +55,6 @@ function decodeMultipartFilename(originalname: string): string {
       } catch (error) {
         console.log('URL decode failed:', error.message);
       }
-    }
-    
-    // If already contains Japanese characters, return as-is
-    if (/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(originalname)) {
-      console.log('Filename already contains Japanese characters:', originalname);
-      return originalname;
     }
     
     console.log('No successful conversion, using original filename:', originalname);
