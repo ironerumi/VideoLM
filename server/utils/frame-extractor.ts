@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 
@@ -30,7 +30,6 @@ export interface FrameExtractionResult {
 async function getVideoDuration(videoPath: string): Promise<number> {
   return new Promise((resolve, reject) => {
     // Check if ffprobe is available
-    const { spawn: spawnSync } = require('child_process');
     try {
       const testProbe = spawnSync('which', ['ffprobe']);
       testProbe.on('error', (error: any) => {
@@ -255,8 +254,6 @@ export async function extractVideoFrames(options: FrameExtractionOptions): Promi
  */
 async function checkFFmpegTools(): Promise<boolean> {
   return new Promise((resolve) => {
-    const { spawn } = require('child_process');
-    
     // Check ffprobe
     const testProbe = spawn('ffprobe', ['-version']);
     
