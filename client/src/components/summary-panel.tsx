@@ -181,7 +181,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                     className="flex items-center justify-between w-full text-left hover:bg-slate-100 rounded-lg p-2 -m-2 transition-colors"
                     data-testid="button-toggle-key-points"
                   >
-                    <h4 className="text-sm font-medium text-slate-700">Key Points</h4>
+                    <h4 className="text-sm font-medium text-slate-700">{t.keyPoints}</h4>
                     {isKeyPointsExpanded ? (
                       <ChevronDown className="w-4 h-4 text-slate-500" />
                     ) : (
@@ -216,7 +216,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                       className="flex items-center justify-between w-full text-left hover:bg-slate-100 rounded-lg p-2 -m-2 transition-colors flex-shrink-0"
                       data-testid="button-toggle-transcription"
                     >
-                      <h4 className="text-sm font-medium text-slate-700">Transcription</h4>
+                      <h4 className="text-sm font-medium text-slate-700">{t.transcription}</h4>
                       {isTranscriptionExpanded ? (
                         <ChevronDown className="w-4 h-4 text-slate-500" />
                       ) : (
@@ -245,7 +245,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                       className="flex items-center justify-between w-full text-left hover:bg-slate-100 rounded-lg p-2 -m-2 transition-colors mb-3"
                       data-testid="button-toggle-video-details"
                     >
-                      <h4 className="text-sm font-medium text-slate-700">Video Details</h4>
+                      <h4 className="text-sm font-medium text-slate-700">{t.videoDetails}</h4>
                       {isVideoDetailsExpanded ? (
                         <ChevronDown className="w-4 h-4 text-slate-500" />
                       ) : (
@@ -255,17 +255,17 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                     {isVideoDetailsExpanded && (
                       <div className="space-y-2">
                         <div className="flex justify-between text-xs text-slate-500">
-                          <span>Duration</span>
+                          <span>{t.duration}</span>
                           <span data-testid="text-video-duration">
                             {currentVideo.duration ? formatDuration(currentVideo.duration) : 'Unknown'}
                           </span>
                         </div>
                         <div className="flex justify-between text-xs text-slate-500">
-                          <span>Format</span>
+                          <span>{t.format}</span>
                           <span data-testid="text-video-format">{currentVideo.format}</span>
                         </div>
                         <div className="flex justify-between text-xs text-slate-500">
-                          <span>Size</span>
+                          <span>{t.fileSize}</span>
                           <span data-testid="text-video-size">{formatFileSize(currentVideo.size)}</span>
                         </div>
                       </div>
