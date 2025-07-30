@@ -198,7 +198,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                               index % 4 === 1 ? 'bg-purple-400' :
                               index % 4 === 2 ? 'bg-pink-400' : 'bg-blue-400'
                             }`}></div>
-                            <span className="text-sm text-slate-600" data-testid={\`key-point-${index}`}>
+                            <span className="text-sm text-slate-600" data-testid={"key-point-" + index}>
                               {point}
                             </span>
                           </div>
@@ -227,7 +227,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                       <ScrollArea className="flex-1 min-h-0 mt-3">
                         <div className="space-y-2 pr-2">
                           {(currentVideo.analysis as any).transcription.map((line: string, index: number) => (
-                            <div key={index} className="text-sm text-slate-600 leading-relaxed" data-testid={\`transcription-line-${index}`}>
+                            <div key={index} className="text-sm text-slate-600 leading-relaxed" data-testid={"transcription-line-" + index}>
                               {line}
                             </div>
                           ))}
@@ -315,7 +315,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
         
         {/* Resizer */}
         <div 
-          className={\`h-2 bg-slate-100 hover:bg-slate-200 cursor-row-resize flex items-center justify-center group transition-colors ${isResizing ? 'bg-slate-300' : ''}`}
+          className={`h-2 bg-slate-100 hover:bg-slate-200 cursor-row-resize flex items-center justify-center group transition-colors ${isResizing ? 'bg-slate-300' : ''}`}
           onMouseDown={handleMouseDown}
           data-testid="summary-resizer"
         >
@@ -360,7 +360,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                 const frameTime = getFrameTimeFromFilename((chat as any).relevantFrame);
 
                 return (
-                  <div key={chat.id} className="space-y-3" data-testid={\`chat-item-${chat.id}`}>
+                  <div key={chat.id} className="space-y-3" data-testid={"chat-item-" + chat.id}>
                     {/* Rephrased Question */}
                     <div className="border-b border-slate-100 pb-3">
                       <h4 className="text-sm font-medium text-slate-800 leading-relaxed">
@@ -379,7 +379,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                           <button
                             onClick={() => frameTime && onFrameClick?.(frameTime)}
                             className="flex-shrink-0 w-16 h-12 bg-slate-200 rounded-lg overflow-hidden hover:ring-2 hover:ring-indigo-300 transition-all duration-200 transform hover:scale-105"
-                            data-testid={\`frame-thumbnail-${chat.id}`}
+                            data-testid={"frame-thumbnail-" + chat.id}
                           >
                             <img
                               src={`/api/videos/${currentVideoId}/frames/${(chat as any).relevantFrame}?session=${sessionManager.getSessionId()}`}
