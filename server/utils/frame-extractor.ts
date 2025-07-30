@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 
@@ -29,6 +29,19 @@ export interface FrameExtractionResult {
  */
 async function getVideoDuration(videoPath: string): Promise<number> {
   return new Promise((resolve, reject) => {
+    // Check if ffprobe is available
+    try {
+      const testProbe = spawnSync('which', ['ffprobe']);
+      testProbe.on('error', (error: any) => {
+        if (error.code === 'ENOENT') {
+          reject(new Error('ffprobe is not installed or not found in PATH. Please ensure FFmpeg is properly installed.'));
+          return;
+        }
+      });
+    } catch (error) {
+      // Continue with original logic if 'which' command fails
+    }
+
     const ffprobe = spawn('ffprobe', [
       '-v', 'quiet',
       '-show_entries', 'format=duration',
@@ -45,6 +58,14 @@ async function getVideoDuration(videoPath: string): Promise<number> {
 
     ffprobe.stderr.on('data', (data) => {
       error += data.toString();
+    });
+
+    ffprobe.on('error', (error: any) => {
+      if (error.code === 'ENOENT') {
+        reject(new Error('ffprobe is not installed or not found in PATH. Please ensure FFmpeg is properly installed.'));
+        return;
+      }
+      reject(error);
     });
 
     ffprobe.on('close', (code) => {
@@ -88,6 +109,16 @@ async function extractFrameAtTime(
       error += data.toString();
     });
 
+    ffmpeg.on('error', (error: any) => {
+      if (error.code === 'ENOENT') {
+        console.error('ffmpeg is not installed or not found in PATH. Please ensure FFmpeg is properly installed.');
+        resolve(false);
+        return;
+      }
+      console.error('ffmpeg error:', error);
+      resolve(false);
+    });
+
     ffmpeg.on('close', (code) => {
       resolve(code === 0);
     });
@@ -106,6 +137,18 @@ export async function extractVideoFrames(options: FrameExtractionOptions): Promi
   } = options;
 
   try {
+    // Check if required tools are available
+    const toolsAvailable = await checkFFmpegTools();
+    if (!toolsAvailable) {
+      return {
+        success: false,
+        frames: [],
+        totalFrames: 0,
+        duration: 0,
+        error: 'FFmpeg tools (ffmpeg/ffprobe) are not available. Please ensure FFmpeg is properly installed.'
+      };
+    }
+
     // Ensure output directory exists
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
@@ -204,6 +247,45 @@ export async function extractVideoFrames(options: FrameExtractionOptions): Promi
       error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
+}
+
+/**
+ * Check if FFmpeg tools are available
+ */
+async function checkFFmpegTools(): Promise<boolean> {
+  return new Promise((resolve) => {
+    // Check ffprobe
+    const testProbe = spawn('ffprobe', ['-version']);
+    
+    testProbe.on('error', (error: any) => {
+      if (error.code === 'ENOENT') {
+        console.error('ffprobe not found. FFmpeg tools are not available.');
+        resolve(false);
+        return;
+      }
+    });
+    
+    testProbe.on('close', (code) => {
+      if (code === 0) {
+        // ffprobe is available, now check ffmpeg
+        const testMpeg = spawn('ffmpeg', ['-version']);
+        
+        testMpeg.on('error', (error: any) => {
+          if (error.code === 'ENOENT') {
+            console.error('ffmpeg not found. FFmpeg tools are not available.');
+            resolve(false);
+            return;
+          }
+        });
+        
+        testMpeg.on('close', (code) => {
+          resolve(code === 0);
+        });
+      } else {
+        resolve(false);
+      }
+    });
+  });
 }
 
 /**

@@ -12,6 +12,8 @@ export interface Translations {
   delete: string;
   reset: string;
   settings: string;
+  sources: string;
+  complete: string;
   
   // Header
   videoLM: string;
@@ -26,6 +28,7 @@ export interface Translations {
   maxFileSize: string;
   uploading: string;
   uploadFailed: string;
+  format: string;
   
   // Video List
   selectVideo: string;
@@ -68,8 +71,7 @@ export interface Translations {
   generating: string;
   keyPoints: string;
   transcription: string;
-  chatHistory: string;
-  sources: string;
+  chatHistoryTab: string;
   videoDetails: string;
   analysisResults: string;
   
@@ -94,7 +96,6 @@ export interface Translations {
   analyzing: string;
   extractingFrames: string;
   uploadComplete: string;
-  analysisComplete: string;
   browserNotSupported: string;
 }
 
@@ -109,6 +110,8 @@ const translations: Record<Language, Translations> = {
     delete: 'Delete',
     reset: 'Reset',
     settings: 'Settings',
+    sources: 'Sources',
+    complete: 'Complete',
     
     // Header
     videoLM: 'VideoLM',
@@ -123,6 +126,7 @@ const translations: Record<Language, Translations> = {
     maxFileSize: 'Maximum file size: 100MB',
     uploading: 'Uploading...',
     uploadFailed: 'Upload failed',
+    format: 'Format',
     
     // Video List
     selectVideo: 'Select video to analyze',
@@ -165,8 +169,7 @@ const translations: Record<Language, Translations> = {
     generating: 'Generating...',
     keyPoints: 'Key Points',
     transcription: 'Transcription',
-    chatHistory: 'Chat History',
-    sources: 'sources',
+    chatHistoryTab: 'Chat History',
     videoDetails: 'Video Details',
     analysisResults: 'Analysis Results',
     
@@ -192,7 +195,6 @@ const translations: Record<Language, Translations> = {
     extractingFrames: 'Extracting frames...',
     uploadComplete: 'Upload complete',
     analysisComplete: 'Analysis complete',
-    complete: 'complete',
     browserNotSupported: 'Your browser does not support the video tag.',
   },
   
@@ -206,6 +208,8 @@ const translations: Record<Language, Translations> = {
     delete: '削除',
     reset: 'リセット',
     settings: '設定',
+    sources: 'ソース',
+    complete: '完了',
     
     // Header
     videoLM: 'VideoLM',
@@ -220,6 +224,7 @@ const translations: Record<Language, Translations> = {
     maxFileSize: '最大ファイルサイズ: 100MB',
     uploading: 'アップロード中...',
     uploadFailed: 'アップロードに失敗しました',
+    format: 'フォーマット',
     
     // Video List
     selectVideo: '分析する動画を選択',
@@ -263,7 +268,6 @@ const translations: Record<Language, Translations> = {
     keyPoints: 'キーポイント',
     transcription: '文字起こし',
     chatHistoryTab: 'チャット履歴',
-    sources: 'ソース',
     videoDetails: '動画詳細',
     analysisResults: '分析結果',
     
@@ -289,7 +293,6 @@ const translations: Record<Language, Translations> = {
     extractingFrames: 'フレームを抽出中...',
     uploadComplete: 'アップロード完了',
     analysisComplete: '分析完了',
-    complete: '完了',
     browserNotSupported: 'お使いのブラウザはビデオタグをサポートしていません。',
   },
 };

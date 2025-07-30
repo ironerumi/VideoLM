@@ -202,8 +202,8 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
                 <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Play className="w-8 h-8 text-slate-400" />
                 </div>
-                <p className="text-slate-500 font-medium">Select a video to play</p>
-                <p className="text-slate-400 text-sm">Choose from your uploaded videos</p>
+                <p className="text-slate-500 font-medium">{t.noVideoSelected}</p>
+                <p className="text-slate-400 text-sm">{t.selectToPlay}</p>
               </div>
             </div>
           )}
@@ -211,7 +211,6 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
 
         {/* Thumbnail Timeline - Real Extracted Frames */}
         <div className="p-6 bg-white border-t border-slate-100 flex-shrink-0 min-w-0">
-          <h4 className="text-sm font-medium text-slate-700 mb-3">Video Timeline</h4>
           <div className="overflow-x-auto max-w-full" ref={timelineRef}>
             <div className="flex space-x-2 pb-2 w-max">
             {video?.thumbnails && typeof video.thumbnails === 'object' && 'frames' in video.thumbnails && Array.isArray(video.thumbnails.frames) && video.thumbnails.frames.length > 0 ? (
@@ -228,6 +227,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
                     }`}
                     onClick={() => handleSeek([frameProgress])}
                     data-testid={`thumbnail-${index}`}
+                    data-testid={"thumbnail-" + index}
                   >
                     <img
                       src={`/api/videos/${video.id}/frames/${frame.fileName}?session=${video.sessionId}`}
@@ -246,7 +246,16 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
                           const gradientClasses = `bg-gradient-to-br ${getGradient(index)}`.split(' ');
                           parent.classList.add(...gradientClasses);
                           
-                          parent.innerHTML += `<div class="w-full h-full flex items-center justify-center"><span class="text-white text-xs">${frame.timestamp.toFixed(1)}s</span></div>`;
+                          // Create elements safely using DOM methods
+                          const containerDiv = document.createElement('div');
+                          containerDiv.className = 'w-full h-full flex items-center justify-center';
+                          
+                          const timestampSpan = document.createElement('span');
+                          timestampSpan.className = 'text-white text-xs';
+                          timestampSpan.textContent = `${frame.timestamp.toFixed(1)}s`;
+                          
+                          containerDiv.appendChild(timestampSpan);
+                          parent.appendChild(containerDiv);
                         }
                       }}
                     />
@@ -256,7 +265,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
             ) : (
               // Show message when no frames are available
               <div className="flex items-center justify-center w-full py-4">
-                <span className="text-slate-500 text-sm">No frames extracted yet</span>
+                <span className="text-slate-500 text-sm">フレームがまだ抽出されていません</span>
               </div>
             )}
             </div>

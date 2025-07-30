@@ -5,8 +5,8 @@ import { videoUpload, generateThumbnails, getVideoMetadata, extractVideoFrame } 
 import { analyzeVideoFrame, analyzeVideoFrames, chatWithVideo, generateVideoSummary, type VideoAnalysis } from "./services/openai";
 import { extractVideoFrames, type FrameExtractionResult } from "./utils/frame-extractor";
 import { insertVideoSchema, insertChatMessageSchema } from "@shared/schema";
-import { decodeFilename, encodeFilename, fixJapaneseEncoding } from "./utils/encoding";
 import multer from 'multer';
+import Busboy from 'busboy';
 import path from 'path';
 import fs from 'fs';
 
@@ -15,77 +15,89 @@ interface MulterRequest extends Request {
   sessionId: string;
 }
 
-// Custom filename decoder for Japanese/CJK characters
-function decodeMultipartFilename(originalname: string): string {
-  try {
-    console.log('Original filename received:', originalname);
-    console.log('Character codes:', originalname.split('').map(c => c.charCodeAt(0)));
-    
-    // First, try to handle the most common issue: UTF-8 bytes interpreted as Latin-1
-    if (originalname.includes('Ã') || originalname.includes('¢') || originalname.includes('â')) {
-      console.log('Detected encoding issue, attempting to fix...');
-      
-      // Convert from Latin-1 back to bytes, then decode as UTF-8
-      const bytes = [];
-      for (let i = 0; i < originalname.length; i++) {
-        bytes.push(originalname.charCodeAt(i));
-      }
-      const uint8Array = new Uint8Array(bytes);
-      const decoder = new TextDecoder('utf-8');
-      const decoded = decoder.decode(uint8Array);
-      
-      console.log('Decoded filename:', decoded);
-      
-      // Verify this looks like valid text (contains readable characters)
-      if (/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u0020-\u007E]/.test(decoded)) {
-        console.log('Successfully decoded Japanese filename');
-        return decoded;
-      }
-    }
-    
-    // If no conversion needed or conversion failed, return original
-    console.log('Using original filename (no conversion needed)');
-    return originalname;
-  } catch (error) {
-    console.warn('Failed to decode filename:', error);
-    return originalname;
-  }
-}
-
-// Configure multer to save files to session-specific directories
-const sessionVideoUpload = multer({
-  storage: multer.diskStorage({
-    destination: async (req: MulterRequest, file, cb) => {
-      const sessionDir = path.join(process.cwd(), 'uploads', req.sessionId);
-      if (!fs.existsSync(sessionDir)) {
-        fs.mkdirSync(sessionDir, { recursive: true });
-      }
-      cb(null, sessionDir);
-    },
-    filename: (req, file, cb) => {
-      const timestamp = Date.now();
-      // First decode the problematic filename
-      const decodedName = decodeMultipartFilename(file.originalname);
-      const ext = path.extname(decodedName);
-      const name = path.basename(decodedName, ext);
-      cb(null, `${timestamp}-${name}${ext}`);
-    }
-  }),
-  limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    const decodedName = decodeMultipartFilename(file.originalname);
-    const allowedTypes = /\.(mp4|mov|avi|wmv|flv|webm|mkv)$/i;
-    if (allowedTypes.test(decodedName)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file type. Only video files are allowed.'));
-    }
-  }
-});
-
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Custom multer middleware with proper UTF-8 filename support using Busboy
+  const customMulterMiddleware = (req: MulterRequest, res: Response, next: NextFunction) => {
+    if (req.headers['content-type']?.startsWith('multipart/form-data')) {
+      const busboy = Busboy({ 
+        headers: req.headers,
+        defParamCharset: 'utf8' // Key setting for UTF-8 support
+      });
+      
+      let fileProcessed = false;
+      
+      busboy.on('file', (fieldname, file, info) => {
+        const { filename, encoding, mimeType } = info;
+        console.log('Properly decoded filename:', filename);
+        
+        // Validate file type
+        const allowedTypes = /\.(mp4|mov|avi|wmv|flv|webm|mkv)$/i;
+        if (!allowedTypes.test(filename)) {
+          file.resume(); // Drain the file stream
+          res.status(400).json({ message: 'Invalid file type. Only video files are allowed.' });
+          return;
+        }
+        
+        // Handle file processing
+        const timestamp = Date.now();
+        const sessionDir = path.join(process.cwd(), 'uploads', req.sessionId);
+        if (!fs.existsSync(sessionDir)) {
+          fs.mkdirSync(sessionDir, { recursive: true });
+        }
+        
+        const ext = path.extname(filename);
+        const name = path.basename(filename, ext);
+        const finalFilename = `${timestamp}-${name}${ext}`;
+        const filePath = path.join(sessionDir, finalFilename);
+        
+        const writeStream = fs.createWriteStream(filePath);
+        let fileSize = 0;
+        
+        file.on('data', (data) => {
+          fileSize += data.length;
+          // Check file size limit (100MB)
+          if (fileSize > 100 * 1024 * 1024) {
+            writeStream.destroy();
+            fs.unlinkSync(filePath);
+            res.status(400).json({ message: 'File too large. Maximum size is 100MB.' });
+            return;
+          }
+        });
+        
+        file.on('end', () => {
+          writeStream.end();
+          fileProcessed = true;
+        });
+        
+        file.pipe(writeStream);
+        
+        req.file = {
+          fieldname,
+          originalname: filename,
+          filename: finalFilename,
+          path: filePath,
+          size: fileSize,
+          mimetype: mimeType
+        } as Express.Multer.File;
+      });
+      
+      busboy.on('finish', () => {
+        if (fileProcessed) {
+          next();
+        }
+      });
+      
+      busboy.on('error', (error) => {
+        console.error('Busboy error:', error);
+        res.status(400).json({ message: 'File upload error' });
+      });
+      
+      req.pipe(busboy);
+    } else {
+      next();
+    }
+  };
   
   // Get videos for current session
   app.get("/api/videos", async (req: MulterRequest, res) => {
@@ -99,7 +111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload video with enhanced progress logging
-  app.post("/api/videos/upload", sessionVideoUpload.single('video'), async (req: MulterRequest, res) => {
+  app.post("/api/videos/upload", customMulterMiddleware, async (req: MulterRequest, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No video file provided" });
@@ -114,18 +126,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const thumbnails = await generateThumbnails(fileBuffer);
       
       // Extract frames from video
-      const decodedOriginalName = decodeMultipartFilename(req.file.originalname);
-      const videoNameWithoutExt = path.basename(decodedOriginalName, path.extname(decodedOriginalName));
+      const videoNameWithoutExt = path.basename(req.file.originalname, path.extname(req.file.originalname));
       const framesDir = path.join(path.dirname(req.file.path), videoNameWithoutExt);
       
       console.log(`🎬 Extracting frames to: ${framesDir}`);
       console.log('⚙️ Frame extraction settings: 1fps, max 100 frames');
-      const frameExtractionResult: FrameExtractionResult = await extractVideoFrames({
-        videoPath: req.file.path,
-        outputDir: framesDir,
-        framesPerSecond: 1, // 1 frame per second for better timeline coverage
-        maxFrames: 100 // Increase to allow more frames for longer videos
-      });
+      
+      let frameExtractionResult: FrameExtractionResult;
+      try {
+        frameExtractionResult = await extractVideoFrames({
+          videoPath: req.file.path,
+          outputDir: framesDir,
+          framesPerSecond: 1,
+          maxFrames: 100
+        });
+      } catch (error) {
+        console.warn('⚠️ Frame extraction failed:', error);
+        // Create fallback result with estimated duration
+        const estimatedDuration = Math.min(Math.max(req.file.size / (1024 * 1024), 10), 300); // Estimate 10-300 seconds based on file size
+        frameExtractionResult = {
+          success: false,
+          frames: [],
+          totalFrames: 0,
+          duration: estimatedDuration,
+          error: 'FFmpeg not available'
+        };
+      }
       
       console.log(`✅ Frame extraction complete: ${frameExtractionResult.frames?.length || 0} frames extracted`);
       
@@ -157,10 +183,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`✨ OpenAI analysis completed in ${processingTime}ms`);
         console.log(`📝 Generated transcription with ${analysis.transcription.length} entries`);
       } else {
-        console.warn('⚠️ Frame extraction failed, using fallback analysis');
-        const placeholder = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
-        const frameBase64 = placeholder.toString('base64');
-        analysis = await analyzeVideoFrame(frameBase64);
+        console.warn('⚠️ Frame extraction failed, creating text-only analysis');
+        // Create a meaningful analysis without frames
+        const userLanguage = req.headers['x-user-language'] as string || 'en';
+        const filename = req.file.originalname;
+        const fileSize = req.file.size;
+        const estimatedDuration = frameExtractionResult.duration;
+        
+        analysis = {
+          summary: userLanguage === 'ja' 
+            ? `動画ファイル「${filename}」がアップロードされました。ファイルサイズ: ${Math.round(fileSize / (1024 * 1024))}MB、推定再生時間: ${Math.round(estimatedDuration)}秒。フレーム抽出ツールが利用できないため、詳細な映像解析は行えませんが、動画の再生と基本的な操作は可能です。`
+            : `Video file "${filename}" has been uploaded successfully. File size: ${Math.round(fileSize / (1024 * 1024))}MB, estimated duration: ${Math.round(estimatedDuration)} seconds. Detailed frame analysis is not available due to missing FFmpeg tools, but video playback and basic operations are supported.`,
+          keyPoints: userLanguage === 'ja' 
+            ? ['動画ファイルが正常にアップロードされました', 'ファイル形式が検証されました', '基本的な動画情報が取得されました']
+            : ['Video file uploaded successfully', 'File format validated', 'Basic video information extracted'],
+          topics: userLanguage === 'ja' ? ['動画アップロード', 'ファイル管理'] : ['Video Upload', 'File Management'],
+          sentiment: 'neutral',
+          visualElements: userLanguage === 'ja' 
+            ? ['動画コンテンツ（詳細解析不可）'] 
+            : ['Video content (detailed analysis unavailable)'],
+          transcription: userLanguage === 'ja' 
+            ? [`[00:00] 動画の再生が開始されました`]
+            : [`[00:00] Video playback started`]
+        };
       }
 
       // Reduce data size for storage optimization
@@ -176,11 +221,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const videoData = {
         sessionId: req.sessionId,
         filename: req.file.filename,
-        originalName: decodedOriginalName,
+        originalName: req.file.originalname,
         filePath: req.file.path,
         size: req.file.size,
         duration: frameExtractionResult.success ? Math.round(frameExtractionResult.duration) : Math.round(metadata.duration),
-        format: path.extname(decodedOriginalName).slice(1),
+        format: path.extname(req.file.originalname).slice(1),
         analysis: optimizedAnalysis,
         thumbnails: {
           ...thumbnails,

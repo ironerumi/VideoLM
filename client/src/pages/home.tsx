@@ -6,7 +6,7 @@ import SummaryPanel from "@/components/summary-panel";
 import QAInterface from "@/components/qa-interface";
 import SettingsModal from "@/components/settings-modal";
 import AppIcon from "@/components/app-icon";
-import { Settings, User, ChevronLeft, ChevronRight, PanelLeftClose, PanelRightClose } from "lucide-react";
+import { Settings, User, ChevronLeft, ChevronRight, PanelLeftClose, PanelRightClose, GripVertical, GripHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import type { Video } from "@shared/schema";
@@ -130,7 +130,10 @@ export default function Home() {
                   onCollapse={() => setLeftPanelCollapsed(true)}
                 />
               </Panel>
-              <PanelResizeHandle className="w-1 bg-slate-200 hover:bg-slate-300 transition-colors data-[resize-handle-active]:bg-slate-400" />
+              
+              <PanelResizeHandle className="w-2 bg-slate-100 hover:bg-slate-200 cursor-col-resize flex items-center justify-center group transition-colors data-[resize-handle-active]:bg-slate-300">
+                <GripVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
+              </PanelResizeHandle>
             </>
           )}
 
@@ -138,7 +141,7 @@ export default function Home() {
           <Panel 
             id="center-panel"
             order={2}
-            defaultSize={leftPanelCollapsed ? (rightPanelCollapsed ? 100 : 75) : (rightPanelCollapsed ? 75 : 50)} 
+            defaultSize={50} 
             minSize={30}
           >
             <PanelGroup direction="vertical" className="h-full">
@@ -159,7 +162,9 @@ export default function Home() {
               </Panel>
               
               {/* Vertical Resize Handle */}
-              <PanelResizeHandle className="h-1 bg-slate-200 hover:bg-slate-300 transition-colors data-[resize-handle-active]:bg-slate-400" />
+              <PanelResizeHandle className="h-2 bg-slate-100 hover:bg-slate-200 cursor-row-resize flex items-center justify-center group transition-colors data-[resize-handle-active]:bg-slate-300">
+                <GripHorizontal className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
+              </PanelResizeHandle>
               
               {/* Chat Interface */}
               <Panel 
@@ -180,24 +185,28 @@ export default function Home() {
 
           {/* Right Panel - Summary */}
           {!rightPanelCollapsed && (
-            <>
-              <PanelResizeHandle className="w-1 bg-slate-200 hover:bg-slate-300 transition-colors data-[resize-handle-active]:bg-slate-400" />
-              <Panel 
-                id="right-panel"
-                order={3}
-                defaultSize={25} 
-                minSize={15} 
-                maxSize={40} 
-                className="min-w-64"
-              >
-                <SummaryPanel
-                  selectedVideoIds={selectedVideoIds}
-                  currentVideoId={currentVideoId}
-                  onCollapse={() => setRightPanelCollapsed(true)}
-                  onFrameClick={handleFrameClick}
-                />
-              </Panel>
-            </>
+            <PanelResizeHandle className="w-2 bg-slate-100 hover:bg-slate-200 cursor-col-resize flex items-center justify-center group transition-colors data-[resize-handle-active]:bg-slate-300">
+              <GripVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
+            </PanelResizeHandle>
+          )}
+          
+          {!rightPanelCollapsed && (
+            <Panel 
+              id="right-panel"
+              order={3}
+              defaultSize={25}
+              minSize={15} 
+              maxSize={40} 
+              className="min-w-64"
+              collapsible={false}
+            >
+              <SummaryPanel
+                selectedVideoIds={selectedVideoIds}
+                currentVideoId={currentVideoId}
+                onCollapse={() => setRightPanelCollapsed(true)}
+                onFrameClick={handleFrameClick}
+              />
+            </Panel>
           )}
         </PanelGroup>
 

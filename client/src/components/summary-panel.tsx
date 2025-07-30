@@ -181,7 +181,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                     className="flex items-center justify-between w-full text-left hover:bg-slate-100 rounded-lg p-2 -m-2 transition-colors"
                     data-testid="button-toggle-key-points"
                   >
-                    <h4 className="text-sm font-medium text-slate-700">Key Points</h4>
+                    <h4 className="text-sm font-medium text-slate-700">{t.keyPoints}</h4>
                     {isKeyPointsExpanded ? (
                       <ChevronDown className="w-4 h-4 text-slate-500" />
                     ) : (
@@ -193,12 +193,12 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                       <div className="space-y-2 pr-2">
                         {(currentVideo.analysis as any)?.keyPoints?.map((point: string, index: number) => (
                           <div key={index} className="flex items-center space-x-2">
-                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                            <div className={`w-2 h-2 rounded-full ${
                               index % 4 === 0 ? 'bg-indigo-400' :
                               index % 4 === 1 ? 'bg-purple-400' :
                               index % 4 === 2 ? 'bg-pink-400' : 'bg-blue-400'
                             }`}></div>
-                            <span className="text-sm text-slate-600" data-testid={`key-point-${index}`}>
+                            <span className="text-sm text-slate-600" data-testid={"key-point-" + index}>
                               {point}
                             </span>
                           </div>
@@ -216,7 +216,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                       className="flex items-center justify-between w-full text-left hover:bg-slate-100 rounded-lg p-2 -m-2 transition-colors flex-shrink-0"
                       data-testid="button-toggle-transcription"
                     >
-                      <h4 className="text-sm font-medium text-slate-700">Transcription</h4>
+                      <h4 className="text-sm font-medium text-slate-700">{t.transcription}</h4>
                       {isTranscriptionExpanded ? (
                         <ChevronDown className="w-4 h-4 text-slate-500" />
                       ) : (
@@ -227,7 +227,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                       <ScrollArea className="flex-1 min-h-0 mt-3">
                         <div className="space-y-2 pr-2">
                           {(currentVideo.analysis as any).transcription.map((line: string, index: number) => (
-                            <div key={index} className="text-sm text-slate-600 leading-relaxed" data-testid={`transcription-line-${index}`}>
+                            <div key={index} className="text-sm text-slate-600 leading-relaxed" data-testid={"transcription-line-" + index}>
                               {line}
                             </div>
                           ))}
@@ -245,7 +245,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                       className="flex items-center justify-between w-full text-left hover:bg-slate-100 rounded-lg p-2 -m-2 transition-colors mb-3"
                       data-testid="button-toggle-video-details"
                     >
-                      <h4 className="text-sm font-medium text-slate-700">Video Details</h4>
+                      <h4 className="text-sm font-medium text-slate-700">{t.videoDetails}</h4>
                       {isVideoDetailsExpanded ? (
                         <ChevronDown className="w-4 h-4 text-slate-500" />
                       ) : (
@@ -255,17 +255,17 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                     {isVideoDetailsExpanded && (
                       <div className="space-y-2">
                         <div className="flex justify-between text-xs text-slate-500">
-                          <span>Duration</span>
+                          <span>{t.duration}</span>
                           <span data-testid="text-video-duration">
                             {currentVideo.duration ? formatDuration(currentVideo.duration) : 'Unknown'}
                           </span>
                         </div>
                         <div className="flex justify-between text-xs text-slate-500">
-                          <span>Format</span>
+                          <span>{t.format}</span>
                           <span data-testid="text-video-format">{currentVideo.format}</span>
                         </div>
                         <div className="flex justify-between text-xs text-slate-500">
-                          <span>Size</span>
+                          <span>{t.fileSize}</span>
                           <span data-testid="text-video-size">{formatFileSize(currentVideo.size)}</span>
                         </div>
                       </div>
@@ -279,9 +279,9 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
               <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-3">
                 <FileText className="w-6 h-6 text-slate-400" />
               </div>
-              <p className="text-slate-600 font-medium mb-2">Generate Summary</p>
+              <p className="text-slate-600 font-medium mb-2">{t.generateSummary}</p>
               <p className="text-slate-400 text-sm mb-3">
-                Create a comprehensive summary of your {selectedVideoIds.length} selected video{selectedVideoIds.length !== 1 ? 's' : ''}
+                {selectedVideoIds.length} {t.selected} {t.videos}の包括的な要約を作成
               </p>
               <Button
                 onClick={handleGenerateSummary}
@@ -292,12 +292,12 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                 {summaryMutation.isPending ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                    Generating...
+                    {t.generating}
                   </>
                 ) : (
                   <>
                     <FileText className="w-4 h-4 mr-2" />
-                    Create Summary
+                    {t.generateSummary}
                   </>
                 )}
               </Button>
@@ -307,8 +307,8 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
               <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-3">
                 <FileText className="w-6 h-6 text-slate-400" />
               </div>
-              <p className="text-slate-500 font-medium mb-2">No videos selected</p>
-              <p className="text-slate-400 text-sm">Select videos to see their analysis summary</p>
+              <p className="text-slate-500 font-medium mb-2">{t.noVideos}</p>
+              <p className="text-slate-400 text-sm">{t.selectVideo}</p>
             </div>
           )}
         </div>
@@ -326,7 +326,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
       {/* Chat History */}
       <div className="flex-1 flex flex-col p-6 min-h-0">
         <div className="flex items-center justify-between mb-4 flex-shrink-0">
-          <h3 className="text-lg font-semibold text-slate-800">Chat History</h3>
+          <h3 className="text-lg font-semibold text-slate-800">{t.chatHistoryTab}</h3>
           <button
             onClick={clearChatHistory}
             disabled={chatHistory.length === 0 || clearChatMutation.isPending}
@@ -343,8 +343,8 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
             <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <Clock className="w-6 h-6 text-slate-400" />
             </div>
-            <p className="text-slate-500 font-medium mb-2">No conversations yet</p>
-            <p className="text-slate-400 text-sm">Start chatting to see your conversation history</p>
+            <p className="text-slate-500 font-medium mb-2">{t.noVideoSelectedChat}</p>
+            <p className="text-slate-400 text-sm">{t.selectVideoToChat}</p>
           </div>
         ) : (
           <ScrollArea className="flex-1 min-h-0">
@@ -360,7 +360,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                 const frameTime = getFrameTimeFromFilename((chat as any).relevantFrame);
 
                 return (
-                  <div key={chat.id} className="space-y-3" data-testid={`chat-item-${chat.id}`}>
+                  <div key={chat.id} className="space-y-3" data-testid={"chat-item-" + chat.id}>
                     {/* Rephrased Question */}
                     <div className="border-b border-slate-100 pb-3">
                       <h4 className="text-sm font-medium text-slate-800 leading-relaxed">
@@ -379,7 +379,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                           <button
                             onClick={() => frameTime && onFrameClick?.(frameTime)}
                             className="flex-shrink-0 w-16 h-12 bg-slate-200 rounded-lg overflow-hidden hover:ring-2 hover:ring-indigo-300 transition-all duration-200 transform hover:scale-105"
-                            data-testid={`frame-thumbnail-${chat.id}`}
+                            data-testid={"frame-thumbnail-" + chat.id}
                           >
                             <img
                               src={`/api/videos/${currentVideoId}/frames/${(chat as any).relevantFrame}?session=${sessionManager.getSessionId()}`}
