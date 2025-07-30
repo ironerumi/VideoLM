@@ -123,17 +123,20 @@ export default function VideoSourcePanel({
                 selectedVideoIds.includes(video.id) ? 'border-indigo-200 bg-indigo-50' : 'border-transparent'
               }`}
               data-testid={`video-item-${video.id}`}
+              data-testid={"video-item-" + video.id}
             >
               <div className="flex items-center space-x-3">
                 <RadioGroupItem
                   value={video.id}
                   className="w-4 h-4 text-indigo-500"
                   data-testid={`radio-${video.id}`}
+                  data-testid={"radio-" + video.id}
                 />
                 <div 
                   className={`w-12 h-8 bg-gradient-to-br ${getGradient(index)} rounded flex items-center justify-center cursor-pointer hover:scale-105 transition-transform`}
                   onClick={() => onVideoPlay(video.id)}
                   data-testid={`play-${video.id}`}
+                  data-testid={"play-" + video.id}
                 >
                   <Play className="w-3 h-3 text-white fill-current" />
                 </div>
@@ -142,12 +145,14 @@ export default function VideoSourcePanel({
                     className="text-sm font-medium text-slate-700 truncate japanese-filename"
                     title={fixJapaneseDisplay(video.originalName)}
                     data-testid={`text-name-${video.id}`}
+                    data-testid={"text-name-" + video.id}
                   >
                     {fixJapaneseDisplay(video.originalName)}
                   </p>
                   <p 
                     className="text-xs text-slate-400"
                     data-testid={`text-duration-${video.id}`}
+                    data-testid={"text-duration-" + video.id}
                   >
                     {video.duration ? formatDuration(video.duration) : 'Unknown'}
                   </p>
@@ -161,6 +166,7 @@ export default function VideoSourcePanel({
                   size="sm"
                   className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-red-500 hover:bg-red-50"
                   data-testid={`button-delete-${video.id}`}
+                  data-testid={"button-delete-" + video.id}
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
