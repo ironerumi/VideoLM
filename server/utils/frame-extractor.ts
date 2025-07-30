@@ -29,6 +29,19 @@ export interface FrameExtractionResult {
  */
 async function getVideoDuration(videoPath: string): Promise<number> {
   return new Promise((resolve, reject) => {
+    // Check if ffprobe is available
+    try {
+      const testProbe = spawnSync('which', ['ffprobe']);
+      testProbe.on('error', (error: any) => {
+        if (error.code === 'ENOENT') {
+          reject(new Error('ffprobe is not installed or not found in PATH. Please ensure FFmpeg is properly installed.'));
+          return;
+        }
+      });
+    } catch (error) {
+      // Continue with original logic if 'which' command fails
+    }
+
     const ffprobe = spawn('ffprobe', [
       '-v', 'quiet',
       '-show_entries', 'format=duration',
