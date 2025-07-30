@@ -202,8 +202,8 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
                 <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Play className="w-8 h-8 text-slate-400" />
                 </div>
-                <p className="text-slate-500 font-medium">Select a video to play</p>
-                <p className="text-slate-400 text-sm">Choose from your uploaded videos</p>
+                <p className="text-slate-500 font-medium">{t.noVideoSelected}</p>
+                <p className="text-slate-400 text-sm">{t.selectToPlay}</p>
               </div>
             </div>
           )}
@@ -211,7 +211,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
 
         {/* Thumbnail Timeline - Real Extracted Frames */}
         <div className="p-6 bg-white border-t border-slate-100 flex-shrink-0 min-w-0">
-          <h4 className="text-sm font-medium text-slate-700 mb-3">Video Timeline</h4>
+          <h4 className="text-sm font-medium text-slate-700 mb-3">動画タイムライン</h4>
           <div className="overflow-x-auto max-w-full" ref={timelineRef}>
             <div className="flex space-x-2 pb-2 w-max">
             {video?.thumbnails && typeof video.thumbnails === 'object' && 'frames' in video.thumbnails && Array.isArray(video.thumbnails.frames) && video.thumbnails.frames.length > 0 ? (
@@ -256,7 +256,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
             ) : (
               // Show message when no frames are available
               <div className="flex items-center justify-center w-full py-4">
-                <span className="text-slate-500 text-sm">No frames extracted yet</span>
+                <span className="text-slate-500 text-sm">フレームがまだ抽出されていません</span>
               </div>
             )}
             </div>

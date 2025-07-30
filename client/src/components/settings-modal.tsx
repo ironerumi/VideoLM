@@ -149,9 +149,9 @@ export default function SettingsModal({ open, onOpenChange, onDataReset }: Setti
 
           {/* Future settings can be added here */}
           <div className="space-y-3">
-            <h3 className="text-sm font-medium text-slate-900">General</h3>
+            <h3 className="text-sm font-medium text-slate-900">一般</h3>
             <p className="text-xs text-slate-500">
-              More settings will be available in future updates.
+              今後のアップデートでより多くの設定が利用可能になります。
             </p>
           </div>
         </div>
@@ -162,7 +162,7 @@ export default function SettingsModal({ open, onOpenChange, onDataReset }: Setti
             variant="outline"
             data-testid="button-close-settings"
           >
-            Close
+            {t.close}
           </Button>
         </div>
       </DialogContent>
