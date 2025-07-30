@@ -110,38 +110,36 @@ export default function Home() {
       <div className="flex-1 overflow-hidden relative">
         <PanelGroup direction="horizontal" className="h-full">
           {/* Left Panel - Video Sources */}
-          {!leftPanelCollapsed && (
-            <>
-              <Panel 
-                id="left-panel"
-                order={1}
-                defaultSize={25} 
-                minSize={15} 
-                maxSize={40} 
-                className="min-w-64"
-              >
-                <VideoSourcePanel
-                  videos={videos}
-                  selectedVideoIds={selectedVideoIds}
-                  onVideoSelect={handleVideoSelect}
-                  onVideoPlay={handleVideoPlay}
-                  onVideoUploaded={refetchVideos}
-                  onVideoDelete={handleVideoDelete}
-                  onCollapse={() => setLeftPanelCollapsed(true)}
-                />
-              </Panel>
-              <PanelResizeHandle className="w-1 bg-slate-200 hover:bg-slate-300 transition-colors data-[resize-handle-active]:bg-slate-400" />
-              <PanelResizeHandle className="w-2 bg-slate-100 hover:bg-slate-200 cursor-col-resize flex items-center justify-center group transition-colors data-[resize-handle-active]:bg-slate-300">
-                <GripVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
-              </PanelResizeHandle>
-            </>
-          )}
+          <Panel 
+            id="left-panel"
+            order={1}
+            defaultSize={25} 
+            minSize={15} 
+            maxSize={40} 
+            className="min-w-64"
+            collapsible={true}
+            collapsed={leftPanelCollapsed}
+          >
+            <VideoSourcePanel
+              videos={videos}
+              selectedVideoIds={selectedVideoIds}
+              onVideoSelect={handleVideoSelect}
+              onVideoPlay={handleVideoPlay}
+              onVideoUploaded={refetchVideos}
+              onVideoDelete={handleVideoDelete}
+              onCollapse={() => setLeftPanelCollapsed(true)}
+            />
+          </Panel>
+          
+          <PanelResizeHandle className="w-2 bg-slate-100 hover:bg-slate-200 cursor-col-resize flex items-center justify-center group transition-colors data-[resize-handle-active]:bg-slate-300">
+            <GripVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
+          </PanelResizeHandle>
 
           {/* Center Panel - Video Player and Chat */}
           <Panel 
             id="center-panel"
             order={2}
-            defaultSize={leftPanelCollapsed ? (rightPanelCollapsed ? 100 : 75) : (rightPanelCollapsed ? 75 : 50)} 
+            defaultSize={50} 
             minSize={30}
           >
             <PanelGroup direction="vertical" className="h-full">
@@ -184,28 +182,27 @@ export default function Home() {
           </Panel>
 
           {/* Right Panel - Summary */}
-          {!rightPanelCollapsed && (
-            <>
-              <PanelResizeHandle className="w-2 bg-slate-100 hover:bg-slate-200 cursor-col-resize flex items-center justify-center group transition-colors data-[resize-handle-active]:bg-slate-300">
-                <GripVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
-              </PanelResizeHandle>
-              <Panel 
-                id="right-panel"
-                order={3}
-                defaultSize={25} 
-                minSize={15} 
-                maxSize={40} 
-                className="min-w-64"
-              >
-                <SummaryPanel
-                  selectedVideoIds={selectedVideoIds}
-                  currentVideoId={currentVideoId}
-                  onCollapse={() => setRightPanelCollapsed(true)}
-                  onFrameClick={handleFrameClick}
-                />
-              </Panel>
-            </>
-          )}
+          <PanelResizeHandle className="w-2 bg-slate-100 hover:bg-slate-200 cursor-col-resize flex items-center justify-center group transition-colors data-[resize-handle-active]:bg-slate-300">
+            <GripVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
+          </PanelResizeHandle>
+          
+          <Panel 
+            id="right-panel"
+            order={3}
+            defaultSize={25} 
+            minSize={15} 
+            maxSize={40} 
+            className="min-w-64"
+            collapsible={true}
+            collapsed={rightPanelCollapsed}
+          >
+            <SummaryPanel
+              selectedVideoIds={selectedVideoIds}
+              currentVideoId={currentVideoId}
+              onCollapse={() => setRightPanelCollapsed(true)}
+              onFrameClick={handleFrameClick}
+            />
+          </Panel>
         </PanelGroup>
 
         {/* Panel Toggle Buttons - Always visible when panels are collapsed */}
