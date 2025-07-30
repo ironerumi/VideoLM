@@ -194,19 +194,12 @@ export default function Home() {
             maxSize={40} 
             className="min-w-64"
             collapsible={true}
-            collapsedSize={0}
-            onCollapse={() => setRightPanelCollapsed(true)}
-            onExpand={() => setRightPanelCollapsed(false)}
+            collapsed={rightPanelCollapsed}
           >
             <SummaryPanel
               selectedVideoIds={selectedVideoIds}
               currentVideoId={currentVideoId}
-              onCollapse={() => {
-                const panel = document.querySelector('[data-panel-id="right-panel"]') as any;
-                if (panel && panel.collapse) {
-                  panel.collapse();
-                }
-              }}
+              onCollapse={() => setRightPanelCollapsed(true)}
               onFrameClick={handleFrameClick}
             />
           </Panel>
