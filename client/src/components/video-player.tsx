@@ -246,7 +246,16 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
                           const gradientClasses = `bg-gradient-to-br ${getGradient(index)}`.split(' ');
                           parent.classList.add(...gradientClasses);
                           
-                          parent.innerHTML += `<div class="w-full h-full flex items-center justify-center"><span class="text-white text-xs">${frame.timestamp.toFixed(1)}s</span></div>`;
+                          // Create elements safely using DOM methods
+                          const containerDiv = document.createElement('div');
+                          containerDiv.className = 'w-full h-full flex items-center justify-center';
+                          
+                          const timestampSpan = document.createElement('span');
+                          timestampSpan.className = 'text-white text-xs';
+                          timestampSpan.textContent = `${frame.timestamp.toFixed(1)}s`;
+                          
+                          containerDiv.appendChild(timestampSpan);
+                          parent.appendChild(containerDiv);
                         }
                       }}
                     />
