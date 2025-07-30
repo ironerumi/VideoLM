@@ -228,6 +228,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
                     }`}
                     onClick={() => handleSeek([frameProgress])}
                     data-testid={`thumbnail-${index}`}
+                    data-testid={"thumbnail-" + index}
                   >
                     <img
                       src={`/api/videos/${video.id}/frames/${frame.fileName}?session=${video.sessionId}`}
