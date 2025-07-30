@@ -189,19 +189,21 @@ export default function Home() {
           <Panel 
             id="right-panel"
             order={3}
-            defaultSize={25} 
+            defaultSize={rightPanelCollapsed ? 0 : 25}
+            size={rightPanelCollapsed ? 0 : undefined}
             minSize={15} 
             maxSize={40} 
             className="min-w-64"
-            collapsible={true}
-            collapsed={rightPanelCollapsed}
+            collapsible={false}
           >
-            <SummaryPanel
-              selectedVideoIds={selectedVideoIds}
-              currentVideoId={currentVideoId}
-              onCollapse={() => setRightPanelCollapsed(true)}
-              onFrameClick={handleFrameClick}
-            />
+            {!rightPanelCollapsed && (
+              <SummaryPanel
+                selectedVideoIds={selectedVideoIds}
+                currentVideoId={currentVideoId}
+                onCollapse={() => setRightPanelCollapsed(true)}
+                onFrameClick={handleFrameClick}
+              />
+            )}
           </Panel>
         </PanelGroup>
 
