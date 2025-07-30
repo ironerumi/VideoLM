@@ -182,29 +182,30 @@ export default function Home() {
           </Panel>
 
           {/* Right Panel - Summary */}
-          <PanelResizeHandle className="w-2 bg-slate-100 hover:bg-slate-200 cursor-col-resize flex items-center justify-center group transition-colors data-[resize-handle-active]:bg-slate-300">
-            <GripVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
-          </PanelResizeHandle>
+          {!rightPanelCollapsed && (
+            <PanelResizeHandle className="w-2 bg-slate-100 hover:bg-slate-200 cursor-col-resize flex items-center justify-center group transition-colors data-[resize-handle-active]:bg-slate-300">
+              <GripVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
+            </PanelResizeHandle>
+          )}
           
-          <Panel 
-            id="right-panel"
-            order={3}
-            defaultSize={rightPanelCollapsed ? 0 : 25}
-            size={rightPanelCollapsed ? 0 : undefined}
-            minSize={15} 
-            maxSize={40} 
-            className="min-w-64"
-            collapsible={false}
-          >
-            {!rightPanelCollapsed && (
+          {!rightPanelCollapsed && (
+            <Panel 
+              id="right-panel"
+              order={3}
+              defaultSize={25}
+              minSize={15} 
+              maxSize={40} 
+              className="min-w-64"
+              collapsible={false}
+            >
               <SummaryPanel
                 selectedVideoIds={selectedVideoIds}
                 currentVideoId={currentVideoId}
                 onCollapse={() => setRightPanelCollapsed(true)}
                 onFrameClick={handleFrameClick}
               />
-            )}
-          </Panel>
+            </Panel>
+          )}
         </PanelGroup>
 
         {/* Panel Toggle Buttons - Always visible when panels are collapsed */}
