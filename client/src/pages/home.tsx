@@ -6,7 +6,7 @@ import SummaryPanel from "@/components/summary-panel";
 import QAInterface from "@/components/qa-interface";
 import SettingsModal from "@/components/settings-modal";
 import AppIcon from "@/components/app-icon";
-import { Settings, User, ChevronLeft, ChevronRight, PanelLeftClose, PanelRightClose } from "lucide-react";
+import { Settings, User, ChevronLeft, ChevronRight, PanelLeftClose, PanelRightClose, GripVertical, GripHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import type { Video } from "@shared/schema";
@@ -132,7 +132,7 @@ export default function Home() {
               </Panel>
               <PanelResizeHandle className="w-1 bg-slate-200 hover:bg-slate-300 transition-colors data-[resize-handle-active]:bg-slate-400" />
               <PanelResizeHandle className="w-2 bg-slate-100 hover:bg-slate-200 cursor-col-resize flex items-center justify-center group transition-colors data-[resize-handle-active]:bg-slate-300">
-                <div className="w-1 h-8 bg-slate-300 rounded-full group-hover:bg-slate-400 transition-colors"></div>
+                <GripVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
               </PanelResizeHandle>
             </>
           )}
@@ -163,7 +163,7 @@ export default function Home() {
               
               {/* Vertical Resize Handle */}
               <PanelResizeHandle className="h-2 bg-slate-100 hover:bg-slate-200 cursor-row-resize flex items-center justify-center group transition-colors data-[resize-handle-active]:bg-slate-300">
-                <div className="h-1 w-8 bg-slate-300 rounded-full group-hover:bg-slate-400 transition-colors"></div>
+                <GripHorizontal className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
               </PanelResizeHandle>
               
               {/* Chat Interface */}
@@ -187,7 +187,7 @@ export default function Home() {
           {!rightPanelCollapsed && (
             <>
               <PanelResizeHandle className="w-2 bg-slate-100 hover:bg-slate-200 cursor-col-resize flex items-center justify-center group transition-colors data-[resize-handle-active]:bg-slate-300">
-                <div className="w-1 h-8 bg-slate-300 rounded-full group-hover:bg-slate-400 transition-colors"></div>
+                <GripVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
               </PanelResizeHandle>
               <Panel 
                 id="right-panel"
