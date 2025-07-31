@@ -84,6 +84,18 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
     }
   }, [seekToTime]);
 
+  // Reset video state when video changes
+  useEffect(() => {
+  if (videoRef.current) {
+    videoRef.current.pause();
+    videoRef.current.load(); // reloads new source
+    videoRef.current.volume = volume;
+    setIsPlaying(false);
+    setCurrentTime(0);
+  }
+}, [video?.id]);
+
+
   // Function to scroll timeline to show specific frame as first visible
   const scrollTimelineToFrame = (targetTime: number) => {
     if (!timelineRef.current || !video?.thumbnails?.frames) return;
@@ -118,6 +130,8 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
             <>
               {/* Actual video element */}
               <video
+                // Use video ID as key to ensure re-render on video change
+                key={video?.id}
                 ref={videoRef}
                 className="w-full h-full object-contain"
                 onTimeUpdate={handleTimeUpdate}
