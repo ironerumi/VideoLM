@@ -1,0 +1,3 @@
+datarobot-pulumi-utils>=0.0.2.post16
+pulumi>=3.187.0
+pulumi-datarobot>=0.10.13
