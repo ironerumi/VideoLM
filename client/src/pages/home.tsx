@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import type { Video } from "@shared/schema";
 import { useI18n } from "@/lib/i18n";
+import { sessionManager } from "@/lib/session";
 
 export default function Home() {
   const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
@@ -53,7 +54,10 @@ export default function Home() {
     try {
       const response = await fetch(`/api/videos/${videoId}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          ...sessionManager.getSessionHeaders()
+        }
       });
       
       if (response.ok) {
