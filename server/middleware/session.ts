@@ -61,7 +61,17 @@ export async function sessionMiddleware(req: Request, res: Response, next: NextF
   }
   
   if (!sessionId) {
-    // Create new session if none exists
+    // Only create a new session for API or protected file routes
+    const needsSession =
+      req.path.startsWith('/api') ||
+      req.path.includes('/file') ||
+      req.path.includes('/frames');
+
+    if (!needsSession) {
+      // Skip session generation for static assets or other public routes
+      return next();
+    }
+
     const session = await storage.createSession();
     sessionId = session.id;
     res.setHeader('X-Session-Id', sessionId);
