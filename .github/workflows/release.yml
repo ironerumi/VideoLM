@@ -26,9 +26,10 @@ jobs:
         run: uv pip install -r requirements.txt
 
       - name: Install Pulumi CLI
-        uses: pulumi/actions@v4
-        with:
-          command: version
+        run: curl -fsSL https://get.pulumi.com | sh
+
+      - name: Show Pulumi CLI version
+        run: ~/.pulumi/bin/pulumi version
 
       - name: Run quickstart_gh.py
         env:
