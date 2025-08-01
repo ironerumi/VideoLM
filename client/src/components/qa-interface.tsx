@@ -202,7 +202,6 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
                           onClick={() => handleFrameClick(frameName)}
                           className="group relative overflow-hidden rounded-lg border-2 border-transparent hover:border-blue-500 transition-all duration-200"
                           data-testid={`frame-thumbnail-${index}`}
-                          data-testid={"frame-thumbnail-" + index}
                         >
                           <img
                             src={`api/videos/${videoId}/frames/${frameName}?session=${sessionManager.getSessionId()}`}

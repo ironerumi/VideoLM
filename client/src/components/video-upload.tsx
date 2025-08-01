@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { useMutation } from "@tanstack/react-query";
-import { uploadFile } from "@/lib/queryClient";
+import { uploadFile, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { CloudUpload, X, CheckCircle, AlertCircle } from "lucide-react";
@@ -28,49 +28,58 @@ export default function VideoUpload({ onVideoUploaded, onCancel, showCancel = tr
       formData.append('video', file);
 
       try {
-        // Enhanced progress with realistic stages based on server logs
+        // Initial upload stage
         setProcessingStage(t.uploadStageStart);
         setUploadProgress(5);
         
-        // More realistic progress stages based on actual server performance
-        const progressStages = [
-          { progress: 10, stage: t.uploadStageFileRead, duration: 800 },
-          { progress: 20, stage: t.uploadStageFrameSetup, duration: 1000 },
-          { progress: 30, stage: t.uploadStageFrameExtract, duration: 2000 },
-          { progress: 40, stage: t.uploadStageFrameDone, duration: 500 },
-          { progress: 50, stage: t.uploadStageAiPrepare, duration: 700 },
-          { progress: 60, stage: t.uploadStageAiAnalyze, duration: 4000 },
-          { progress: 75, stage: t.uploadStageAiDone, duration: 1000 },
-          { progress: 80, stage: t.uploadStageDbSave, duration: 3000 }, // This stage takes longest
-          { progress: 90, stage: t.uploadStageMeta, duration: 500 }
-        ];
-
-        let currentStage = 0;
-        const progressInterval = setInterval(() => {
-          if (currentStage < progressStages.length) {
-            const stage = progressStages[currentStage];
-            setUploadProgress(stage.progress);
-            setProcessingStage(stage.stage);
-            
-            // Show frame count for frame extraction stages
-            if (stage.progress >= 20 && stage.progress <= 50) {
-              const estimatedFrames = 20;
-              setEstimatedFrames(estimatedFrames);
-              const frameProgress = Math.max(0, Math.min(estimatedFrames, Math.floor((stage.progress - 20) / 30 * estimatedFrames)));
-              setFrameCount(frameProgress);
-            }
-            
-            currentStage++;
-          } else {
-            clearInterval(progressInterval);
-          }
-        }, Math.max(300, progressStages[currentStage]?.duration / 3 || 300));
-
+        // Quick upload to get job ID
         const response = await uploadFile('api/videos/upload', formData);
-        clearInterval(progressInterval);
-        setUploadProgress(100);
-        setProcessingStage(t.uploadComplete);
-        return response.json();
+        const result = await response.json();
+        
+        if (!result.videoId || !result.jobId) {
+          throw new Error('Invalid upload response');
+        }
+        
+        console.log(`Upload completed, starting polling for video ${result.videoId}`);
+        
+        // Start polling for progress
+        return new Promise((resolve, reject) => {
+          const pollProgress = async () => {
+            try {
+              const statusResponse = await apiRequest('GET', `api/videos/${result.videoId}/status`);
+              const status = await statusResponse.json();
+              
+              // Update UI with real progress
+              setUploadProgress(status.progress || 0);
+              setProcessingStage(status.currentStage || 'Processing...');
+              
+              // Show frame count estimation for processing stages
+              if (status.progress >= 20 && status.progress <= 50) {
+                const estimatedFrames = 20;
+                setEstimatedFrames(estimatedFrames);
+                const frameProgress = Math.max(0, Math.min(estimatedFrames, Math.floor((status.progress - 20) / 30 * estimatedFrames)));
+                setFrameCount(frameProgress);
+              }
+              
+              if (status.status === 'completed') {
+                setUploadProgress(100);
+                setProcessingStage(t.uploadComplete);
+                resolve(result);
+              } else if (status.status === 'failed') {
+                reject(new Error(status.errorMessage || 'Processing failed'));
+              } else {
+                // Continue polling
+                setTimeout(pollProgress, 2000); // Poll every 2 seconds
+              }
+            } catch (error) {
+              console.error('Polling error:', error);
+              reject(error);
+            }
+          };
+          
+          // Start polling after a short delay
+          setTimeout(pollProgress, 1000);
+        });
       } catch (error) {
         setUploadProgress(0);
         setProcessingStage('');

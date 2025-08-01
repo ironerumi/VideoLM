@@ -34,23 +34,25 @@ The application follows a monorepo structure with a clear separation between cli
 ### Data Storage Strategy
 - **Session Management**: Each user gets a unique session ID stored in localStorage
 - **File Storage**: Videos saved to session-specific folders in `uploads/{sessionId}/`
-- **Current Database**: **In-memory storage** (no database file created)
-- **Data Persistence**: Data is lost when server restarts (temporary storage only)
-- **File Handling**: Videos stored as files on disk with metadata in memory
+- **Current Database**: **SQLite with persistent storage** (`database.sqlite` file)
+- **Data Persistence**: Full persistence across server restarts with job tracking
+- **File Handling**: Videos stored as files on disk with metadata in SQLite database
 - **Session Security**: All video access restricted to session owner
+- **Job Tracking**: Asynchronous video processing with real-time progress updates
 
 ### Available Database Implementations
 The application supports three different storage approaches via TypeScript files:
 
-1. **MemStorage** (`server/storage.ts`) - **Currently Active**
+1. **MemStorage** (`server/storage.ts`) - Development/Testing Only
    - In-memory data storage for maximum performance
    - No persistence - data lost on server restart
    - Best for development and performance testing
 
-2. **SQLite Storage** (`server/db.ts`)
+2. **SQLite Storage** (`server/db.ts`) - **Currently Active**
    - Local SQLite database stored as `database.sqlite` in project root
    - Persistent storage with better-sqlite3
-   - Custom table initialization with four main tables (sessions, videos, chatMessages, videoSessions)
+   - Five main tables: sessions, videos, chatMessages, videoSessions, videoJobs
+   - Supports asynchronous video processing with job tracking
    - Best for single-user applications requiring persistence
 
 3. **PostgreSQL Storage** (`server/database-storage.ts`)
@@ -63,16 +65,15 @@ The application supports three different storage approaches via TypeScript files
 To switch between storage types, modify the export in `server/storage.ts`:
 
 ```typescript
-// Current: In-memory storage (active)
-export const storage = new MemStorage();
+// Current: SQLite storage (active)
+import { DatabaseStorage } from './database-storage';
+export const storage = new DatabaseStorage();
 
-// Option 1: SQLite storage (uncomment to use)
-// import { DatabaseStorage } from './database-storage';
-// export const storage = new DatabaseStorage();
+// Option 1: In-memory storage (development only)
+// export const storage = new MemStorage();
 
 // Option 2: PostgreSQL storage (requires DATABASE_URL)
-// import { DatabaseStorage } from './database-storage';  
-// export const storage = new DatabaseStorage();
+// Use same DatabaseStorage but requires DATABASE_URL environment variable
 ```
 
 **Note**: The PostgreSQL option also requires updating `server/database-storage.ts` to use the PostgreSQL schema instead of SQLite, and setting the `DATABASE_URL` environment variable.
@@ -80,12 +81,14 @@ export const storage = new MemStorage();
 ## Key Components
 
 ### Video Management System
-- **Upload Processing**: Handles video file validation with real FFmpeg-based metadata extraction
+- **Asynchronous Upload Processing**: Quick upload returns immediately, processing happens in background
+- **Job Tracking**: Real-time progress updates through polling-based status system
 - **Frame Extraction**: Uses FFmpeg to extract frames at 1fps with configurable limits (100 frames max)
 - **AI Analysis**: Integrates with OpenAI's GPT-4.1-mini model for real video frame analysis
 - **Transcription Generation**: Analyzes ALL extracted frames to create detailed timestamped descriptions
-- **Storage Interface**: Database storage with session-based file organization and security
-- **Real-time Processing**: Actual video duration extraction and frame-by-frame analysis
+- **Storage Interface**: SQLite database storage with session-based file organization and security
+- **Progress Stages**: Real processing stages (10% file read → 40% frames → 80% AI → 100% complete)
+- **No More Timeouts**: Eliminates 504 errors by decoupling upload from processing
 
 ### Resizable Panel System
 - **Fully Adjustable Layout**: React Resizable Panels implementation with three-way split
@@ -119,14 +122,13 @@ export const storage = new MemStorage();
    - Server creates session record and unique folder if new
    - Session ID stored in client localStorage for persistence
 
-2. **Video Upload Flow**:
-   - Client uploads video via drag-and-drop or file picker
-   - Server saves file to session-specific folder (uploads/{sessionId}/)
-   - File validation and size limits (100MB)
-   - Real FFmpeg-based frame extraction (1 frame per second)
-   - Actual video duration calculation from FFmpeg
-   - AI frame analysis using OpenAI Vision API on extracted frames
-   - Database storage with real metadata and extracted frame references
+2. **Asynchronous Video Upload Flow**:
+   - Client uploads video via drag-and-drop or file picker  
+   - Server quickly validates and saves file to session-specific folder (uploads/{sessionId}/)
+   - **Returns immediately** with video ID and job ID (eliminates timeout issues)
+   - Background processing starts: frame extraction → AI analysis → database storage  
+   - Client polls job status every 2 seconds for real progress updates
+   - Processing stages: 10% file read → 40% frames → 80% AI analysis → 100% complete
 
 2. **Chat Interaction Flow**:
    - User sends message about selected video
@@ -176,18 +178,25 @@ export const storage = new MemStorage();
 ### Production Build Process
 1. **Client Build**: Vite builds React app to `dist/public`
 2. **Server Build**: ESBuild bundles Express server to `dist/index.js`
-3. **Static Serving**: Express serves built client files in production
-4. **Database**: Currently uses in-memory storage (data lost on restart)
+3. **Static Serving**: Express serves built client files in production  
+4. **Database**: SQLite database (`database.sqlite`) created automatically on first run
+5. **Dependencies**: May need `npm rebuild better-sqlite3` if Node.js version differs
 
 ### Configuration Requirements
 - **AI Service**: OpenAI API key for video analysis features
-- **Database**: Optional - DATABASE_URL only needed if using PostgreSQL storage
-- **File Storage**: Videos stored in uploads/ directory, metadata in memory
+- **Database**: SQLite file (`database.sqlite`) created automatically, or DATABASE_URL for PostgreSQL
+- **File Storage**: Videos stored in uploads/ directory, metadata in SQLite database
 - **Environment**: NODE_ENV for development/production switching
+- **Dependencies**: better-sqlite3 requires native compilation (run `npm rebuild better-sqlite3` if Node.js version changes)
 
-The application is designed for deployment on platforms like Replit, Vercel, or traditional VPS environments. Current in-memory storage makes it suitable for development and demo purposes.
+The application is designed for deployment on platforms like Replit, Vercel, or traditional VPS environments. SQLite storage provides persistence while maintaining simplicity.
 
 ## Recent Changes
+
+### August 1, 2025 - Asynchronous Video Processing
+- **Fixed**: 504 timeout errors by implementing async job-based processing
+- **Changes**: Upload returns immediately (~50ms), background processing with real progress polling
+- **Benefits**: No timeouts, real progress updates, better error handling, job persistence
 
 ### August 1, 2025 - Multi-Platform Hosting Compatibility
 - **Issue**: Fixed asset and API path issues when deploying to hosting platforms that use URL redirection
@@ -210,6 +219,11 @@ The application is designed for deployment on platforms like Replit, Vercel, or 
 - **Enhancement**: Transparent batch progress indicators with detailed server logging
 
 ## Development Guidelines
+
+### Asynchronous Processing Guidelines
+**CRITICAL**: Use async processing for long-running operations (>30s) to prevent timeouts.
+
+**Pattern**: Quick endpoint returns job ID → Background processing → Frontend polling for progress
 
 ### Path Convention Rules
 **CRITICAL**: Always use relative paths for client-side assets and API calls to ensure compatibility across different hosting environments.

@@ -7,10 +7,13 @@ import {
   type InsertChatMessage,
   type VideoSession,
   type InsertVideoSession,
+  type VideoJob,
+  type InsertVideoJob,
   sessions,
   videos,
   chatMessages,
-  videoSessions
+  videoSessions,
+  videoJobs
 } from "@shared/schema";
 import { db } from "./db";
 // Note: Using Neon PostgreSQL database instead of SQLite
@@ -182,10 +185,71 @@ export class DatabaseStorage implements IStorage {
     return this.getVideoSession(id);
   }
 
+  // Video Job operations
+  async getVideoJob(id: string): Promise<VideoJob | undefined> {
+    const [job] = await db.select().from(videoJobs).where(eq(videoJobs.id, id));
+    return job || undefined;
+  }
+
+  async createVideoJob(insertJob: InsertVideoJob): Promise<VideoJob> {
+    const id = randomUUID();
+    const job: VideoJob = { 
+      ...insertJob, 
+      id, 
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    await db.insert(videoJobs).values(job);
+    return job;
+  }
+
+  async updateVideoJobProgress(id: string, progress: number, stage: string): Promise<void> {
+    await db.update(videoJobs)
+      .set({ 
+        progress: Math.max(0, Math.min(100, progress)),
+        currentStage: stage,
+        status: progress < 100 ? 'processing' : 'processing',
+        updatedAt: new Date()
+      })
+      .where(eq(videoJobs.id, id));
+  }
+
+  async updateVideoJobStatus(id: string, status: string, errorMessage?: string): Promise<void> {
+    const updates: any = { 
+      status, 
+      updatedAt: new Date() 
+    };
+    
+    if (status === 'completed') {
+      updates.progress = 100;
+      updates.currentStage = 'Complete';
+    } else if (status === 'failed') {
+      updates.currentStage = 'Failed';
+      if (errorMessage) {
+        updates.errorMessage = errorMessage;
+      }
+    } else if (status === 'pending') {
+      updates.progress = 0;
+      updates.currentStage = 'Retrying...';
+      updates.errorMessage = null;
+    }
+    
+    await db.update(videoJobs)
+      .set(updates)
+      .where(eq(videoJobs.id, id));
+  }
+
+  async deleteVideoJob(id: string): Promise<boolean> {
+    const result = await db.delete(videoJobs).where(eq(videoJobs.id, id));
+    return result.changes > 0;
+  }
+
   // Reset functionality
   async clearSessionData(sessionId: string): Promise<void> {
     // Delete all data related to this session
     await db.delete(chatMessages).where(eq(chatMessages.sessionId, sessionId));
+    await db.delete(videoJobs).where(eq(videoJobs.sessionId, sessionId));
     await db.delete(videos).where(eq(videos.sessionId, sessionId));
     await db.delete(videoSessions).where(eq(videoSessions.sessionId, sessionId));
     await db.delete(sessions).where(eq(sessions.id, sessionId));
