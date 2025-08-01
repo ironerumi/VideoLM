@@ -1,0 +1,16 @@
+# Screenshots Folder
+
+This folder contains application screenshots for the README.md file.
+
+## Required Screenshots:
+
+1. `main-interface.png` - Video upload and analysis interface
+2. `analysis-results.png` - AI-generated video analysis with transcription  
+3. `chat-interface.png` - Interactive chat interface
+
+## Guidelines:
+
+- Use descriptive filenames
+- Recommended size: 1200px width or larger
+- Use PNG format for screenshots
+- Include captions in README.md for accessibility

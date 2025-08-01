@@ -34,11 +34,48 @@ The application follows a monorepo structure with a clear separation between cli
 ### Data Storage Strategy
 - **Session Management**: Each user gets a unique session ID stored in localStorage
 - **File Storage**: Videos saved to session-specific folders in `uploads/{sessionId}/`
-- **Database Schema**: SQLite with four main tables (sessions, videos, chatMessages, videoSessions)
-- **Database File**: Local SQLite database stored as `database.sqlite` in project root
-- **File Handling**: Videos stored as files on disk with metadata in database
-- **Schema Management**: Custom table initialization with better-sqlite3
+- **Current Database**: **In-memory storage** (no database file created)
+- **Data Persistence**: Data is lost when server restarts (temporary storage only)
+- **File Handling**: Videos stored as files on disk with metadata in memory
 - **Session Security**: All video access restricted to session owner
+
+### Available Database Implementations
+The application supports three different storage approaches via TypeScript files:
+
+1. **MemStorage** (`server/storage.ts`) - **Currently Active**
+   - In-memory data storage for maximum performance
+   - No persistence - data lost on server restart
+   - Best for development and performance testing
+
+2. **SQLite Storage** (`server/db.ts`)
+   - Local SQLite database stored as `database.sqlite` in project root
+   - Persistent storage with better-sqlite3
+   - Custom table initialization with four main tables (sessions, videos, chatMessages, videoSessions)
+   - Best for single-user applications requiring persistence
+
+3. **PostgreSQL Storage** (`server/database-storage.ts`)
+   - Cloud-hosted PostgreSQL database via Neon
+   - Requires DATABASE_URL environment variable
+   - Drizzle ORM with full schema management
+   - Best for production multi-user deployments
+
+### Switching Storage Implementations
+To switch between storage types, modify the export in `server/storage.ts`:
+
+```typescript
+// Current: In-memory storage (active)
+export const storage = new MemStorage();
+
+// Option 1: SQLite storage (uncomment to use)
+// import { DatabaseStorage } from './database-storage';
+// export const storage = new DatabaseStorage();
+
+// Option 2: PostgreSQL storage (requires DATABASE_URL)
+// import { DatabaseStorage } from './database-storage';  
+// export const storage = new DatabaseStorage();
+```
+
+**Note**: The PostgreSQL option also requires updating `server/database-storage.ts` to use the PostgreSQL schema instead of SQLite, and setting the `DATABASE_URL` environment variable.
 
 ## Key Components
 
@@ -108,7 +145,7 @@ The application follows a monorepo structure with a clear separation between cli
 ### Core Framework Dependencies
 - **React Ecosystem**: React 18, React DOM, React Query for frontend
 - **Express.js**: Web server framework with middleware support
-- **Database**: Drizzle ORM with PostgreSQL dialect, Neon serverless driver
+- **Database**: Currently in-memory storage (MemStorage), with optional SQLite/PostgreSQL support via Drizzle ORM
 
 ### AI Integration
 - **OpenAI API**: GPT-4.1-mini model for video analysis and enhanced chat responses
@@ -134,21 +171,21 @@ The application follows a monorepo structure with a clear separation between cli
 ### Development Environment
 - **Local Development**: Vite dev server with Express API proxy
 - **Hot Module Replacement**: Real-time code updates during development
-- **Environment Variables**: DATABASE_URL and OPENAI_API_KEY required
+- **Environment Variables**: OPENAI_API_KEY required (DATABASE_URL only needed for PostgreSQL storage)
 
 ### Production Build Process
 1. **Client Build**: Vite builds React app to `dist/public`
 2. **Server Build**: ESBuild bundles Express server to `dist/index.js`
 3. **Static Serving**: Express serves built client files in production
-4. **Database**: Requires PostgreSQL database (Neon recommended)
+4. **Database**: Currently uses in-memory storage (data lost on restart)
 
 ### Configuration Requirements
-- **Database**: PostgreSQL connection string in DATABASE_URL
 - **AI Service**: OpenAI API key for video analysis features
-- **File Storage**: In-memory processing (no persistent file storage needed)
+- **Database**: Optional - DATABASE_URL only needed if using PostgreSQL storage
+- **File Storage**: Videos stored in uploads/ directory, metadata in memory
 - **Environment**: NODE_ENV for development/production switching
 
-The application is designed for deployment on platforms like Replit, Vercel, or traditional VPS environments with PostgreSQL support.
+The application is designed for deployment on platforms like Replit, Vercel, or traditional VPS environments. Current in-memory storage makes it suitable for development and demo purposes.
 
 ## Recent Changes
 
