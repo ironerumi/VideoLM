@@ -1,8 +1,11 @@
 import OpenAI from "openai";
 
 const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "default_key" 
+  apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "default_key",
+  baseURL: process.env.OPENAI_BASE_URL || undefined 
 });
+
+const model = process.env.OPENAI_MODEL || "gpt-4.1-mini"; // Default to the most cost-effective model
 
 export interface VideoAnalysis {
   summary: string;
@@ -32,7 +35,7 @@ export async function analyzeVideoFrames(frameData: Array<{base64: string, times
     });
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4.1-mini", // the newest OpenAI model is "gpt-4.1-mini" which is more cost-effective. do not change this unless explicitly requested by the user
+      model: model,
       messages: [
         {
           role: "system",
@@ -148,7 +151,7 @@ export async function analyzeVideoFrames(frameData: Array<{base64: string, times
 export async function analyzeVideoFrame(base64Frame: string): Promise<VideoAnalysis> {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4.1-mini", // the newest OpenAI model is "gpt-4.1-mini" which is more cost-effective. do not change this unless explicitly requested by the user
+      model: model,
       messages: [
         {
           role: "system",
@@ -213,7 +216,7 @@ ${chatHistory.map(h => `User: ${h.message}\nAI: ${h.response}`).join("\n\n")}
 `;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4.1-mini", // the newest OpenAI model is "gpt-4.1-mini" which is more cost-effective. do not change this unless explicitly requested by the user
+      model: model,
       messages: [
         {
           role: "system",
@@ -263,7 +266,7 @@ export async function generateVideoSummary(videoAnalyses: VideoAnalysis[], langu
     ).join("\n\n");
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4.1-mini", // the newest OpenAI model is "gpt-4.1-mini" which is more cost-effective. do not change this unless explicitly requested by the user
+      model: model,
       messages: [
         {
           role: "system",
