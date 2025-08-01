@@ -92,7 +92,7 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`);
   }).on('error', (err) => {
-    if (err.code === 'ENOTSUP') {
+    if (typeof err === "object" && err !== null && "code" in err && (err as any).code === 'ENOTSUP') {
       log(`Binding to 0.0.0.0 not supported, trying localhost...`);
       server.listen({
         port,

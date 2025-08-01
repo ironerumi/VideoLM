@@ -72,7 +72,7 @@ export class DatabaseStorage implements IStorage {
 
   // Video operations
   async getVideo(id: string): Promise<Video | undefined> {
-    const [video] = await db.select().from(videos).where(eq(videos.id, id));
+    const [video] = await db.select().from(videos).where(eq(videos.id, id)) as Video[];
     return video || undefined;
   }
 
@@ -80,7 +80,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select()
       .from(videos)
       .where(eq(videos.sessionId, sessionId))
-      .orderBy(desc(videos.uploadedAt));
+      .orderBy(desc(videos.uploadedAt)) as Video[];
   }
 
   async getVideosBySession(sessionId: string): Promise<Video[]> {
@@ -99,7 +99,9 @@ export class DatabaseStorage implements IStorage {
     };
     
     // Ensure session directory exists before creating video record
-    this.ensureSessionDir(insertVideo.sessionId);
+    if (typeof insertVideo.sessionId === "string") {
+      this.ensureSessionDir(insertVideo.sessionId);
+    }
     
     await db.insert(videos).values(video);
     return video;
@@ -144,7 +146,9 @@ export class DatabaseStorage implements IStorage {
       ...insertMessage, 
       id, 
       timestamp: new Date(),
-      videoId: insertMessage.videoId ?? null
+      videoId: insertMessage.videoId ?? null,
+      rephrasedQuestion: insertMessage.rephrasedQuestion ?? null,
+      relevantFrame: insertMessage.relevantFrame ?? null
     };
     
     await db.insert(chatMessages).values(message);

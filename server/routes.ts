@@ -1,13 +1,11 @@
-import type { Express, Request } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { videoUpload, generateThumbnails, getVideoMetadata, extractVideoFrame } from "./services/video";
-import { analyzeVideoFrame, analyzeVideoFrames, chatWithVideo, generateVideoSummary, type VideoAnalysis } from "./services/openai";
-import { extractVideoFrames, type FrameExtractionResult } from "./utils/frame-extractor";
+import { getVideoMetadata } from "./services/video";
+import { chatWithVideo, generateVideoSummary, type VideoAnalysis } from "./services/openai";
 import { insertVideoSchema, insertChatMessageSchema } from "@shared/schema";
 import { JobManager } from "./services/job-manager";
 import { VideoProcessor } from "./services/video-processor";
-import multer from 'multer';
 import Busboy from 'busboy';
 import path from 'path';
 import fs from 'fs';
@@ -29,7 +27,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let fileProcessed = false;
       
-      busboy.on('file', (fieldname, file, info) => {
+      busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: { filename: string; encoding: string; mimeType: string }) => {
         const { filename, encoding, mimeType } = info;
         console.log('Properly decoded filename:', filename);
         
@@ -56,7 +54,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const writeStream = fs.createWriteStream(filePath);
         let fileSize = 0;
         
-        file.on('data', (data) => {
+        file.on('data', (data: Buffer) => {
           fileSize += data.length;
           // Check file size limit (100MB)
           if (fileSize > 100 * 1024 * 1024) {
@@ -90,7 +88,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
-      busboy.on('error', (error) => {
+      busboy.on('error', (error: unknown) => {
         console.error('Busboy error:', error);
         res.status(400).json({ message: 'File upload error' });
       });
