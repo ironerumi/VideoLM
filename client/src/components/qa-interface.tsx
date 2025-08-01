@@ -24,18 +24,18 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
   const { t } = useI18n();
 
   const { data: chatHistory = [] } = useQuery<ChatMessage[]>({
-    queryKey: ["/api/videos", videoId, "chat"],
+    queryKey: ["api/videos", videoId, "chat"],
     enabled: !!videoId,
     refetchOnWindowFocus: false,
   });
 
   const chatMutation = useMutation({
     mutationFn: async ({ message, videoId }: { message: string; videoId: string }) => {
-      const response = await apiRequest('POST', `/api/videos/${videoId}/chat`, { message });
+      const response = await apiRequest('POST', `api/videos/${videoId}/chat`, { message });
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/videos", videoId, "chat"] });
+      queryClient.invalidateQueries({ queryKey: ["api/videos", videoId, "chat"] });
       setMessage("");
       setIsWaitingForResponse(false);
       // Set the new Q&A immediately from the response
@@ -51,11 +51,11 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
 
   const clearChatMutation = useMutation({
     mutationFn: async (videoId: string) => {
-      const response = await apiRequest('DELETE', `/api/videos/${videoId}/chat`);
+      const response = await apiRequest('DELETE', `api/videos/${videoId}/chat`);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/videos", videoId, "chat"] });
+      queryClient.invalidateQueries({ queryKey: ["api/videos", videoId, "chat"] });
       setCurrentQA(null);
     },
   });
@@ -205,7 +205,7 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
                           data-testid={"frame-thumbnail-" + index}
                         >
                           <img
-                            src={`/api/videos/${videoId}/frames/${frameName}?session=${sessionManager.getSessionId()}`}
+                            src={`api/videos/${videoId}/frames/${frameName}?session=${sessionManager.getSessionId()}`}
                             alt={`Frame at ${extractTimestamp(frameName)}s`}
                             className="w-16 h-12 object-cover rounded-md"
                             onError={(e) => {

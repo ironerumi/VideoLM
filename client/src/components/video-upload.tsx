@@ -65,7 +65,7 @@ export default function VideoUpload({ onVideoUploaded, onCancel }: VideoUploadPr
           }
         }, Math.max(300, progressStages[currentStage]?.duration / 3 || 300));
 
-        const response = await uploadFile('/api/videos/upload', formData);
+        const response = await uploadFile('api/videos/upload', formData);
         clearInterval(progressInterval);
         setUploadProgress(100);
         setProcessingStage('アップロード完了！');

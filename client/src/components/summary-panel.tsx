@@ -26,28 +26,28 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
   const queryClient = useQueryClient();
   
   const { data: videos = [] } = useQuery<Video[]>({
-    queryKey: ["/api/videos"],
+    queryKey: ["api/videos"],
   });
 
   const { data: chatHistory = [] } = useQuery<ChatMessage[]>({
-    queryKey: ["/api/videos", currentVideoId, "chat"],
+    queryKey: ["api/videos", currentVideoId, "chat"],
     enabled: !!currentVideoId,
   });
 
   const summaryMutation = useMutation({
     mutationFn: async (videoIds: string[]) => {
-      const response = await apiRequest('POST', '/api/videos/summary', { videoIds });
+      const response = await apiRequest('POST', 'api/videos/summary', { videoIds });
       return response.json();
     },
   });
 
   const clearChatMutation = useMutation({
     mutationFn: async (videoId: string) => {
-      const response = await apiRequest('DELETE', `/api/videos/${videoId}/chat`);
+      const response = await apiRequest('DELETE', `api/videos/${videoId}/chat`);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/videos", currentVideoId, "chat"] });
+      queryClient.invalidateQueries({ queryKey: ["api/videos", currentVideoId, "chat"] });
     },
   });
 
@@ -382,7 +382,7 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                             data-testid={"frame-thumbnail-" + chat.id}
                           >
                             <img
-                              src={`/api/videos/${currentVideoId}/frames/${(chat as any).relevantFrame}?session=${sessionManager.getSessionId()}`}
+                              src={`api/videos/${currentVideoId}/frames/${(chat as any).relevantFrame}?session=${sessionManager.getSessionId()}`}
                               alt="Relevant frame"
                               className="w-full h-full object-cover"
                               onError={(e) => {

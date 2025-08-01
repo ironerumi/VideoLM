@@ -140,7 +140,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
                 }}
                 data-testid="video-element"
               >
-                <source src={`/api/videos/${video.id}/file?session=${video.sessionId}`} type="video/mp4" />
+                <source src={`api/videos/${video.id}/file?session=${video.sessionId}`} type="video/mp4" />
                 {t.browserNotSupported || 'Your browser does not support the video tag.'}
               </video>
               
@@ -244,7 +244,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
                     data-testid={"thumbnail-" + index}
                   >
                     <img
-                      src={`/api/videos/${video.id}/frames/${frame.fileName}?session=${video.sessionId}`}
+                      src={`api/videos/${video.id}/frames/${frame.fileName}?session=${video.sessionId}`}
                       alt={`Frame at ${frame.timestamp.toFixed(1)}s`}
                       className={`w-full h-full object-cover transition-all duration-300 ${
                         isPastFrame ? 'grayscale opacity-60' : ''

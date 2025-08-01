@@ -22,28 +22,28 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
   const { t } = useI18n();
 
   const { data: chatHistory = [] } = useQuery<ChatMessage[]>({
-    queryKey: ["/api/videos", videoId, "chat"],
+    queryKey: ["api/videos", videoId, "chat"],
     enabled: !!videoId,
   });
 
   const chatMutation = useMutation({
     mutationFn: async ({ message, videoId }: { message: string; videoId: string }) => {
-      const response = await apiRequest('POST', `/api/videos/${videoId}/chat`, { message });
+      const response = await apiRequest('POST', `api/videos/${videoId}/chat`, { message });
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/videos", videoId, "chat"] });
+      queryClient.invalidateQueries({ queryKey: ["api/videos", videoId, "chat"] });
       setMessage("");
     },
   });
 
   const clearChatMutation = useMutation({
     mutationFn: async (videoId: string) => {
-      const response = await apiRequest('DELETE', `/api/videos/${videoId}/chat`);
+      const response = await apiRequest('DELETE', `api/videos/${videoId}/chat`);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/videos", videoId, "chat"] });
+      queryClient.invalidateQueries({ queryKey: ["api/videos", videoId, "chat"] });
     },
   });
 
@@ -194,7 +194,7 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
                           data-testid={`frame-thumbnail-primary-${latestChat.id}`}
                         >
                           <img
-                            src={`/api/videos/${videoId}/frames/${relevantFrame}?session=${sessionManager.getSessionId()}`}
+                            src={`api/videos/${videoId}/frames/${relevantFrame}?session=${sessionManager.getSessionId()}`}
                             alt="Primary relevant frame"
                             className="w-32 h-24 object-cover rounded-lg shadow-sm group-hover:shadow-md transition-all duration-200 group-hover:scale-105"
                             onError={(e) => {
@@ -233,7 +233,7 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
                                 data-testid={`frame-thumbnail-${timestamp}-${latestChat.id}`}
                               >
                                 <img
-                                  src={`/api/videos/${videoId}/frames/${frameName}?session=${sessionManager.getSessionId()}`}
+                                  src={`api/videos/${videoId}/frames/${frameName}?session=${sessionManager.getSessionId()}`}
                                   alt={`Frame at ${Math.floor(timestamp / 60)}:${String(timestamp % 60).padStart(2, '0')}`}
                                   className="w-20 h-15 object-cover rounded shadow-sm group-hover:shadow-md transition-all duration-200 group-hover:scale-105"
                                   onError={(e) => {

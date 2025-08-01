@@ -23,7 +23,7 @@ export default function Home() {
   const { t } = useI18n();
 
   const { data: videos = [], refetch: refetchVideos } = useQuery<Video[]>({
-    queryKey: ["/api/videos"],
+    queryKey: ["api/videos"],
   });
 
   const currentVideo = videos.find(v => v.id === currentVideoId);
@@ -52,7 +52,7 @@ export default function Home() {
 
   const handleVideoDelete = async (videoId: string) => {
     try {
-      const response = await fetch(`/api/videos/${videoId}`, {
+      const response = await fetch(`api/videos/${videoId}`, {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',

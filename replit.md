@@ -152,6 +152,18 @@ The application is designed for deployment on platforms like Replit, Vercel, or 
 
 ## Recent Changes
 
+### August 1, 2025 - Multi-Platform Hosting Compatibility
+- **Issue**: Fixed asset and API path issues when deploying to hosting platforms that use URL redirection
+- **Root Cause**: Some platforms serve apps from subdirectories (e.g., `/custom_applications/ID/`) but absolute paths (`/api/videos`) resolve to root domain
+- **Solution**: Converted all absolute paths to relative paths for universal compatibility
+- **Changes Made**:
+  - **Vite Config**: Added `base: "./"` for relative asset paths in production builds
+  - **API Calls**: Changed all `/api/videos` → `api/videos` in query keys and fetch calls  
+  - **Assets**: Changed `/assets/icons/` → `./assets/icons/` for images and favicon
+  - **Router**: Added empty path route (`""`) to handle trailing slash scenarios
+- **Files Modified**: All client components, `vite.config.ts`, `client/index.html`
+- **Compatibility**: Now works on both root domain hosting (Replit) and subdirectory hosting platforms
+
 ### July 29, 2025 - Custom App Icon System
 - **Feature**: Added customizable app icon system with automatic detection
 - **Location**: `public/assets/icons/` folder created for custom icons  
@@ -159,3 +171,37 @@ The application is designed for deployment on platforms like Replit, Vercel, or 
 - **Formats**: Supports SVG (preferred), PNG, JPG formats
 - **Usage**: Upload `app-icon.svg/png/jpg` to replace default icon automatically
 - **Enhancement**: Transparent batch progress indicators with detailed server logging
+
+## Development Guidelines
+
+### Path Convention Rules
+**CRITICAL**: Always use relative paths for client-side assets and API calls to ensure compatibility across different hosting environments.
+
+#### ✅ Correct Path Usage:
+```typescript
+// API calls - use relative paths
+queryKey: ["api/videos"]
+fetch("api/videos/123")
+await apiRequest('POST', 'api/videos/upload', data)
+
+// Assets - use relative paths with ./
+src="./assets/icons/app-icon.svg"
+href="./assets/icons/favicon.png"
+
+// Routes - handle both absolute and empty paths
+<Route path="/" component={Home} />
+<Route path="" component={Home} />
+```
+
+#### ❌ Incorrect Path Usage:
+```typescript
+// Absolute paths break in subdirectory deployments
+queryKey: ["/api/videos"]           // ❌ Resolves to root domain
+fetch("/api/videos/123")            // ❌ Ignores base path
+src="/assets/icons/app-icon.svg"    // ❌ Goes to root domain
+```
+
+#### Why This Matters:
+- **Root Domain Hosting**: Serves from root (`/`) - both work but absolute paths are unnecessary
+- **Subdirectory Hosting**: Serves from subdirectory (e.g., `/apps/ID/`) - absolute paths fail
+- **Relative paths**: Adapt automatically to any hosting environment

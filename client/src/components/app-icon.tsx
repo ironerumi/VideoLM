@@ -16,7 +16,7 @@ export default function AppIcon({ className = "w-8 h-8", size = 32 }: AppIconPro
       
       for (const format of iconFormats) {
         try {
-          const iconPath = `/assets/icons/app-icon.${format}`;
+          const iconPath = `./assets/icons/app-icon.${format}`;
           // Try to load the image directly to test if it's valid
           const img = new Image();
           await new Promise((resolve, reject) => {
