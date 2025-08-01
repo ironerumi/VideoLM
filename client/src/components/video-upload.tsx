@@ -11,9 +11,10 @@ import { useI18n } from "@/lib/i18n";
 interface VideoUploadProps {
   onVideoUploaded: () => void;
   onCancel: () => void;
+  showCancel?: boolean;
 }
 
-export default function VideoUpload({ onVideoUploaded, onCancel }: VideoUploadProps) {
+export default function VideoUpload({ onVideoUploaded, onCancel, showCancel = true }: VideoUploadProps) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [processingStage, setProcessingStage] = useState<string>('');
   const [frameCount, setFrameCount] = useState<number>(0);
@@ -165,15 +166,15 @@ export default function VideoUpload({ onVideoUploaded, onCancel }: VideoUploadPr
             </p>
             <Progress value={uploadProgress} className="w-full max-w-xs mx-auto mb-2" />
             <div className="text-blue-400 text-xs space-y-1">
-              <p>{uploadProgress.toFixed(0)}% 完了</p>
+              <p>{uploadProgress.toFixed(0)}% {t.complete}</p>
               {frameCount > 0 && estimatedFrames > 0 && (
                 <p className="text-blue-300">
-                  フレーム: {frameCount}/{estimatedFrames}
+                  {t.frame}: {frameCount}/{estimatedFrames}
                 </p>
               )}
               {processingStage.includes('データベース') && (
                 <p className="text-amber-500 text-xs">
-                  ※ この段階は時間がかかる場合があります
+                  {t.stageMayTakeTime}
                 </p>
               )}
             </div>
@@ -189,16 +190,18 @@ export default function VideoUpload({ onVideoUploaded, onCancel }: VideoUploadPr
         )}
       </div>
 
-      <div className="flex justify-end space-x-2">
-        <Button
-          variant="outline"
-          onClick={onCancel}
-          disabled={isUploading}
-          data-testid="button-cancel-upload"
-        >
-          {t.cancel}
-        </Button>
-      </div>
+      {showCancel && (
+        <div className="flex justify-end space-x-2">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={isUploading}
+            data-testid="button-cancel-upload"
+          >
+            {t.cancel}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

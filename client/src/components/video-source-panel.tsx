@@ -48,7 +48,7 @@ export default function VideoSourcePanel({
   };
 
   return (
-    <div className="w-full bg-white border-r border-slate-200/60 flex flex-col h-full">
+    <div className="w-full bg-white border-r border-slate-200/60 flex flex-col h-full min-w-0">
       {/* Header */}
       <div className="p-6 border-b border-slate-100">
         <div className="flex items-center justify-between mb-4">
@@ -86,6 +86,7 @@ export default function VideoSourcePanel({
               setShowUpload(false);
             }}
             onCancel={() => setShowUpload(false)}
+            showCancel={true}
           />
         </div>
       )}
@@ -93,21 +94,12 @@ export default function VideoSourcePanel({
       {/* Videos List */}
       <div className="flex-1 px-6 pb-6 overflow-y-auto">
         {videos.length === 0 && !showUpload && (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Film className="w-8 h-8 text-slate-400" />
-            </div>
-            <p className="text-slate-500 font-medium mb-2">{t.noVideos}</p>
-            <p className="text-slate-400 text-sm mb-4">{t.uploadFirst}</p>
-            <Button
-              onClick={() => setShowUpload(true)}
-              variant="outline"
-              size="sm"
-              data-testid="button-upload-first"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              {t.uploadTitle}
-            </Button>
+          <div className="py-6">
+            <VideoUpload
+              onVideoUploaded={onVideoUploaded}
+              onCancel={() => {}}
+              showCancel={false}
+            />
           </div>
         )}
 
@@ -124,20 +116,20 @@ export default function VideoSourcePanel({
               }`}
               data-testid={`video-item-${video.id}`}
             >
-              <div className="flex items-center space-x-3">
+              <div className="grid grid-cols-[auto_auto_1fr_auto] gap-3 items-center min-w-0">
                 <RadioGroupItem
                   value={video.id}
                   className="w-4 h-4 text-indigo-500"
                   data-testid={`radio-${video.id}`}
                 />
                 <div 
-                  className={`w-12 h-8 bg-gradient-to-br ${getGradient(index)} rounded flex items-center justify-center cursor-pointer hover:scale-105 transition-transform`}
+                  className={`w-10 sm:w-12 h-8 bg-gradient-to-br ${getGradient(index)} rounded flex items-center justify-center cursor-pointer hover:scale-105 transition-transform flex-shrink-0`}
                   onClick={() => onVideoPlay(video.id)}
                   data-testid={`play-${video.id}`}
                 >
                   <Play className="w-3 h-3 text-white fill-current" />
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 overflow-hidden">
                   <p 
                     className="text-sm font-medium text-slate-700 truncate japanese-filename"
                     title={fixJapaneseDisplay(video.originalName)}
@@ -146,7 +138,7 @@ export default function VideoSourcePanel({
                     {fixJapaneseDisplay(video.originalName)}
                   </p>
                   <p 
-                    className="text-xs text-slate-400"
+                    className="text-xs text-slate-400 truncate"
                     data-testid={`text-duration-${video.id}`}
                   >
                     {video.duration ? formatDuration(video.duration) : 'Unknown'}
@@ -159,7 +151,7 @@ export default function VideoSourcePanel({
                   }}
                   variant="ghost"
                   size="sm"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-red-500 hover:bg-red-50"
+                  className="opacity-60 group-hover:opacity-100 hover:opacity-100 transition-opacity text-slate-400 hover:text-red-500 hover:bg-red-50 flex-shrink-0 w-8 h-8 p-0"
                   data-testid={`button-delete-${video.id}`}
                 >
                   <Trash2 className="w-4 h-4" />
