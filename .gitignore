@@ -21,3 +21,11 @@ vite.config.ts.*
 *.tiff
 *.svg
 .env
+
+*.sqlite*
+*python-version
+infra/*.zip
+
+# python cache
+__pycache__
+*.pyc

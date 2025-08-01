@@ -2,12 +2,12 @@ import { useState, useRef, useEffect } from "react";
 import { Play, Pause, Volume2, Maximize, SkipBack, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import type { Video } from "@shared/schema";
+import type { VideoWithFrames } from "@shared/types";
 import { useI18n } from "@/lib/i18n";
 
 interface VideoPlayerProps {
-  video: Video | undefined;
-  videos: Video[];
+  video: VideoWithFrames | undefined;
+  videos: VideoWithFrames[];
   onVideoSelect: (videoId: string) => void;
   seekToTime?: number;
 }
@@ -16,6 +16,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [volume, setVolume] = useState(1);
+  const [isHovered, setIsHovered] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
   const { t } = useI18n();
@@ -84,6 +85,18 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
     }
   }, [seekToTime]);
 
+  // Reset video state when video changes
+  useEffect(() => {
+  if (videoRef.current) {
+    videoRef.current.pause();
+    videoRef.current.load(); // reloads new source
+    videoRef.current.volume = volume;
+    setIsPlaying(false);
+    setCurrentTime(0);
+  }
+}, [video?.id]);
+
+
   // Function to scroll timeline to show specific frame as first visible
   const scrollTimelineToFrame = (targetTime: number) => {
     if (!timelineRef.current || !video?.thumbnails?.frames) return;
@@ -113,11 +126,17 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
     <div className="p-8 h-full flex flex-col min-h-0 overflow-hidden">
       <div className="bg-white rounded-2xl shadow-premium overflow-hidden flex-1 flex flex-col min-h-0">
         {/* Video Display */}
-        <div className="relative bg-black flex-1 flex items-center justify-center min-h-0">
+        <div 
+          className="relative bg-black flex-1 flex items-center justify-center min-h-0"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
           {video ? (
             <>
               {/* Actual video element */}
               <video
+                // Use video ID as key to ensure re-render on video change
+                key={video?.id}
                 ref={videoRef}
                 className="w-full h-full object-contain"
                 onTimeUpdate={handleTimeUpdate}
@@ -126,12 +145,14 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
                 }}
                 data-testid="video-element"
               >
-                <source src={`/api/videos/${video.id}/file?session=${video.sessionId}`} type="video/mp4" />
+                <source src={`api/videos/${video.id}/file?session=${video.sessionId}`} type="video/mp4" />
                 {t.browserNotSupported || 'Your browser does not support the video tag.'}
               </video>
               
               {/* Play Button Overlay */}
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
+                !isPlaying || isHovered ? 'opacity-100' : 'opacity-0'
+              }`}>
                 <Button
                   onClick={handlePlayPause}
                   className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-all duration-300 transform hover:scale-110 border-0"
@@ -227,10 +248,9 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
                     }`}
                     onClick={() => handleSeek([frameProgress])}
                     data-testid={`thumbnail-${index}`}
-                    data-testid={"thumbnail-" + index}
                   >
                     <img
-                      src={`/api/videos/${video.id}/frames/${frame.fileName}?session=${video.sessionId}`}
+                      src={`api/videos/${video.id}/frames/${frame.fileName}?session=${video.sessionId}`}
                       alt={`Frame at ${frame.timestamp.toFixed(1)}s`}
                       className={`w-full h-full object-cover transition-all duration-300 ${
                         isPastFrame ? 'grayscale opacity-60' : ''
@@ -265,7 +285,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
             ) : (
               // Show message when no frames are available
               <div className="flex items-center justify-center w-full py-4">
-                <span className="text-slate-500 text-sm">フレームがまだ抽出されていません</span>
+                <span className="text-slate-500 text-sm">{t.frameNotExtracted}</span>
               </div>
             )}
             </div>

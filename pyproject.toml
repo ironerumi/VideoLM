@@ -1,0 +1,11 @@
+[project]
+name = "videolm"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11.11"
+dependencies = [
+    "datarobot-pulumi-utils>=0.0.2.post16",
+    "pulumi>=3.187.0",
+    "pulumi-datarobot>=0.10.13",
+]

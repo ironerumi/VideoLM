@@ -188,3 +188,25 @@ p, h1, h2, h3, h4, h5, h6, span, div, input, textarea, button {
 .text-balance {
   text-wrap: balance;
 }
+
+/* Enhanced specificity to override global Japanese text rules */
+p.break-keep, 
+div.break-keep, 
+span.break-keep {
+  /* より自然な改行のための基本設定 */
+  overflow-wrap: break-word !important;
+  word-break: keep-all !important;
+  line-break: strict;
+  
+  /* 自然な日本語の改行を優先（バランス調整を無効化） */
+  text-wrap: wrap;
+}
+
+/* モダンブラウザ向けの追加改善 */
+@supports (word-break: auto-phrase) {
+  p.break-keep, 
+  div.break-keep, 
+  span.break-keep {
+    word-break: auto-phrase !important;
+  }
+}

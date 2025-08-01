@@ -24,18 +24,18 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
   const { t } = useI18n();
 
   const { data: chatHistory = [] } = useQuery<ChatMessage[]>({
-    queryKey: ["/api/videos", videoId, "chat"],
+    queryKey: ["api/videos", videoId, "chat"],
     enabled: !!videoId,
     refetchOnWindowFocus: false,
   });
 
   const chatMutation = useMutation({
     mutationFn: async ({ message, videoId }: { message: string; videoId: string }) => {
-      const response = await apiRequest('POST', `/api/videos/${videoId}/chat`, { message });
+      const response = await apiRequest('POST', `api/videos/${videoId}/chat`, { message });
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/videos", videoId, "chat"] });
+      queryClient.invalidateQueries({ queryKey: ["api/videos", videoId, "chat"] });
       setMessage("");
       setIsWaitingForResponse(false);
       // Set the new Q&A immediately from the response
@@ -51,11 +51,11 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
 
   const clearChatMutation = useMutation({
     mutationFn: async (videoId: string) => {
-      const response = await apiRequest('DELETE', `/api/videos/${videoId}/chat`);
+      const response = await apiRequest('DELETE', `api/videos/${videoId}/chat`);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/videos", videoId, "chat"] });
+      queryClient.invalidateQueries({ queryKey: ["api/videos", videoId, "chat"] });
       setCurrentQA(null);
     },
   });
@@ -158,7 +158,7 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
       
       {/* Q&A Display Area */}
       <div className="flex-1 overflow-hidden min-h-0">
-        <ScrollArea className="h-full" ref={scrollRef}>
+        <ScrollArea className="h-full w-full" ref={scrollRef}>
           {!videoId ? (
             <div className="flex items-center justify-center h-full p-6">
               <div className="text-center">
@@ -172,7 +172,7 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
             <div className="p-6 space-y-4">
               {/* Section 1: Rephrased Question */}
               <div className="bg-slate-50 rounded-lg p-4">
-                <div className="text-slate-800 bg-white rounded-md p-3 border relative pl-10">
+                <div className="text-slate-800 bg-white rounded-md p-3 border relative pl-10 break-keep">
                   <User className="h-4 w-4 absolute top-3 left-3 text-slate-500" />
                   {currentQA.rephrasedQuestion || currentQA.message}
                 </div>
@@ -180,7 +180,7 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
 
               {/* Section 2: Bot Response */}
               <div className="bg-blue-50 rounded-lg p-4">
-                <div className="text-slate-800 bg-white rounded-md p-3 border relative pl-10">
+                <div className="text-slate-800 bg-white rounded-md p-3 border relative pl-10 break-keep">
                   <Bot className="h-4 w-4 absolute top-3 left-3 text-slate-500" />
                   {currentQA.response}
                 </div>
@@ -202,10 +202,9 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
                           onClick={() => handleFrameClick(frameName)}
                           className="group relative overflow-hidden rounded-lg border-2 border-transparent hover:border-blue-500 transition-all duration-200"
                           data-testid={`frame-thumbnail-${index}`}
-                          data-testid={"frame-thumbnail-" + index}
                         >
                           <img
-                            src={`/api/videos/${videoId}/frames/${frameName}?session=${sessionManager.getSessionId()}`}
+                            src={`api/videos/${videoId}/frames/${frameName}?session=${sessionManager.getSessionId()}`}
                             alt={`Frame at ${extractTimestamp(frameName)}s`}
                             className="w-16 h-12 object-cover rounded-md"
                             onError={(e) => {

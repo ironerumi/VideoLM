@@ -149,9 +149,9 @@ export default function SettingsModal({ open, onOpenChange, onDataReset }: Setti
 
           {/* Future settings can be added here */}
           <div className="space-y-3">
-            <h3 className="text-sm font-medium text-slate-900">一般</h3>
+            <h3 className="text-sm font-medium text-slate-900">{t.general}</h3>
             <p className="text-xs text-slate-500">
-              今後のアップデートでより多くの設定が利用可能になります。
+              {t.moreSettingsComing}
             </p>
           </div>
         </div>

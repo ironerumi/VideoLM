@@ -6,7 +6,9 @@ import {
   type ChatMessage, 
   type InsertChatMessage,
   type VideoSession,
-  type InsertVideoSession 
+  type InsertVideoSession,
+  type VideoJob,
+  type InsertVideoJob
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import fs from 'fs';
@@ -37,6 +39,13 @@ export interface IStorage {
   createVideoSession(session: InsertVideoSession): Promise<VideoSession>;
   updateVideoSession(id: string, updates: Partial<VideoSession>): Promise<VideoSession | undefined>;
   
+  // Video Job operations
+  getVideoJob(id: string): Promise<VideoJob | undefined>;
+  createVideoJob(job: InsertVideoJob): Promise<VideoJob>;
+  updateVideoJobProgress(id: string, progress: number, stage: string): Promise<void>;
+  updateVideoJobStatus(id: string, status: string, errorMessage?: string): Promise<void>;
+  deleteVideoJob(id: string): Promise<boolean>;
+  
   // Additional methods for reset functionality  
   getVideosBySession(sessionId: string): Promise<Video[]>;
   clearSessionData(sessionId: string): Promise<void>;
@@ -47,6 +56,7 @@ export class MemStorage implements IStorage {
   private videos: Map<string, Video>;
   private chatMessages: Map<string, ChatMessage>;
   private videoSessions: Map<string, VideoSession>;
+  private videoJobs: Map<string, VideoJob>;
   private uploadsDir: string;
 
   constructor() {
@@ -54,6 +64,7 @@ export class MemStorage implements IStorage {
     this.videos = new Map();
     this.chatMessages = new Map();
     this.videoSessions = new Map();
+    this.videoJobs = new Map();
     this.uploadsDir = path.join(process.cwd(), 'uploads');
     this.ensureUploadsDir();
   }
@@ -202,6 +213,61 @@ export class MemStorage implements IStorage {
     return Array.from(this.videos.values()).filter(video => video.sessionId === sessionId);
   }
 
+  async getVideoJob(id: string): Promise<VideoJob | undefined> {
+    return this.videoJobs.get(id);
+  }
+
+  async createVideoJob(insertJob: InsertVideoJob): Promise<VideoJob> {
+    const id = randomUUID();
+    const job: VideoJob = { 
+      ...insertJob, 
+      id, 
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.videoJobs.set(id, job);
+    return job;
+  }
+
+  async updateVideoJobProgress(id: string, progress: number, stage: string): Promise<void> {
+    const job = this.videoJobs.get(id);
+    if (job) {
+      job.progress = Math.max(0, Math.min(100, progress));
+      job.currentStage = stage;
+      job.status = progress < 100 ? 'processing' : 'processing';
+      job.updatedAt = new Date();
+      this.videoJobs.set(id, job);
+    }
+  }
+
+  async updateVideoJobStatus(id: string, status: string, errorMessage?: string): Promise<void> {
+    const job = this.videoJobs.get(id);
+    if (job) {
+      job.status = status;
+      job.updatedAt = new Date();
+      
+      if (status === 'completed') {
+        job.progress = 100;
+        job.currentStage = 'Complete';
+      } else if (status === 'failed') {
+        job.currentStage = 'Failed';
+        if (errorMessage) {
+          job.errorMessage = errorMessage;
+        }
+      } else if (status === 'pending') {
+        job.progress = 0;
+        job.currentStage = 'Retrying...';
+        job.errorMessage = null;
+      }
+      
+      this.videoJobs.set(id, job);
+    }
+  }
+
+  async deleteVideoJob(id: string): Promise<boolean> {
+    return this.videoJobs.delete(id);
+  }
+
   async clearSessionData(sessionId: string): Promise<void> {
     // Remove all videos for this session
     const videosToDelete = Array.from(this.videos.entries())
@@ -223,14 +289,22 @@ export class MemStorage implements IStorage {
       .map(([id, _]) => id);
     
     sessionsToDelete.forEach(id => this.videoSessions.delete(id));
+
+    // Remove all video jobs for this session
+    const jobsToDelete = Array.from(this.videoJobs.entries())
+      .filter(([_, job]) => job.sessionId === sessionId)
+      .map(([id, _]) => id);
+    
+    jobsToDelete.forEach(id => this.videoJobs.delete(id));
     
     // Remove the session itself
     this.sessions.delete(sessionId);
   }
 }
 
-// Temporarily use MemStorage for performance testing
-// import { DatabaseStorage } from './database-storage';
-// export const storage = new DatabaseStorage();
+// Use SQLite DatabaseStorage for job tracking persistence
+import { DatabaseStorage } from './database-storage';
+export const storage = new DatabaseStorage();
 
-export const storage = new MemStorage();
+// MemStorage option (data lost on restart)
+// export const storage = new MemStorage();

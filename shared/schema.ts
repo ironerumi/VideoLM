@@ -21,6 +21,8 @@ export const videos = sqliteTable("videos", {
   uploadedAt: integer("uploaded_at", { mode: 'timestamp' }).notNull().default(sql`(unixepoch() * 1000)`),
   analysis: text("analysis", { mode: 'json' }), // AI analysis results as JSON
   thumbnails: text("thumbnails", { mode: 'json' }), // array of thumbnail URLs/data as JSON
+  processingStatus: text("processing_status").default('pending'), // 'pending', 'processing', 'completed', 'failed'
+  jobId: text("job_id").references(() => videoJobs.id),
 });
 
 export const chatMessages = sqliteTable("chat_messages", {
@@ -40,6 +42,18 @@ export const videoSessions = sqliteTable("video_sessions", {
   selectedVideoIds: text("selected_video_ids", { mode: 'json' }).$type<string[]>().notNull().default(sql`'[]'`),
   summary: text("summary"),
   createdAt: integer("created_at", { mode: 'timestamp' }).notNull().default(sql`(unixepoch() * 1000)`),
+});
+
+export const videoJobs = sqliteTable("video_jobs", {
+  id: text("id").primaryKey(),
+  videoId: text("video_id").references(() => videos.id).notNull(),
+  sessionId: text("session_id").references(() => sessions.id).notNull(),
+  status: text("status").notNull().default('pending'), // 'pending', 'processing', 'completed', 'failed'
+  progress: integer("progress").notNull().default(0), // 0-100
+  currentStage: text("current_stage"),
+  errorMessage: text("error_message"),
+  createdAt: integer("created_at", { mode: 'timestamp' }).notNull().default(sql`(unixepoch() * 1000)`),
+  updatedAt: integer("updated_at", { mode: 'timestamp' }).notNull().default(sql`(unixepoch() * 1000)`),
 });
 
 export const insertSessionSchema = createInsertSchema(sessions).omit({
@@ -63,6 +77,12 @@ export const insertVideoSessionSchema = createInsertSchema(videoSessions).omit({
   createdAt: true,
 });
 
+export const insertVideoJobSchema = createInsertSchema(videoJobs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type InsertSession = z.infer<typeof insertSessionSchema>;
 export type Session = typeof sessions.$inferSelect;
 export type InsertVideo = z.infer<typeof insertVideoSchema>;
@@ -71,3 +91,5 @@ export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type InsertVideoSession = z.infer<typeof insertVideoSessionSchema>;
 export type VideoSession = typeof videoSessions.$inferSelect;
+export type InsertVideoJob = z.infer<typeof insertVideoJobSchema>;
+export type VideoJob = typeof videoJobs.$inferSelect;

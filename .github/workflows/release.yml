@@ -1,0 +1,40 @@
+name: Run quickstart_gh.py on release branch
+
+on:
+  push:
+    branches:
+      - release
+
+jobs:
+  run-quickstart-gh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Create virtual environment
+        run: uv venv .venv
+
+      - name: Install dependencies with uv
+        run: uv pip install -r requirements.txt
+
+      - name: Install Pulumi CLI
+        run: curl -fsSL https://get.pulumi.com | sh
+
+      - name: Show Pulumi CLI version
+        run: ~/.pulumi/bin/pulumi version
+
+      - name: Run quickstart_gh.py
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          DATAROBOT_ENDPOINT: ${{ secrets.DATAROBOT_ENDPOINT }}
+          DATAROBOT_API_TOKEN: ${{ secrets.DATAROBOT_API_TOKEN }}
+          # Add any other required secrets/environment variables here
+        run: python quickstart_gh.py videolm-prod-us --action up

@@ -36,7 +36,9 @@ const initializeTables = () => {
           format TEXT NOT NULL,
           uploaded_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
           analysis TEXT,
-          thumbnails TEXT
+          thumbnails TEXT,
+          processing_status TEXT DEFAULT 'pending',
+          job_id TEXT
         );
 
         CREATE TABLE chat_messages (
@@ -44,7 +46,9 @@ const initializeTables = () => {
           session_id TEXT NOT NULL REFERENCES sessions(id),
           video_id TEXT REFERENCES videos(id),
           message TEXT NOT NULL,
+          rephrased_question TEXT,
           response TEXT NOT NULL,
+          relevant_frame TEXT,
           timestamp INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
         );
 
@@ -54,6 +58,18 @@ const initializeTables = () => {
           selected_video_ids TEXT NOT NULL DEFAULT '[]',
           summary TEXT,
           created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
+        );
+
+        CREATE TABLE video_jobs (
+          id TEXT PRIMARY KEY,
+          video_id TEXT NOT NULL REFERENCES videos(id),
+          session_id TEXT NOT NULL REFERENCES sessions(id),
+          status TEXT NOT NULL DEFAULT 'pending',
+          progress INTEGER NOT NULL DEFAULT 0,
+          current_stage TEXT,
+          error_message TEXT,
+          created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+          updated_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
         );
       `);
       console.log('✓ SQLite database tables created successfully');
