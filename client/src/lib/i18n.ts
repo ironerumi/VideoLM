@@ -97,6 +97,19 @@ export interface Translations {
   extractingFrames: string;
   uploadComplete: string;
   browserNotSupported: string;
+  analysisComplete: string;
+
+  // Video Upload Progress Stages
+  uploadStageStart: string;
+  uploadStageFileRead: string;
+  uploadStageFrameSetup: string;
+  uploadStageFrameExtract: string;
+  uploadStageFrameDone: string;
+  uploadStageAiPrepare: string;
+  uploadStageAiAnalyze: string;
+  uploadStageAiDone: string;
+  uploadStageDbSave: string;
+  uploadStageMeta: string;
 }
 
 const translations: Record<Language, Translations> = {
@@ -196,6 +209,18 @@ const translations: Record<Language, Translations> = {
     uploadComplete: 'Upload complete',
     analysisComplete: 'Analysis complete',
     browserNotSupported: 'Your browser does not support the video tag.',
+
+    // Video Upload Progress Stages
+    uploadStageStart: 'Starting upload',
+    uploadStageFileRead: 'Reading and validating file...',
+    uploadStageFrameSetup: 'Setting up frame extraction...',
+    uploadStageFrameExtract: 'Extracting frames (FFmpeg)...',
+    uploadStageFrameDone: 'Frame extraction complete (~20 frames)',
+    uploadStageAiPrepare: 'Preparing AI analysis...',
+    uploadStageAiAnalyze: 'Analyzing with AI...',
+    uploadStageAiDone: 'AI analysis complete, processing results...',
+    uploadStageDbSave: 'Saving video info to database...',
+    uploadStageMeta: 'Finalizing metadata...',
   },
   
   ja: {
@@ -262,7 +287,7 @@ const translations: Record<Language, Translations> = {
     askVideoQuestion: 'この動画について何でもお聞きください...',
     
     // Summary Panel
-    videoSummary: '動画概要',
+    videoSummary: '概要',
     generateSummary: '要約を生成',
     generating: '生成中...',
     keyPoints: 'キーポイント',
@@ -294,6 +319,18 @@ const translations: Record<Language, Translations> = {
     uploadComplete: 'アップロード完了',
     analysisComplete: '分析完了',
     browserNotSupported: 'お使いのブラウザはビデオタグをサポートしていません。',
+
+    // Video Upload Progress Stages
+    uploadStageStart: 'アップロード開始',
+    uploadStageFileRead: 'ファイル読み込み・検証中...',
+    uploadStageFrameSetup: 'フレーム抽出設定中...',
+    uploadStageFrameExtract: 'フレーム抽出実行中 (FFmpeg)',
+    uploadStageFrameDone: 'フレーム抽出完了 (~20フレーム)',
+    uploadStageAiPrepare: 'AI分析準備中...',
+    uploadStageAiAnalyze: 'AI分析中...',
+    uploadStageAiDone: 'AI分析完了、結果を処理中...',
+    uploadStageDbSave: '動画情報をデータベースに保存中...',
+    uploadStageMeta: 'メタデータ最終処理中...',
   },
 };
 
