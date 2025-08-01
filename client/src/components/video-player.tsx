@@ -2,12 +2,12 @@ import { useState, useRef, useEffect } from "react";
 import { Play, Pause, Volume2, Maximize, SkipBack, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import type { Video } from "@shared/schema";
+import type { VideoWithFrames } from "@shared/types";
 import { useI18n } from "@/lib/i18n";
 
 interface VideoPlayerProps {
-  video: Video | undefined;
-  videos: Video[];
+  video: VideoWithFrames | undefined;
+  videos: VideoWithFrames[];
   onVideoSelect: (videoId: string) => void;
   seekToTime?: number;
 }
@@ -241,7 +241,6 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
                     }`}
                     onClick={() => handleSeek([frameProgress])}
                     data-testid={`thumbnail-${index}`}
-                    data-testid={"thumbnail-" + index}
                   >
                     <img
                       src={`api/videos/${video.id}/frames/${frame.fileName}?session=${video.sessionId}`}
