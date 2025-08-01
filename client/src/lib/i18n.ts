@@ -131,7 +131,7 @@ const translations: Record<Language, Translations> = {
     tagline: 'AI-Powered Video Understanding',
     
     // Video Upload
-    uploadTitle: 'Upload Videos',
+    uploadTitle: 'Upload Video',
     uploadDescription: 'Add videos to analyze with AI',
     dropZoneText: 'Drop video files here or click to browse',
     browseFiles: 'Browse Files',
@@ -177,7 +177,7 @@ const translations: Record<Language, Translations> = {
     askVideoQuestion: 'Ask about this video...',
     
     // Summary Panel
-    videoSummary: 'Video Summary',
+    videoSummary: 'Summary',
     generateSummary: 'Generate Summary',
     generating: 'Generating...',
     keyPoints: 'Key Points',

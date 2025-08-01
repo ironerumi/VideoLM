@@ -16,6 +16,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [volume, setVolume] = useState(1);
+  const [isHovered, setIsHovered] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
   const { t } = useI18n();
@@ -125,7 +126,11 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
     <div className="p-8 h-full flex flex-col min-h-0 overflow-hidden">
       <div className="bg-white rounded-2xl shadow-premium overflow-hidden flex-1 flex flex-col min-h-0">
         {/* Video Display */}
-        <div className="relative bg-black flex-1 flex items-center justify-center min-h-0">
+        <div 
+          className="relative bg-black flex-1 flex items-center justify-center min-h-0"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
           {video ? (
             <>
               {/* Actual video element */}
@@ -145,7 +150,9 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
               </video>
               
               {/* Play Button Overlay */}
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
+                !isPlaying || isHovered ? 'opacity-100' : 'opacity-0'
+              }`}>
                 <Button
                   onClick={handlePlayPause}
                   className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-all duration-300 transform hover:scale-110 border-0"
