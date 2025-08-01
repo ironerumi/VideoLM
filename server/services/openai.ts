@@ -244,10 +244,43 @@ Please rephrase the question into a complete sentence with video context, provid
         }
       ],
       response_format: { type: "json_object" },
-      max_tokens: 800,
+      max_tokens: 2000,
     });
 
-    const result = JSON.parse(response.choices[0].message.content || '{}');
+    const responseContent = response.choices[0].message.content || '{}';
+    console.log("Chat response content:", responseContent);
+    
+    let result;
+    try {
+      result = JSON.parse(responseContent);
+    } catch (parseError) {
+      console.error("JSON parsing failed:", parseError);
+      console.error("Content that failed to parse:", responseContent);
+      
+      // Try to extract JSON from potentially malformed response
+      const jsonMatch = responseContent.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          result = JSON.parse(jsonMatch[0]);
+        } catch (fallbackError) {
+          console.error("Fallback JSON parsing also failed:", fallbackError);
+          // Create minimal fallback response
+          result = {
+            rephrasedQuestion: message,
+            response: "I apologize, but I encountered an issue processing your question. Please try asking again or rephrase your question.",
+            relevantFrame: null
+          };
+        }
+      } else {
+        console.log("No JSON structure found, creating minimal response");
+        // Create minimal fallback response
+        result = {
+          rephrasedQuestion: message,
+          response: "I'm unable to provide a response at the moment due to a formatting issue. Please try asking your question again.",
+          relevantFrame: null
+        };
+      }
+    }
     return {
       response: result.response || "I'm unable to provide a response at the moment.",
       rephrasedQuestion: result.rephrasedQuestion || message,
@@ -255,6 +288,10 @@ Please rephrase the question into a complete sentence with video context, provid
     };
   } catch (error) {
     console.error("Error in chat response:", error);
+    console.error("Error details:", {
+      message: (error as Error).message,
+      stack: (error as Error).stack
+    });
     throw new Error("Failed to generate chat response");
   }
 }

@@ -158,7 +158,7 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
       
       {/* Q&A Display Area */}
       <div className="flex-1 overflow-hidden min-h-0">
-        <ScrollArea className="h-full" ref={scrollRef}>
+        <ScrollArea className="h-full w-full" ref={scrollRef}>
           {!videoId ? (
             <div className="flex items-center justify-center h-full p-6">
               <div className="text-center">
@@ -172,7 +172,7 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
             <div className="p-6 space-y-4">
               {/* Section 1: Rephrased Question */}
               <div className="bg-slate-50 rounded-lg p-4">
-                <div className="text-slate-800 bg-white rounded-md p-3 border relative pl-10">
+                <div className="text-slate-800 bg-white rounded-md p-3 border relative pl-10 break-keep">
                   <User className="h-4 w-4 absolute top-3 left-3 text-slate-500" />
                   {currentQA.rephrasedQuestion || currentQA.message}
                 </div>
@@ -180,7 +180,7 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
 
               {/* Section 2: Bot Response */}
               <div className="bg-blue-50 rounded-lg p-4">
-                <div className="text-slate-800 bg-white rounded-md p-3 border relative pl-10">
+                <div className="text-slate-800 bg-white rounded-md p-3 border relative pl-10 break-keep">
                   <Bot className="h-4 w-4 absolute top-3 left-3 text-slate-500" />
                   {currentQA.response}
                 </div>
