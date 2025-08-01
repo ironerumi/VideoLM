@@ -88,6 +88,7 @@ app_source = datarobot.ApplicationSource(
         resource_label=CustomAppResourceBundles.CPU_8XL.value.id,
         replicas=1,
         session_affinity=True,
+        service_web_requests_on_root_path=True,
     ),
 )
 
