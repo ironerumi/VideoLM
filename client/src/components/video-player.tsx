@@ -285,7 +285,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
             ) : (
               // Show message when no frames are available
               <div className="flex items-center justify-center w-full py-4">
-                <span className="text-slate-500 text-sm">フレームがまだ抽出されていません</span>
+                <span className="text-slate-500 text-sm">{t.frameNotExtracted}</span>
               </div>
             )}
             </div>

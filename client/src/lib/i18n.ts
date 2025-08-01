@@ -29,6 +29,11 @@ export interface Translations {
   uploading: string;
   uploadFailed: string;
   format: string;
+  frame: string;
+  stageMayTakeTime: string;
+  frameNotExtracted: string;
+  general: string;
+  moreSettingsComing: string;
   
   // Video List
   selectVideo: string;
@@ -140,6 +145,11 @@ const translations: Record<Language, Translations> = {
     uploading: 'Uploading...',
     uploadFailed: 'Upload failed',
     format: 'Format',
+    frame: 'Frame',
+    stageMayTakeTime: 'This stage may take some time',
+    frameNotExtracted: 'Frames have not been extracted yet',
+    general: 'General',
+    moreSettingsComing: 'More settings will be available in future updates.',
     
     // Video List
     selectVideo: 'Select video to analyze',
@@ -250,6 +260,11 @@ const translations: Record<Language, Translations> = {
     uploading: 'アップロード中...',
     uploadFailed: 'アップロードに失敗しました',
     format: 'フォーマット',
+    frame: 'フレーム',
+    stageMayTakeTime: '※ この段階は時間がかかる場合があります',
+    frameNotExtracted: 'フレームがまだ抽出されていません',
+    general: '一般',
+    moreSettingsComing: '今後のアップデートでより多くの設定が利用可能になります。',
     
     // Video List
     selectVideo: '分析する動画を選択',
