@@ -60,31 +60,26 @@ A modern web application that leverages AI to analyze video content, extract ins
 Set up the following environment variables:
 
 ```bash
+# For DataRobot (OpenAI-compatible)
+export DATAROBOT_API_TOKEN="your-datarobot-token"
+export DATAROBOT_ENDPOINT="https://app.datarobot.com/api/v2"
+
 # For OpenAI
 export OPENAI_API_KEY="your-openai-api-key"
 export OPENAI_BASE_URL="https://api.openai.com/v1"  # Optional, defaults to OpenAI
 export OPENAI_MODEL="gpt-4.1-mini"          # Optional
-
-# For DataRobot (OpenAI-compatible)
-export DATAROBOT_API_TOKEN="your-datarobot-token"
-export DATAROBOT_ENDPOINT="https://app.datarobot.com/api/v2"
 ```
 
 ### Running the Application
 
-#### Option 1: Standard Node.js Setup
+#### Option 1 (prod): DataRobot Custom Application
 ```bash
-# Switch to Node.js 20
-nvm use 20
-
-# Set environment variables and start
-export OPENAI_API_KEY="your-api-key"
-PORT=8888 npm start
+python quickstart.py <stack_name>
 ```
 
-#### Option 2: DataRobot Setup (Recommended)
+#### Option 2 (dev): Local DataRobot Setup
 ```bash
-# Use the provided startup script
+# Use the provided startup script, which will use gemini-2.5-flash by default
 nvm use 20 && \
 DATAROBOT_API_TOKEN="$DATAROBOT_API_TOKEN" \
 DATAROBOT_ENDPOINT="$DATAROBOT_ENDPOINT" \
@@ -92,10 +87,14 @@ PORT=8888 \
 ./infra/custom_application/start-app.sh
 ```
 
-#### Option 3: Development Mode
+#### Option 3 (dev): Local Standard Node.js Setup
 ```bash
+# Use Node.js 20
 nvm use 20
-npm run dev
+
+# Set environment variables and start, which will use gpt-4.1-mini by default
+export OPENAI_API_KEY="your-api-key"
+PORT=8888 npm start
 ```
 
 ## 🏗️ Architecture
@@ -207,11 +206,11 @@ OPENAI_MODEL: vertex_ai/gemini-2.5-flash
 
 ## 📝 License
 
-[Add your license information here]
+This project is licensed under the terms of the [LICENSE](LICENSE) file.
 
 ## 🤝 Contributing
 
-[Add contribution guidelines here]
+[TBA]
 
 ---
 
