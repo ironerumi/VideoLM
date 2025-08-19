@@ -81,10 +81,11 @@ python quickstart.py <stack_name>
 ```bash
 # Use the provided startup script, which will use gemini-2.5-flash by default
 nvm use 22 && \
-DATAROBOT_API_TOKEN="$DATAROBOT_API_TOKEN" \
-DATAROBOT_ENDPOINT="$DATAROBOT_ENDPOINT" \
+OPENAI_API_KEY="$DATAROBOT_API_TOKEN" \
+OPENAI_BASE_URL="${DATAROBOT_ENDPOINT}/genai/llmgw" \
+OPENAI_MODEL="vertex_ai/gemini-2.5-flash" \
 PORT=8888 \
-./infra/custom_application/start-app.sh
+npm run dev
 ```
 
 #### Option 3 (dev): Local Standard Node.js Setup
