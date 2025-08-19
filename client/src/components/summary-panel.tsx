@@ -8,6 +8,56 @@ import { useState, useEffect, useRef } from "react";
 import { useI18n } from "@/lib/i18n";
 import { sessionManager } from "@/lib/session";
 
+// Utility function to parse timestamps from text
+const parseTimestampFromText = (text: string): { timestamp: number; start: number; end: number } | null => {
+  const match = text.match(/\[(\d{2}):(\d{2})\]/);
+  if (match) {
+    const minutes = parseInt(match[1], 10);
+    const seconds = parseInt(match[2], 10);
+    const timestamp = minutes * 60 + seconds;
+    return {
+      timestamp,
+      start: match.index!,
+      end: match.index! + match[0].length
+    };
+  }
+  return null;
+};
+
+// Component for rendering text with clickable timestamps
+interface ClickableTextProps {
+  text: string;
+  onTimestampClick?: (timestamp: number) => void;
+  className?: string;
+  testId?: string;
+}
+
+function ClickableText({ text, onTimestampClick, className, testId }: ClickableTextProps) {
+  const timestampInfo = parseTimestampFromText(text);
+  
+  if (!timestampInfo || !onTimestampClick) {
+    return <p className={className} data-testid={testId}>{text}</p>;
+  }
+  
+  const { timestamp, start, end } = timestampInfo;
+  const beforeTimestamp = text.slice(0, start);
+  const timestampText = text.slice(start, end);
+  const afterTimestamp = text.slice(end);
+  
+  return (
+    <p className={className} data-testid={testId}>
+      {beforeTimestamp}
+      <button
+        onClick={() => onTimestampClick(timestamp)}
+        className="text-indigo-600 hover:text-indigo-800 underline cursor-pointer font-medium transition-colors"
+      >
+        {timestampText}
+      </button>
+      {afterTimestamp}
+    </p>
+  );
+}
+
 interface SummaryPanelProps {
   selectedVideoIds: string[];
   currentVideoId: string | null;
@@ -255,9 +305,12 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                         index % 4 === 1 ? 'bg-purple-400' :
                         index % 4 === 2 ? 'bg-pink-400' : 'bg-blue-400'
                       }`}></div>
-                      <p className="text-sm text-slate-600 leading-relaxed break-keep" data-testid={"key-point-" + index}>
-                        {point}
-                      </p>
+                      <ClickableText
+                        text={point}
+                        onTimestampClick={onFrameClick}
+                        className="text-sm text-slate-600 leading-relaxed break-keep"
+                        testId={"key-point-" + index}
+                      />
                     </div>
                   ))}
                 </div>
@@ -276,9 +329,13 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                 >
                   <div className="space-y-3 p-2">
                     {(currentVideo.analysis as any).transcription.map((line: string, index: number) => (
-                      <p key={index} className="text-sm text-slate-600 leading-relaxed break-keep" data-testid={"transcription-line-" + index}>
-                        {line}
-                      </p>
+                      <ClickableText
+                        key={index}
+                        text={line}
+                        onTimestampClick={onFrameClick}
+                        className="text-sm text-slate-600 leading-relaxed break-keep"
+                        testId={"transcription-line-" + index}
+                      />
                     ))}
                   </div>
                 </CollapsibleSection>
