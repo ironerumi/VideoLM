@@ -29,18 +29,6 @@ export interface FrameExtractionResult {
  */
 async function getVideoDuration(videoPath: string): Promise<number> {
   return new Promise((resolve, reject) => {
-    // Check if ffprobe is available
-    try {
-      const testProbe = spawnSync('which', ['ffprobe']);
-      testProbe.on('error', (error: any) => {
-        if (error.code === 'ENOENT') {
-          reject(new Error('ffprobe is not installed or not found in PATH. Please ensure FFmpeg is properly installed.'));
-          return;
-        }
-      });
-    } catch (error) {
-      // Continue with original logic if 'which' command fails
-    }
 
     const ffprobe = spawn('ffprobe', [
       '-v', 'quiet',
@@ -169,7 +157,8 @@ export async function extractVideoFrames(options: FrameExtractionOptions): Promi
     // If we would exceed max frames, adjust the interval
     if (totalPossibleFrames > maxFrames) {
       // Adjust interval to fit within maxFrames (excluding first and last frame)
-      extractionInterval = duration / (maxFrames - 2);
+      // use Math.ceil to round up, avoid fractional frames
+      extractionInterval = Math.ceil(duration / (maxFrames - 2));
       estimatedFrames = maxFrames;
     }
 

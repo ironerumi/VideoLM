@@ -1,7 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { getVideoMetadata } from "./services/video";
 import { chatWithVideo, generateVideoSummary, type VideoAnalysis } from "./services/openai";
 import { insertVideoSchema, insertChatMessageSchema } from "@shared/schema";
 import { JobManager } from "./services/job-manager";
@@ -9,7 +8,6 @@ import { VideoProcessor } from "./services/video-processor";
 import Busboy from 'busboy';
 import path from 'path';
 import fs from 'fs';
-
 interface MulterRequest extends Request {
   file?: Express.Multer.File;
   sessionId: string;
@@ -120,8 +118,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('🚀 Quick upload started:', req.file.originalname);
 
       // 1. Quick validation and basic metadata
-      const fileBuffer = fs.readFileSync(req.file.path);
-      const metadata = getVideoMetadata(fileBuffer, req.file.originalname);
+      const metadata = {
+        duration: 0, // Will be updated from frame extraction
+        format: path.extname(req.file.originalname).slice(1).toUpperCase(),
+        size: req.file.size
+      };
       
       // 2. Create video record with pending status
       const videoData = {
@@ -230,7 +231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // For image requests, prioritize query parameter session over header
       let sessionId = req.query.session as string || req.sessionId;
       
-      console.log('Frame request:', {
+      console.debug('Frame request:', {
         videoId: req.params.id,
         frameName: req.params.frameName,
         videoFound: !!video,
@@ -305,7 +306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/videos/:id/file", async (req: MulterRequest, res) => {
     try {
       const video = await storage.getVideo(req.params.id);
-      console.log('Video file request:', {
+      console.debug('Video file request:', {
         videoId: req.params.id,
         videoFound: !!video,
         requestSessionId: req.sessionId,
@@ -470,7 +471,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (fs.existsSync(framesDir)) {
           const frameFiles = fs.readdirSync(framesDir);
           availableFrames = frameFiles.filter(file => file.endsWith('.jpg'));
-          console.log('Available frames for AI:', availableFrames);
+          console.debug('Available frames for AI:', availableFrames);
         }
       } catch (error) {
         console.warn('Could not read frames directory:', error);

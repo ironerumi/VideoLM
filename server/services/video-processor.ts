@@ -1,6 +1,5 @@
 import { JobManager } from "./job-manager";
 import { storage } from "../storage";
-import { getVideoMetadata, generateThumbnails } from "./video";
 import { analyzeVideoFrames, type VideoAnalysis } from "./openai";
 import { extractVideoFrames, type FrameExtractionResult } from "../utils/frame-extractor";
 import fs from 'fs';
@@ -38,9 +37,11 @@ export class VideoProcessor implements IVideoProcessor {
       // Step 1: Read file and generate basic metadata (10%)
       await this.jobManager.updateJobProgress(jobId, 10, 'Reading file and generating metadata...');
       
-      const fileBuffer = fs.readFileSync(video.filePath);
-      const metadata = getVideoMetadata(fileBuffer, video.originalName);
-      const thumbnails = await generateThumbnails(fileBuffer);
+      const metadata = {
+        duration: 0, // Will be updated from frame extraction
+        format: path.extname(video.originalName).slice(1).toUpperCase(),
+        size: video.size
+      };
 
       // Step 2: Frame extraction setup (20%)
       await this.jobManager.updateJobProgress(jobId, 20, 'Setting up frame extraction...');
@@ -81,8 +82,9 @@ export class VideoProcessor implements IVideoProcessor {
       
       let analysis: VideoAnalysis;
       if (frameExtractionResult.success && frameExtractionResult.frames.length > 0) {
-        const maxFramesToAnalyze = Math.min(frameExtractionResult.frames.length, 50);
-        const framesToAnalyze = frameExtractionResult.frames.slice(0, maxFramesToAnalyze);
+        // const maxFramesToAnalyze = Math.min(frameExtractionResult.frames.length, 50);
+        // const framesToAnalyze = frameExtractionResult.frames.slice(0, maxFramesToAnalyze);
+        const framesToAnalyze = frameExtractionResult.frames;
         
         await this.jobManager.updateJobProgress(jobId, 60, 
           `Analyzing ${framesToAnalyze.length} frames with AI...`);
@@ -99,7 +101,7 @@ export class VideoProcessor implements IVideoProcessor {
         analysis = await analyzeVideoFrames(frameData, userLanguage);
         const processingTime = Date.now() - startTime;
         
-        console.log(`✨ OpenAI analysis completed in ${processingTime}ms`);
+        console.log(`✨ LLM analysis completed in ${processingTime}ms`);
         await this.jobManager.updateJobProgress(jobId, 80, 'AI analysis complete');
       } else {
         // Create fallback analysis
@@ -131,21 +133,20 @@ export class VideoProcessor implements IVideoProcessor {
       await this.jobManager.updateJobProgress(jobId, 90, 'Saving analysis to database...');
 
       // Optimize analysis data
-      const optimizedAnalysis = {
-        summary: analysis.summary,
-        keyPoints: analysis.keyPoints.slice(0, 5),
-        topics: analysis.topics.slice(0, 3),
-        sentiment: analysis.sentiment,
-        visualElements: analysis.visualElements.slice(0, 5),
-        transcription: analysis.transcription.slice(0, 50)
-      };
+      // const optimizedAnalysis = {
+      //   summary: analysis.summary,
+      //   keyPoints: analysis.keyPoints.slice(0, 5),
+      //   topics: analysis.topics.slice(0, 3),
+      //   sentiment: analysis.sentiment,
+      //   visualElements: analysis.visualElements.slice(0, 5),
+      //   transcription: analysis.transcription.slice(0, 50)
+      // };
 
       // Update video with analysis results
       await storage.updateVideo(videoId, {
         duration: frameExtractionResult.success ? Math.round(frameExtractionResult.duration) : Math.round(metadata.duration),
-        analysis: optimizedAnalysis,
+        analysis: analysis,
         thumbnails: {
-          ...thumbnails,
           frames: frameExtractionResult.success ? frameExtractionResult.frames : []
         }
       });

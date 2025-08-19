@@ -60,7 +60,7 @@ export async function analyzeVideoFrames(frameData: Array<{base64: string, times
               Return JSON with this structure:
               {
                 "summary": "Comprehensive summary covering entire video duration",
-                "keyPoints": ["key observation 1", "key observation 2", "key observation 3"],
+                "keyPoints": ["[00:00] key observation 1", "[00:01] key observation 2", "[00:02] key observation 3"],
                 "topics": ["main topic 1", "main topic 2"],
                 "sentiment": "overall mood/sentiment",
                 "visualElements": ["visual element 1", "visual element 2"],
@@ -74,13 +74,13 @@ export async function analyzeVideoFrames(frameData: Array<{base64: string, times
         },
       ],
       response_format: { type: "json_object" },
-      max_tokens: 4000, // Increased to accommodate more transcription entries
+      max_tokens: 20000, // Increased to accommodate more transcription entries
     });
 
     const responseContent = response.choices[0].message.content || "{}";
     console.log("Raw OpenAI response length:", responseContent.length);
-    console.log("Response preview:", responseContent.substring(0, 200) + "...");
-    
+    console.debug("Response preview:", responseContent.substring(0, 200) + "...");
+
     let result;
     try {
       result = JSON.parse(responseContent);
@@ -248,7 +248,7 @@ Please rephrase the question into a complete sentence with video context, provid
     });
 
     const responseContent = response.choices[0].message.content || '{}';
-    console.log("Chat response content:", responseContent);
+    console.debug("Chat response content:", responseContent);
     
     let result;
     try {

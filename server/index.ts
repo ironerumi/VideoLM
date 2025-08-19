@@ -47,8 +47,10 @@ app.use((req, res, next) => {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
 
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
+      const shouldTruncate = process.env.LOG_TRUNCATE !== 'false'; // default true
+      const maxLogLength = parseInt(process.env.LOG_MAX_LENGTH || '80', 10);
+      if (shouldTruncate && logLine.length > maxLogLength) {
+        logLine = logLine.slice(0, maxLogLength - 1) + "…";
       }
 
       log(logLine);
