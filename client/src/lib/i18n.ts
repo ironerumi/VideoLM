@@ -64,7 +64,6 @@ export interface Translations {
   
   // Q&A Interface
   qaInterface: string;
-  chatHistoryPanel: string;
   rephrasedQuestion: string;
   botResponse: string;
   relatedFrames: string;
@@ -180,7 +179,6 @@ const translations: Record<Language, Translations> = {
     
     // Q&A Interface
     qaInterface: 'Q&A',
-    chatHistoryPanel: 'Chat History',
     rephrasedQuestion: 'Question',
     botResponse: 'Response',
     relatedFrames: 'Related Frames',
@@ -295,7 +293,6 @@ const translations: Record<Language, Translations> = {
     
     // Q&A Interface
     qaInterface: 'Q&A',
-    chatHistoryPanel: 'チャット履歴',
     rephrasedQuestion: '質問',
     botResponse: '回答',
     relatedFrames: '関連フレーム',

@@ -86,7 +86,7 @@ export default function ChatInterface({ videoId, selectedVideoCount, onFrameClic
       {/* Chat History */}
       <div className="flex-1 overflow-hidden min-h-0">
         <div className="flex items-center justify-between px-6 py-3 border-b border-slate-100">
-          <h4 className="text-sm font-medium text-slate-700">{t.chatHistory}</h4>
+          <h4 className="text-sm font-medium text-slate-700">{t.chatHistoryTab}</h4>
           <button
             onClick={clearChatHistory}
             disabled={chatHistory.length === 0 || isLoading}
