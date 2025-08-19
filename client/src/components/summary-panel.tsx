@@ -128,6 +128,22 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
   const queryClient = useQueryClient();
   const containerRef = useRef<HTMLDivElement>(null);
   
+  // Parse frames from relevantFrame field
+  const parseFrames = (relevantFrame: string | null) => {
+    if (!relevantFrame) return [];
+    
+    try {
+      // Handle both string and array formats
+      if (relevantFrame.startsWith('[')) {
+        return JSON.parse(relevantFrame);
+      } else {
+        return [relevantFrame];
+      }
+    } catch {
+      return relevantFrame ? [relevantFrame] : [];
+    }
+  };
+  
   // State for tracking expanded sections
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['key-points', 'transcription', 'chat-history', 'metadata'])
@@ -379,7 +395,9 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                           return match ? parseFloat(match[1]) : null;
                         };
 
-                        const frameTime = getFrameTimeFromFilename((chat as any).relevantFrame);
+                        const parsedFrames = parseFrames((chat as any).relevantFrame);
+                        const primaryFrame = parsedFrames[0]; // Use first frame for display
+                        const frameTime = getFrameTimeFromFilename(primaryFrame);
 
                         return (
                           <div key={chat.id} className="space-y-2" data-testid={"chat-item-" + chat.id}>
@@ -392,14 +410,14 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                               </p>
                             </div>
                             <div className="flex items-start space-x-3">
-                              {(chat as any).relevantFrame && currentVideoId && (
+                              {primaryFrame && currentVideoId && (
                                 <button
                                   onClick={() => frameTime && onFrameClick?.(frameTime)}
                                   className="flex-shrink-0 w-14 h-10 bg-slate-200 rounded-lg overflow-hidden hover:ring-2 hover:ring-indigo-300 transition-all duration-200 transform hover:scale-105"
                                   data-testid={"frame-thumbnail-" + chat.id}
                                 >
                                   <img
-                                    src={`api/videos/${currentVideoId}/frames/${(chat as any).relevantFrame}?session=${sessionManager.getSessionId()}`}
+                                    src={`api/videos/${currentVideoId}/frames/${primaryFrame}?session=${sessionManager.getSessionId()}`}
                                     alt="Relevant frame"
                                     className="w-full h-full object-cover"
                                     onError={(e) => {

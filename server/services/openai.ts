@@ -224,27 +224,28 @@ ${chatHistory.map(h => `User: ${h.message}\nAI: ${h.response}`).join("\n\n")}
           1. Rephrase the user's question into a complete, clear sentence based on the video context
           2. Provide a detailed answer based on the video analysis
           3. Identify the most relevant frame from the transcription if applicable
-          
+          4. Be BRIEF and CONCISE in your responses
+
           ${language === 'ja' ? 'すべての回答を日本語で書いてください。質問の言い換えと回答の両方を日本語で提供してください。' : 'Please respond in English.'}
           
           Return JSON with this structure:
           {
             "rephrasedQuestion": "Complete sentence version of the user's question with video context",
             "response": "Detailed answer to the question",
-            "relevantFrame": "exact filename from available frames list or null (e.g., frame_003_14.1s.jpg)"
+            "relevantFrame": "exact filename from available frames list or null (e.g., frame_003_14.1s.jpg or ['frame_037_74.0s.jpg','frame_056_112.0s.jpg'])"
           }
           
-          CRITICAL: For relevantFrame, you MUST use only the exact filenames from the "Available Frame Files" list above. Do not create or guess frame names.`
+          CRITICAL: For relevantFrame, you MUST use only the exact filename(s) from the "Available Frame Files" list above. Do not create or guess frame names.`
         },
         {
           role: "user",
           content: `${context}\n\nUser Question: ${message}
-
-Please rephrase the question into a complete sentence with video context, provide a helpful response based on the video analysis, and identify the most relevant frame filename if applicable. IMPORTANT: Only use exact frame filenames from the Available Frame Files list above.`
+          Please rephrase the question into a complete sentence with video context, provide a helpful response based on the video analysis, and identify the most relevant frame filename if applicable. 
+          IMPORTANT: Only use exact frame filenames from the Available Frame Files list above.`
         }
       ],
       response_format: { type: "json_object" },
-      max_tokens: 2000,
+      max_tokens: 5000,
     });
 
     const responseContent = response.choices[0].message.content || '{}';
@@ -284,7 +285,9 @@ Please rephrase the question into a complete sentence with video context, provid
     return {
       response: result.response || "I'm unable to provide a response at the moment.",
       rephrasedQuestion: result.rephrasedQuestion || message,
-      relevantFrame: result.relevantFrame || null
+      relevantFrame: Array.isArray(result.relevantFrame) 
+        ? JSON.stringify(result.relevantFrame) 
+        : result.relevantFrame || null
     };
   } catch (error) {
     console.error("Error in chat response:", error);
