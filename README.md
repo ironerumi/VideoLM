@@ -80,7 +80,7 @@ python quickstart.py <stack_name>
 #### Option 2 (dev): Local DataRobot Setup
 ```bash
 # Use the provided startup script, which will use gemini-2.5-flash by default
-nvm use 20 && \
+nvm use 22 && \
 DATAROBOT_API_TOKEN="$DATAROBOT_API_TOKEN" \
 DATAROBOT_ENDPOINT="$DATAROBOT_ENDPOINT" \
 PORT=8888 \
@@ -89,8 +89,8 @@ PORT=8888 \
 
 #### Option 3 (dev): Local Standard Node.js Setup
 ```bash
-# Use Node.js 20
-nvm use 20
+# Use Node.js 22
+nvm use 22
 
 # Set environment variables and start, which will use gpt-4.1-mini by default
 export OPENAI_API_KEY="your-api-key"
@@ -177,7 +177,7 @@ This application is designed to work with DataRobot's Custom Application platfor
 
 1. **Node.js Version Issues**
    - Use Node.js 20.x or 22.x (not 23.x)
-   - Run `nvm use 20` before starting
+   - Run `nvm use 22` before starting
 
 2. **API Connection Issues**
    - Verify `OPENAI_BASE_URL` is set correctly (not `OPENAI_API_BASE_URL`)
