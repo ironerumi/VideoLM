@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import VideoSourcePanel from "@/components/video-source-panel";
 import VideoPlayer from "@/components/video-player";
@@ -10,6 +10,7 @@ import { Settings, User, ChevronLeft, ChevronRight, PanelLeftClose, PanelRightCl
 import { Button } from "@/components/ui/button";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import type { Video } from "@shared/schema";
+import type { VideoWithFrames, VideoThumbnails } from "@shared/types";
 import { useI18n } from "@/lib/i18n";
 import { sessionManager } from "@/lib/session";
 
@@ -26,7 +27,21 @@ export default function Home() {
     queryKey: ["api/videos"],
   });
 
-  const currentVideo = videos.find(v => v.id === currentVideoId);
+  // Fetch frames for the current video
+  const { data: framesData } = useQuery<VideoThumbnails>({
+    queryKey: ["api/videos", currentVideoId, "frames"],
+    enabled: !!currentVideoId,
+  });
+
+  // Combine video data with frames data to create VideoWithFrames
+  const videosWithFrames = useMemo(() => {
+    return videos.map(video => ({
+      ...video,
+      thumbnails: video.id === currentVideoId ? framesData : undefined
+    } as VideoWithFrames));
+  }, [videos, currentVideoId, framesData]);
+
+  const currentVideo = videosWithFrames.find(v => v.id === currentVideoId);
 
   const handleVideoSelect = (videoId: string, selected: boolean) => {
     // For single selection, replace the current selection
@@ -159,7 +174,7 @@ export default function Home() {
               >
                 <VideoPlayer
                   video={currentVideo}
-                  videos={videos}
+                  videos={videosWithFrames}
                   onVideoSelect={setCurrentVideoId}
                   seekToTime={seekToTime}
                 />

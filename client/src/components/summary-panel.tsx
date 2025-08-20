@@ -8,6 +8,15 @@ import { useState, useEffect, useRef } from "react";
 import { useI18n } from "@/lib/i18n";
 import { sessionManager } from "@/lib/session";
 
+interface VideoAnalysisData {
+  summary: string | null;
+  sentiment: string | null;
+  keyPoints: string[];
+  topics: string[];
+  visualElements: string[];
+  transcription: string[];
+}
+
 // Utility function to parse timestamps from text
 const parseTimestampFromText = (text: string): { timestamp: number; start: number; end: number } | null => {
   const match = text.match(/\[(\d{2}):(\d{2})\]/);
@@ -205,6 +214,11 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
     enabled: !!currentVideoId,
   });
 
+  const { data: analysis } = useQuery<VideoAnalysisData>({
+    queryKey: ["api/videos", currentVideoId, "analysis"],
+    enabled: !!currentVideoId,
+  });
+
   const summaryMutation = useMutation({
     mutationFn: async (videoIds: string[]) => {
       const response = await apiRequest('POST', 'api/videos/summary', { videoIds });
@@ -301,20 +315,20 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
                 Based on {summaryMutation.data.videoCount} video{summaryMutation.data.videoCount !== 1 ? 's' : ''}
               </div>
             </div>
-          ) : currentVideo?.analysis ? (
+          ) : analysis ? (
             <div className="flex-1 min-h-0 flex flex-col">
               {/* Key Points Section */}
               <CollapsibleSection
                 id="key-points"
                 title={t.keyPoints}
-                subtitle={`${(currentVideo.analysis as any)?.keyPoints?.length || 0} items`}
+                subtitle={`${analysis?.keyPoints?.length || 0} items`}
                 isExpanded={expandedSections.has('key-points')}
                 onToggle={() => toggleSection('key-points')}
                 maxHeight={getContentHeight('key-points')}
                 testId="button-toggle-key-points"
               >
                 <div className="space-y-3 p-2">
-                  {(currentVideo.analysis as any)?.keyPoints?.map((point: string, index: number) => (
+                  {analysis?.keyPoints?.map((point: string, index: number) => (
                     <div key={index} className="flex items-start space-x-3">
                       <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
                         index % 4 === 0 ? 'bg-indigo-400' :
@@ -333,18 +347,18 @@ export default function SummaryPanel({ selectedVideoIds, currentVideoId, onColla
               </CollapsibleSection>
 
               {/* Transcription Section */}
-              {(currentVideo.analysis as any)?.transcription?.length > 0 && (
+              {analysis?.transcription?.length && analysis.transcription.length > 0 && (
                 <CollapsibleSection
                   id="transcription"
                   title={t.transcription}
-                  subtitle={`${(currentVideo.analysis as any).transcription.length} entries`}
+                  subtitle={`${analysis.transcription.length} entries`}
                   isExpanded={expandedSections.has('transcription')}
                   onToggle={() => toggleSection('transcription')}
                   maxHeight={getContentHeight('transcription')}
                   testId="button-toggle-transcription"
                 >
                   <div className="space-y-3 p-2">
-                    {(currentVideo.analysis as any).transcription.map((line: string, index: number) => (
+                    {analysis.transcription.map((line: string, index: number) => (
                       <ClickableText
                         key={index}
                         text={line}

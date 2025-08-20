@@ -22,6 +22,9 @@ export interface VideoWithFrames {
   duration: number | null;
   format: string;
   uploadedAt: Date;
-  analysis: unknown;
-  thumbnails: VideoThumbnails;
+  processingStatus?: string | null;
+  jobId?: string | null;
+  summary?: string | null;
+  sentiment?: string | null;
+  thumbnails?: VideoThumbnails;
 }

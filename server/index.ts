@@ -3,7 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { sessionMiddleware } from "./middleware/session";
 
-const app = express();
+export const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
@@ -76,7 +76,7 @@ app.use((req, res, next) => {
   // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
-  } else {
+  } else if (app.get("env") === "production") {
     serveStatic(app);
   }
 
@@ -86,24 +86,27 @@ app.use((req, res, next) => {
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
   
-  // Try binding to 0.0.0.0 first, fallback to localhost if not supported
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  }).on('error', (err) => {
-    if (typeof err === "object" && err !== null && "code" in err && (err as any).code === 'ENOTSUP') {
-      log(`Binding to 0.0.0.0 not supported, trying localhost...`);
-      server.listen({
-        port,
-        host: "localhost",
-      }, () => {
-        log(`serving on localhost:${port}`);
-      });
-    } else {
-      throw err;
-    }
-  });
+  // Start the server only if this file is executed directly
+  if (import.meta.url.startsWith('file://') && process.argv[1] === new URL(import.meta.url).pathname) {
+    // Try binding to 0.0.0.0 first, fallback to localhost if not supported
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, () => {
+      log(`serving on port ${port}`);
+    }).on('error', (err) => {
+      if (typeof err === "object" && err !== null && "code" in err && (err as any).code === 'ENOTSUP') {
+        log(`Binding to 0.0.0.0 not supported, trying localhost...`);
+        server.listen({
+          port,
+          host: "localhost",
+        }, () => {
+          log(`serving on localhost:${port}`);
+        });
+      } else {
+        throw err;
+      }
+    });
+  }
 })();

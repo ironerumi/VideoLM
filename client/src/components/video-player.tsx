@@ -234,7 +234,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
         <div className="p-6 bg-white border-t border-slate-100 flex-shrink-0 min-w-0">
           <div className="overflow-x-auto max-w-full" ref={timelineRef}>
             <div className="flex space-x-2 pb-2 w-max">
-            {video?.thumbnails && typeof video.thumbnails === 'object' && 'frames' in video.thumbnails && Array.isArray(video.thumbnails.frames) && video.thumbnails.frames.length > 0 ? (
+            {video?.thumbnails?.frames && Array.isArray(video.thumbnails.frames) && video.thumbnails.frames.length > 0 ? (
               video.thumbnails.frames.map((frame: any, index: number) => {
                 const frameProgress = actualDuration > 0 ? (frame.timestamp / actualDuration) * 100 : 0;
                 const isActive = Math.abs(progress - frameProgress) < 5; // Active within 5% range

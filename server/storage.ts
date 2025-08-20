@@ -27,6 +27,12 @@ export interface IStorage {
   updateVideo(id: string, updates: Partial<Video>): Promise<Video | undefined>;
   deleteVideo(id: string): Promise<boolean>;
   
+  // Analysis data operations
+  insertKeyPoints(points: { videoId: string, text: string }[]): Promise<void>;
+  insertTopics(topics: { videoId: string, text: string }[]): Promise<void>;
+  insertVisualElements(elements: { videoId: string, text: string }[]): Promise<void>;
+  insertTranscriptions(transcriptions: { videoId: string, timestamp: number, text: string }[]): Promise<void>;
+
   // Chat operations
   getChatMessage(id: string): Promise<ChatMessage | undefined>;
   getChatMessagesByVideoId(videoId: string): Promise<ChatMessage[]>;
@@ -57,6 +63,10 @@ export class MemStorage implements IStorage {
   private chatMessages: Map<string, ChatMessage>;
   private videoSessions: Map<string, VideoSession>;
   private videoJobs: Map<string, VideoJob>;
+  private videoKeyPoints: Map<string, { videoId: string, text: string }>;
+  private videoTopics: Map<string, { videoId: string, text: string }>;
+  private videoVisualElements: Map<string, { videoId: string, text: string }>;
+  private videoTranscriptions: Map<string, { videoId: string, timestamp: number, text: string }>;
   private uploadsDir: string;
 
   constructor() {
@@ -65,6 +75,10 @@ export class MemStorage implements IStorage {
     this.chatMessages = new Map();
     this.videoSessions = new Map();
     this.videoJobs = new Map();
+    this.videoKeyPoints = new Map();
+    this.videoTopics = new Map();
+    this.videoVisualElements = new Map();
+    this.videoTranscriptions = new Map();
     this.uploadsDir = path.join(process.cwd(), 'uploads');
     this.ensureUploadsDir();
   }
@@ -119,13 +133,20 @@ export class MemStorage implements IStorage {
 
   async createVideo(insertVideo: InsertVideo): Promise<Video> {
     const id = randomUUID();
-    const video: Video = { 
-      ...insertVideo, 
-      id, 
+    const video: Video = {
+      id,
+      sessionId: insertVideo.sessionId,
+      filename: insertVideo.filename,
+      originalName: insertVideo.originalName,
+      filePath: insertVideo.filePath,
+      size: insertVideo.size,
+      duration: insertVideo.duration ?? null,
+      format: insertVideo.format,
       uploadedAt: new Date(),
-      analysis: insertVideo.analysis ?? null,
-      thumbnails: insertVideo.thumbnails ?? null,
-      duration: insertVideo.duration ?? null
+      processingStatus: insertVideo.processingStatus ?? 'pending',
+      jobId: insertVideo.jobId ?? null,
+      summary: null,
+      sentiment: null
     };
     this.videos.set(id, video);
     return video;
@@ -142,6 +163,30 @@ export class MemStorage implements IStorage {
 
   async deleteVideo(id: string): Promise<boolean> {
     return this.videos.delete(id);
+  }
+
+  async insertKeyPoints(points: { videoId: string, text: string }[]): Promise<void> {
+    for (const point of points) {
+      this.videoKeyPoints.set(randomUUID(), point);
+    }
+  }
+
+  async insertTopics(topics: { videoId: string, text: string }[]): Promise<void> {
+    for (const topic of topics) {
+      this.videoTopics.set(randomUUID(), topic);
+    }
+  }
+
+  async insertVisualElements(elements: { videoId: string, text: string }[]): Promise<void> {
+    for (const element of elements) {
+      this.videoVisualElements.set(randomUUID(), element);
+    }
+  }
+
+  async insertTranscriptions(transcriptions: { videoId: string, timestamp: number, text: string }[]): Promise<void> {
+    for (const transcription of transcriptions) {
+      this.videoTranscriptions.set(randomUUID(), transcription);
+    }
   }
 
   async getChatMessage(id: string): Promise<ChatMessage | undefined> {
@@ -162,11 +207,15 @@ export class MemStorage implements IStorage {
 
   async createChatMessage(insertMessage: InsertChatMessage): Promise<ChatMessage> {
     const id = randomUUID();
-    const message: ChatMessage = { 
-      ...insertMessage, 
-      id, 
-      timestamp: new Date(),
-      videoId: insertMessage.videoId ?? null
+    const message: ChatMessage = {
+      id,
+      sessionId: insertMessage.sessionId,
+      videoId: insertMessage.videoId ?? null,
+      message: insertMessage.message,
+      rephrasedQuestion: insertMessage.rephrasedQuestion ?? null,
+      response: insertMessage.response,
+      relevantFrame: insertMessage.relevantFrame ?? null,
+      timestamp: new Date()
     };
     this.chatMessages.set(id, message);
     return message;
@@ -219,9 +268,14 @@ export class MemStorage implements IStorage {
 
   async createVideoJob(insertJob: InsertVideoJob): Promise<VideoJob> {
     const id = randomUUID();
-    const job: VideoJob = { 
-      ...insertJob, 
-      id, 
+    const job: VideoJob = {
+      id,
+      videoId: insertJob.videoId,
+      sessionId: insertJob.sessionId,
+      status: insertJob.status ?? 'pending',
+      progress: insertJob.progress ?? 0,
+      currentStage: insertJob.currentStage ?? null,
+      errorMessage: insertJob.errorMessage ?? null,
       createdAt: new Date(),
       updatedAt: new Date()
     };

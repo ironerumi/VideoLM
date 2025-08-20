@@ -14,15 +14,40 @@ export const videos = sqliteTable("videos", {
   sessionId: text("session_id").references(() => sessions.id).notNull(),
   filename: text("filename").notNull(),
   originalName: text("original_name").notNull(),
-  filePath: text("file_path").notNull(), // path to stored video file
+  filePath: text("file_path").notNull(),
   size: integer("size").notNull(),
-  duration: integer("duration"), // in seconds
+  duration: integer("duration"),
   format: text("format").notNull(),
   uploadedAt: integer("uploaded_at", { mode: 'timestamp' }).notNull().default(sql`(unixepoch() * 1000)`),
-  analysis: text("analysis", { mode: 'json' }), // AI analysis results as JSON
-  thumbnails: text("thumbnails", { mode: 'json' }), // array of thumbnail URLs/data as JSON
-  processingStatus: text("processing_status").default('pending'), // 'pending', 'processing', 'completed', 'failed'
-  jobId: text("job_id").references(() => videoJobs.id),
+  processingStatus: text("processing_status").default('pending'),
+  jobId: text("job_id"),
+  summary: text("summary"),
+  sentiment: text("sentiment"),
+});
+
+export const videoKeyPoints = sqliteTable("video_key_points", {
+  id: text("id").primaryKey(),
+  videoId: text("video_id").references(() => videos.id).notNull(),
+  text: text("text").notNull(),
+});
+
+export const videoTopics = sqliteTable("video_topics", {
+  id: text("id").primaryKey(),
+  videoId: text("video_id").references(() => videos.id).notNull(),
+  text: text("text").notNull(),
+});
+
+export const videoVisualElements = sqliteTable("video_visual_elements", {
+  id: text("id").primaryKey(),
+  videoId: text("video_id").references(() => videos.id).notNull(),
+  text: text("text").notNull(),
+});
+
+export const videoTranscriptions = sqliteTable("video_transcriptions", {
+  id: text("id").primaryKey(),
+  videoId: text("video_id").references(() => videos.id).notNull(),
+  timestamp: integer("timestamp").notNull(),
+  text: text("text").notNull(),
 });
 
 export const chatMessages = sqliteTable("chat_messages", {
@@ -30,9 +55,9 @@ export const chatMessages = sqliteTable("chat_messages", {
   sessionId: text("session_id").references(() => sessions.id).notNull(),
   videoId: text("video_id").references(() => videos.id),
   message: text("message").notNull(),
-  rephrasedQuestion: text("rephrased_question"), // LLM-rephrased full sentence question
+  rephrasedQuestion: text("rephrased_question"),
   response: text("response").notNull(),
-  relevantFrame: text("relevant_frame"), // frame filename/path if relevant
+  relevantFrame: text("relevant_frame"),
   timestamp: integer("timestamp", { mode: 'timestamp' }).notNull().default(sql`(unixepoch() * 1000)`),
 });
 
@@ -48,8 +73,8 @@ export const videoJobs = sqliteTable("video_jobs", {
   id: text("id").primaryKey(),
   videoId: text("video_id").references(() => videos.id).notNull(),
   sessionId: text("session_id").references(() => sessions.id).notNull(),
-  status: text("status").notNull().default('pending'), // 'pending', 'processing', 'completed', 'failed'
-  progress: integer("progress").notNull().default(0), // 0-100
+  status: text("status").notNull().default('pending'),
+  progress: integer("progress").notNull().default(0),
   currentStage: text("current_stage"),
   errorMessage: text("error_message"),
   createdAt: integer("created_at", { mode: 'timestamp' }).notNull().default(sql`(unixepoch() * 1000)`),
@@ -65,6 +90,10 @@ export const insertSessionSchema = createInsertSchema(sessions).omit({
 export const insertVideoSchema = createInsertSchema(videos).omit({
   id: true,
   uploadedAt: true,
+}).extend({
+  duration: z.number().nullable().optional(),
+  processingStatus: z.string().nullable().optional(),
+  jobId: z.string().nullable().optional()
 });
 
 export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({
@@ -81,6 +110,11 @@ export const insertVideoJobSchema = createInsertSchema(videoJobs).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  status: z.string().default('pending'),
+  progress: z.number().default(0),
+  currentStage: z.string().nullable().optional(),
+  errorMessage: z.string().nullable().optional()
 });
 
 export type InsertSession = z.infer<typeof insertSessionSchema>;

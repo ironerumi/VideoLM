@@ -12,14 +12,6 @@ export interface IJobManager {
 }
 
 export class JobManager implements IJobManager {
-  private static instance: JobManager;
-
-  public static getInstance(): JobManager {
-    if (!JobManager.instance) {
-      JobManager.instance = new JobManager();
-    }
-    return JobManager.instance;
-  }
 
   async createJob(videoId: string, sessionId: string): Promise<string> {
     const jobData: InsertVideoJob = {

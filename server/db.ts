@@ -35,10 +35,35 @@ const initializeTables = () => {
           duration INTEGER,
           format TEXT NOT NULL,
           uploaded_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
-          analysis TEXT,
-          thumbnails TEXT,
           processing_status TEXT DEFAULT 'pending',
-          job_id TEXT
+          job_id TEXT,
+          summary TEXT,
+          sentiment TEXT
+        );
+
+        CREATE TABLE video_key_points (
+          id TEXT PRIMARY KEY,
+          video_id TEXT NOT NULL REFERENCES videos(id),
+          text TEXT NOT NULL
+        );
+
+        CREATE TABLE video_topics (
+          id TEXT PRIMARY KEY,
+          video_id TEXT NOT NULL REFERENCES videos(id),
+          text TEXT NOT NULL
+        );
+
+        CREATE TABLE video_visual_elements (
+          id TEXT PRIMARY KEY,
+          video_id TEXT NOT NULL REFERENCES videos(id),
+          text TEXT NOT NULL
+        );
+
+        CREATE TABLE video_transcriptions (
+          id TEXT PRIMARY KEY,
+          video_id TEXT NOT NULL REFERENCES videos(id),
+          timestamp INTEGER NOT NULL,
+          text TEXT NOT NULL
         );
 
         CREATE TABLE chat_messages (
