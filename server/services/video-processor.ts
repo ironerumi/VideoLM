@@ -36,7 +36,6 @@ export class VideoProcessor implements IVideoProcessor {
       const frameExtractionResult = await extractVideoFrames({
         videoPath: video.filePath,
         outputDir: framesDir,
-        framesPerSecond: 1,
         maxFrames: 100
       });
       
