@@ -19,6 +19,7 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
   const [isHovered, setIsHovered] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
+  const pendingPlayRef = useRef<Promise<void> | null>(null);
   const { t } = useI18n();
 
   const formatTime = (seconds: number) => {
@@ -27,14 +28,35 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handlePlayPause = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
+  const handlePlayPause = async () => {
+    if (!videoRef.current) return;
+
+    // Wait for any current play() to finish before issuing another play/pause
+    if (pendingPlayRef.current) {
+      try {
+        await pendingPlayRef.current;
+      } catch (e) {
+        // Ignore; we only care that it's finished
       }
-      setIsPlaying(!isPlaying);
+      pendingPlayRef.current = null;
+    }
+
+    if (isPlaying) {
+      setIsPlaying(false);
+      videoRef.current.pause();
+    } else {
+      setIsPlaying(true);
+      try {
+        // Store the play promise so we can sequence properly
+        pendingPlayRef.current = videoRef.current.play();
+        await pendingPlayRef.current;
+      } catch (error) {
+        console.warn('Play interrupted:', error);
+        // Revert state on error
+        setIsPlaying(false);
+      } finally {
+        pendingPlayRef.current = null;
+      }
     }
   };
 
@@ -143,9 +165,12 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
                 onLoadedMetadata={() => {
                   // Video duration is automatically set when metadata loads
                 }}
+                onError={(e) => {
+                  console.error('Video loading error:', e);
+                }}
                 data-testid="video-element"
               >
-                <source src={`api/videos/${video.id}/file?session=${video.sessionId}`} type="video/mp4" />
+                <source src={`/api/videos/${video.id}/file?session=${video.sessionId}`} type="video/mp4" />
                 {t.browserNotSupported || 'Your browser does not support the video tag.'}
               </video>
               

@@ -102,6 +102,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/videos/:id/file", async (req: MulterRequest, res) => {
+    try {
+      const video = await VideoService.getVideoDetails(req.params.id, req.sessionId);
+      res.setHeader('Content-Type', 'video/mp4');
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.sendFile(video.filePath);
+    } catch (error) {
+      res.status(404).json({ message: (error as Error).message });
+    }
+  });
+
   app.get("/api/videos/:id/frames/:frameName", async (req: MulterRequest, res) => {
     try {
       const framePath = await VideoService.getFrame(req.params.id, req.params.frameName, req.sessionId, req.query.session as string);
