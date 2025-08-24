@@ -83,18 +83,29 @@ describe('VideoLM API E2E Test', () => {
     expect(status).toBe('completed');
     console.log('Video processing complete.');
 
-    // 3. Get video details and verify analysis
+    // 3. Get video details
     const detailsResponse = await request
       .get(`/api/videos/${videoId}`)
       .set('X-Session-Id', sessionId)
       .expect(200);
     expect(detailsResponse.body.id).toBe(videoId);
     expect(detailsResponse.body.processingStatus).toBe('completed');
-    expect(detailsResponse.body.analysis).not.toBeNull();
-    expect(detailsResponse.body.analysis.summary).toBe('This is a mock summary.');
-    console.log('Verified video details and analysis.');
+    console.log('Verified video details.');
+    
+    // 4. Get analysis separately
+    const analysisResponse = await request
+      .get(`/api/videos/${videoId}/analysis`)
+      .set('X-Session-Id', sessionId)
+      .expect(200);
+    expect(analysisResponse.body.summary).toBe('This is a mock summary.');
+    expect(analysisResponse.body.keyPoints).toEqual(['Mock point 1', 'Mock point 2']);
+    expect(analysisResponse.body.topics).toEqual(['Mock topic 1', 'Mock topic 2']);
+    expect(analysisResponse.body.sentiment).toBe('neutral');
+    expect(analysisResponse.body.visualElements).toEqual(['Mock element 1']);
+    expect(analysisResponse.body.transcription).toEqual(['[00:00] Mock transcription']);
+    console.log('Verified video analysis.');
 
-    // 4. Test the chat endpoint
+    // 5. Test the chat endpoint
     const chatResponse = await request
       .post(`/api/videos/${videoId}/chat`)
       .set('X-Session-Id', sessionId)
@@ -103,7 +114,7 @@ describe('VideoLM API E2E Test', () => {
     expect(chatResponse.body.response).toBe('This is a mock AI response.');
     console.log('Verified chat functionality.');
 
-    // 5. Delete the video
+    // 6. Delete the video
     const deleteResponse = await request
       .delete(`/api/videos/${videoId}`)
       .set('X-Session-Id', sessionId)
@@ -111,7 +122,7 @@ describe('VideoLM API E2E Test', () => {
     expect(deleteResponse.body.message).toBe('Video deleted successfully');
     console.log('Verified video deletion.');
 
-    // 6. Verify the video is gone
+    // 7. Verify the video is gone
     await request
       .get(`/api/videos/${videoId}`)
       .set('X-Session-Id', sessionId)
