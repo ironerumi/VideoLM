@@ -55,13 +55,14 @@ export class AnalysisService {
         text 
       }))),
       db.insert(videoTranscriptions).values(analysis.transcription.map(line => {
-        const match = line.match(/\[(\d{2}):(\d{2})\]/);
+        const match = line.match(/\[(\d{2}):(\d{2})\]\s*(.*)/);
         const timestamp = match ? parseInt(match[1]) * 60 + parseInt(match[2]) : 0;
+        const text = match ? match[3] : line; // Extract text without timestamp
         return { 
           id: randomUUID(), 
           videoId, 
           timestamp, 
-          text: line 
+          text 
         };
       }))
     ]);

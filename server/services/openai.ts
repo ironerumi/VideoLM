@@ -16,7 +16,198 @@ export interface VideoAnalysis {
   transcription: string[];  // Array of timestamped descriptions
 }
 
-// New function to analyze all frames and generate transcription
+export interface KeyFrameAnalysis {
+  summary: string;
+  keyPoints: string[];
+  topics: string[];
+  sentiment: string;
+  visualElements: string[];
+}
+
+export interface FrameBatchTranscription {
+  transcription: string[];
+}
+
+// Analyze key frames for high-level insights only
+export async function analyzeKeyFrames(frameData: Array<{base64: string, timestamp: number}>, language: string = 'en'): Promise<KeyFrameAnalysis> {
+  try {
+    // Prepare images for the request
+    const imageContent = frameData.map(frame => ({
+      type: "image_url" as const,
+      image_url: {
+        url: `data:image/jpeg;base64,${frame.base64}`,
+        detail: "low" as const
+      }
+    }));
+
+    const timestamps = frameData.map(frame => {
+      const minutes = Math.floor(frame.timestamp / 60);
+      const seconds = Math.floor(frame.timestamp % 60);
+      return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    });
+
+    const response = await openai.chat.completions.create({
+      model: model,
+      messages: [
+        {
+          role: "system",
+          content: `You are a video analyst. Analyze these KEY video frames to understand the overall video content and themes. Focus on:
+          - Main themes and topics
+          - Key visual elements and patterns
+          - Overall sentiment and mood
+          - Important moments and transitions
+          
+          Do NOT generate transcriptions - focus on high-level analysis only.
+          
+          ${language === 'ja' ? 'Please respond in Japanese.' : 'Please respond in English.'}`
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `Analyze these ${frameData.length} key video frames taken at timestamps ${timestamps.join(', ')} and provide high-level analysis ONLY:
+              
+              Return JSON with this structure:
+              {
+                "summary": "Comprehensive summary covering main themes and content",
+                "keyPoints": ["[00:00] key observation 1", "[00:01] key observation 2", "[00:02] key observation 3"],
+                "topics": ["main topic 1", "main topic 2"],
+                "sentiment": "overall mood/sentiment",
+                "visualElements": ["visual element 1", "visual element 2"]
+              }`
+            },
+            ...imageContent
+          ],
+        },
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 3000,
+    });
+
+    const responseContent = response.choices[0].message.content || "{}";
+    let result;
+    try {
+      result = JSON.parse(responseContent);
+    } catch (parseError) {
+      console.error("JSON parsing failed:", parseError);
+      result = {
+        summary: "Video analysis completed with limited details due to response format issues",
+        keyPoints: ["Video content analyzed", "Processing completed"],
+        topics: ["General content"],
+        sentiment: "neutral",
+        visualElements: ["Various visual elements detected"]
+      };
+    }
+    
+    return {
+      summary: result.summary || "Unable to analyze video content",
+      keyPoints: result.keyPoints || [],
+      topics: result.topics || [],
+      sentiment: result.sentiment || "neutral",
+      visualElements: result.visualElements || []
+    };
+  } catch (error) {
+    console.error("Error analyzing key frames:", error);
+    throw new Error("Failed to analyze key frames");
+  }
+}
+
+// Generate detailed transcription with context from key frame analysis
+export async function transcribeFrameBatch(
+  frameData: Array<{base64: string, timestamp: number}>, 
+  context: KeyFrameAnalysis | null,
+  language: string = 'en'
+): Promise<FrameBatchTranscription> {
+  try {
+    // Prepare images for the request
+    const imageContent = frameData.map(frame => ({
+      type: "image_url" as const,
+      image_url: {
+        url: `data:image/jpeg;base64,${frame.base64}`,
+        detail: "low" as const
+      }
+    }));
+
+    const timestamps = frameData.map(frame => {
+      const minutes = Math.floor(frame.timestamp / 60);
+      const seconds = Math.floor(frame.timestamp % 60);
+      return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    });
+
+    const contextText = context ? `
+Video Context (for reference):
+- Main themes: ${context.topics.join(', ')}
+- Key visual elements: ${context.visualElements.join(', ')}
+- Overall sentiment: ${context.sentiment}
+- Summary: ${context.summary}
+
+Use this context to provide meaningful frame descriptions that connect to the bigger picture.` : '';
+
+    const response = await openai.chat.completions.create({
+      model: model,
+      messages: [
+        {
+          role: "system",
+          content: `You are a video transcriber. Create detailed frame-by-frame descriptions. Focus on:
+          - Specific actions and movements in each frame
+          - Important objects and changes
+          - Environmental details
+          
+          Keep each transcription entry SHORT (10-15 words) and focused on what's happening in that specific moment.
+          
+          ${language === 'ja' ? 'Please respond in Japanese.' : 'Please respond in English.'}`
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `${contextText}
+              
+              Transcribe these ${frameData.length} video frames taken at timestamps ${timestamps.join(', ')}.
+              
+              Return JSON with this structure:
+              {
+                "transcription": ["[${timestamps[0]}] description", "[${timestamps[1] || '00:01'}] description", "... for ALL frames"]
+              }
+              
+              CRITICAL: Create transcription entries for ALL ${frameData.length} frames. Keep each entry 8-15 words.`
+            },
+            ...imageContent
+          ],
+        },
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 15000,
+    });
+
+    const responseContent = response.choices[0].message.content || "{}";
+    let result;
+    try {
+      result = JSON.parse(responseContent);
+    } catch (parseError) {
+      console.error("JSON parsing failed:", parseError);
+      result = {
+        transcription: frameData.map((_, index) => {
+          const minutes = Math.floor(frameData[index].timestamp / 60);
+          const seconds = Math.floor(frameData[index].timestamp % 60);
+          const timestamp = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+          return `[${timestamp}] Frame ${index + 1} processed`;
+        })
+      };
+    }
+    
+    return {
+      transcription: result.transcription || []
+    };
+  } catch (error) {
+    console.error("Error transcribing frame batch:", error);
+    throw new Error("Failed to transcribe frame batch");
+  }
+}
+
+// DEPRECATED: Use analyzeKeyFrames() and transcribeFrameBatch() instead
 export async function analyzeVideoFrames(frameData: Array<{base64: string, timestamp: number}>, language: string = 'en'): Promise<VideoAnalysis> {
   try {
     // Prepare images for the request
@@ -74,7 +265,7 @@ export async function analyzeVideoFrames(frameData: Array<{base64: string, times
         },
       ],
       response_format: { type: "json_object" },
-      max_tokens: 20000, // Increased to accommodate more transcription entries
+      max_tokens: 30000, // Increased to accommodate more transcription entries
     });
 
     const responseContent = response.choices[0].message.content || "{}";

@@ -1,8 +1,8 @@
 import { JobManager } from "./job-manager";
 import { storage } from "../storage";
-import { analyzeVideoFrames, type VideoAnalysis } from "./openai";
+import { analyzeVideoFrames, analyzeKeyFrames, transcribeFrameBatch, type VideoAnalysis, type KeyFrameAnalysis } from "./openai";
 import { AnalysisService } from "./analysis-service";
-import { extractVideoFrames, type FrameExtractionResult } from "../utils/frame-extractor";
+import { extractVideoFrames } from "../utils/frame-extractor";
 import fs from 'fs';
 import path from 'path';
 
@@ -47,38 +47,50 @@ export class VideoProcessor implements IVideoProcessor {
 
       await this.jobManager.updateJobProgress(jobId, 50, 'Preparing AI analysis...');
       
-      const framesToAnalyze = frameExtractionResult.frames;
-      await this.jobManager.updateJobProgress(jobId, 60, `Analyzing ${framesToAnalyze.length} frames with AI...`);
+      const allFrames = frameExtractionResult.frames;
+      
+      // Select most important frames for high-level analysis (summary, key points, topics)
+      // Sort by score descending and take top N frames
+      const IMPORTANT_FRAME_COUNT = Math.min(10, allFrames.length);
+      const importantFrames = [...allFrames]
+        .sort((a, b) => b.score - a.score)
+        .slice(0, IMPORTANT_FRAME_COUNT)
+        .sort((a, b) => a.timestamp - b.timestamp); // Re-sort by timestamp for chronological order
+      
+      console.log(`Using ${importantFrames.length} most important frames (scores: ${importantFrames.map(f => f.score.toFixed(3)).join(', ')}) for high-level analysis`);
+      console.log(`Using all ${allFrames.length} frames for transcription`);
+      
+      await this.jobManager.updateJobProgress(jobId, 60, `Analyzing ${allFrames.length} frames with AI...`);
 
-      const batchSize = 10;
-      let allKeyPoints: string[] = [];
-      let allTopics: string[] = [];
-      let allVisualElements: string[] = [];
+      // Step 1: Analyze important frames for summary, key points, topics, visual elements
+      const importantFrameData = importantFrames.map(frame => ({
+        base64: fs.readFileSync(frame.filePath).toString('base64'),
+        timestamp: frame.timestamp
+      }));
+      
+      const highLevelAnalysis = await analyzeKeyFrames(importantFrameData, userLanguage);
+      
+      // Step 2: Process ALL frames in batches for complete transcription with context
+      const batchSize = 35;
       let allTranscriptions: string[] = [];
-      let summary = "";
-
-      for (let i = 0; i < framesToAnalyze.length; i += batchSize) {
-        const batch = framesToAnalyze.slice(i, i + batchSize);
+      
+      for (let i = 0; i < allFrames.length; i += batchSize) {
+        const batch = allFrames.slice(i, i + batchSize);
         const frameData = batch.map(frame => ({
           base64: fs.readFileSync(frame.filePath).toString('base64'),
           timestamp: frame.timestamp
         }));
 
-        const analysisBatch = await analyzeVideoFrames(frameData, userLanguage);
-        
-        if (i === 0) summary = analysisBatch.summary;
-        allKeyPoints.push(...analysisBatch.keyPoints);
-        allTopics.push(...analysisBatch.topics);
-        allVisualElements.push(...analysisBatch.visualElements);
-        allTranscriptions.push(...analysisBatch.transcription);
+        const transcriptionBatch = await transcribeFrameBatch(frameData, highLevelAnalysis, userLanguage);
+        allTranscriptions.push(...transcriptionBatch.transcription);
       }
 
       const analysis: VideoAnalysis = {
-        summary,
-        keyPoints: allKeyPoints,
-        topics: [...new Set(allTopics)],
-        sentiment: 'neutral',
-        visualElements: allVisualElements,
+        summary: highLevelAnalysis.summary,
+        keyPoints: highLevelAnalysis.keyPoints,
+        topics: [...new Set(highLevelAnalysis.topics)],
+        sentiment: highLevelAnalysis.sentiment || 'neutral',
+        visualElements: highLevelAnalysis.visualElements,
         transcription: allTranscriptions
       };
 

@@ -13,6 +13,7 @@ export interface ExtractedFrame {
   timestamp: number; // in seconds
   filePath: string;
   fileName: string;
+  score: number; // Scene change score (0-1), higher means more important
 }
 
 export interface FrameExtractionResult {
@@ -128,15 +129,22 @@ async function getAllFrameScores(videoPath: string): Promise<FrameCandidate[]> {
       resolve(candidates);
     });
 
-    ffmpeg.on('error', reject);
+    ffmpeg.on('error', (error: any) => {
+      if (error.code === 'ENOENT') {
+        reject(new Error('ffmpeg is not installed or not found in PATH. Please ensure FFmpeg is properly installed.'));
+        return;
+      }
+      reject(error);
+    });
   });
 }
 
 /**
  * Adaptively select frames to maximize coverage up to maxFrames
  * Uses dynamic threshold based on score distribution
+ * Returns selected frame candidates with their scores
  */
-function selectFramesAdaptively(candidates: FrameCandidate[], maxFrames: number): number[] {
+function selectFramesAdaptively(candidates: FrameCandidate[], maxFrames: number): FrameCandidate[] {
   if (candidates.length === 0) {
     return [];
   }
@@ -178,12 +186,12 @@ function selectFramesAdaptively(candidates: FrameCandidate[], maxFrames: number)
   console.log(`${significantCandidates.length} frames pass threshold ${threshold.toFixed(4)}`);
   
   // Select frames with temporal spacing
-  const selectedTimestamps: number[] = [];
+  const selectedFrames: FrameCandidate[] = [];
   const selectedTimes: Set<number> = new Set();
   const minTimeDiff = 0.5; // Min 0.5 seconds between frames
 
   for (const candidate of significantCandidates) {
-    if (selectedTimestamps.length >= maxFrames) {
+    if (selectedFrames.length >= maxFrames) {
       break;
     }
 
@@ -197,21 +205,21 @@ function selectFramesAdaptively(candidates: FrameCandidate[], maxFrames: number)
     }
 
     if (!isTooClose) {
-      selectedTimestamps.push(candidate.timestamp);
+      selectedFrames.push(candidate);
       selectedTimes.add(candidate.timestamp);
     }
   }
 
   // Ensure we have good coverage:
   // If we have very few frames, lower threshold and try again
-  if (selectedTimestamps.length < Math.min(10, maxFrames / 10) && candidates.length > selectedTimestamps.length) {
-    console.log(`Only ${selectedTimestamps.length} frames selected, relaxing constraints...`);
+  if (selectedFrames.length < Math.min(10, maxFrames / 10) && candidates.length > selectedFrames.length) {
+    console.log(`Only ${selectedFrames.length} frames selected, relaxing constraints...`);
     // Take top N frames with just temporal spacing
-    selectedTimestamps.length = 0;
+    selectedFrames.length = 0;
     selectedTimes.clear();
     
     for (const candidate of sortedCandidates) {
-      if (selectedTimestamps.length >= maxFrames) {
+      if (selectedFrames.length >= maxFrames) {
         break;
       }
       
@@ -224,13 +232,13 @@ function selectFramesAdaptively(candidates: FrameCandidate[], maxFrames: number)
       }
       
       if (!isTooClose) {
-        selectedTimestamps.push(candidate.timestamp);
+        selectedFrames.push(candidate);
         selectedTimes.add(candidate.timestamp);
       }
     }
   }
 
-  return selectedTimestamps.sort((a, b) => a - b);
+  return selectedFrames.sort((a, b) => a.timestamp - b.timestamp);
 }
 
 
@@ -285,18 +293,6 @@ export async function extractVideoFrames(options: FrameExtractionOptions): Promi
   } = options;
 
   try {
-    // Check if required tools are available
-    const toolsAvailable = await checkFFmpegTools();
-    if (!toolsAvailable) {
-      return {
-        success: false,
-        frames: [],
-        totalFrames: 0,
-        duration: 0,
-        error: 'FFmpeg tools (ffmpeg/ffprobe) are not available. Please ensure FFmpeg is properly installed.'
-      };
-    }
-
     // Ensure output directory exists
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
@@ -312,24 +308,25 @@ export async function extractVideoFrames(options: FrameExtractionOptions): Promi
     console.log(`Found ${candidates.length} total scene changes.`);
 
     // Adaptively select best frames based on score distribution
-    const selectedTimestamps = selectFramesAdaptively(candidates, maxFrames);
-    console.log(`Adaptively selected ${selectedTimestamps.length} frames for extraction.`);
+    const selectedCandidates = selectFramesAdaptively(candidates, maxFrames);
+    console.log(`Adaptively selected ${selectedCandidates.length} frames for extraction.`);
 
     const frames: ExtractedFrame[] = [];
     let frameNumber = 0;
 
-    for (const timestamp of selectedTimestamps) {
-      const frameFileName = `frame_${frameNumber.toString().padStart(3, '0')}_${timestamp.toFixed(1)}s.jpg`;
+    for (const candidate of selectedCandidates) {
+      const frameFileName = `frame_${frameNumber.toString().padStart(3, '0')}_${candidate.timestamp.toFixed(1)}s.jpg`;
       const framePath = path.join(outputDir, frameFileName);
       
-      const success = await extractFrameAtTime(videoPath, timestamp, framePath);
+      const success = await extractFrameAtTime(videoPath, candidate.timestamp, framePath);
       
       if (success) {
         frames.push({
           frameNumber: frameNumber,
-          timestamp: timestamp,
+          timestamp: candidate.timestamp,
           filePath: framePath,
-          fileName: frameFileName
+          fileName: frameFileName,
+          score: candidate.score
         });
       }
       
@@ -346,7 +343,8 @@ export async function extractVideoFrames(options: FrameExtractionOptions): Promi
                 frameNumber: 0,
                 timestamp: 0.1,
                 filePath: framePath,
-                fileName: frameFileName
+                fileName: frameFileName,
+                score: 0.5  // Default middle score for fallback frame
             });
         }
     }
@@ -370,45 +368,6 @@ export async function extractVideoFrames(options: FrameExtractionOptions): Promi
       error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
-}
-
-/**
- * Check if FFmpeg tools are available
- */
-async function checkFFmpegTools(): Promise<boolean> {
-  return new Promise((resolve) => {
-    // Check ffprobe
-    const testProbe = spawn('ffprobe', ['-version']);
-    
-    testProbe.on('error', (error: any) => {
-      if (error.code === 'ENOENT') {
-        console.error('ffprobe not found. FFmpeg tools are not available.');
-        resolve(false);
-        return;
-      }
-    });
-    
-    testProbe.on('close', (code) => {
-      if (code === 0) {
-        // ffprobe is available, now check ffmpeg
-        const testMpeg = spawn('ffmpeg', ['-version']);
-        
-        testMpeg.on('error', (error: any) => {
-          if (error.code === 'ENOENT') {
-            console.error('ffmpeg not found. FFmpeg tools are not available.');
-            resolve(false);
-            return;
-          }
-        });
-        
-        testMpeg.on('close', (code) => {
-          resolve(code === 0);
-        });
-      } else {
-        resolve(false);
-      }
-    });
-  });
 }
 
 /**

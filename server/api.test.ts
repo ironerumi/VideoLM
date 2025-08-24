@@ -7,14 +7,31 @@ import { VideoAnalysis } from './services/openai';
 
 // Mock the OpenAI service
 vi.mock('./services/openai', () => ({
+  // Keep deprecated function for backward compatibility
   analyzeVideoFrames: vi.fn().mockResolvedValue({
     summary: 'This is a mock summary.',
-    keyPoints: ['Mock point 1', 'Mock point 2'],
+    keyPoints: ['[00:00] Mock point 1', '[00:01] Mock point 2'],
     topics: ['Mock topic 1', 'Mock topic 2'],
     sentiment: 'neutral',
     visualElements: ['Mock element 1'],
     transcription: ['[00:00] Mock transcription']
   } as VideoAnalysis),
+  // New split functions
+  analyzeKeyFrames: vi.fn().mockResolvedValue({
+    summary: 'This is a mock summary.',
+    keyPoints: ['[00:00] Mock point 1', '[00:01] Mock point 2'],
+    topics: ['Mock topic 1', 'Mock topic 2'],
+    sentiment: 'neutral',
+    visualElements: ['Mock element 1'],
+  }),
+  transcribeFrameBatch: vi.fn().mockImplementation((frameData) => Promise.resolve({
+    transcription: frameData.map((frame: any, index: number) => {
+      const minutes = Math.floor(frame.timestamp / 60);
+      const seconds = Math.floor(frame.timestamp % 60);
+      const timestamp = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      return `[${timestamp}] Mock transcription frame ${index + 1}`;
+    })
+  })),
   chatWithVideo: vi.fn().mockResolvedValue({
     rephrasedQuestion: 'This is a mock rephrased question.',
     response: 'This is a mock AI response.',
@@ -98,11 +115,13 @@ describe('VideoLM API E2E Test', () => {
       .set('X-Session-Id', sessionId)
       .expect(200);
     expect(analysisResponse.body.summary).toBe('This is a mock summary.');
-    expect(analysisResponse.body.keyPoints).toEqual(['Mock point 1', 'Mock point 2']);
+    expect(analysisResponse.body.keyPoints).toEqual(['[00:00] Mock point 1', '[00:01] Mock point 2']);
     expect(analysisResponse.body.topics).toEqual(['Mock topic 1', 'Mock topic 2']);
     expect(analysisResponse.body.sentiment).toBe('neutral');
     expect(analysisResponse.body.visualElements).toEqual(['Mock element 1']);
-    expect(analysisResponse.body.transcription).toEqual(['[00:00] Mock transcription']);
+    expect(analysisResponse.body.transcription).toEqual(expect.arrayContaining([
+      expect.stringMatching(/^\[\d{2}:\d{2}\] Mock transcription frame \d+$/)
+    ]));
     console.log('Verified video analysis.');
 
     // 5. Test the chat endpoint
