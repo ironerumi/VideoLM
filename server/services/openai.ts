@@ -67,7 +67,7 @@ export async function analyzeKeyFrames(frameData: Array<{base64: string, timesta
             {
               type: "text",
               text: `Analyze these ${frameData.length} key video frames taken at timestamps ${timestamps.join(', ')} and provide high-level analysis ONLY:
-              
+
               Return JSON with this structure:
               {
                 "summary": "Comprehensive summary covering main themes and content",
@@ -82,7 +82,7 @@ export async function analyzeKeyFrames(frameData: Array<{base64: string, timesta
         },
       ],
       response_format: { type: "json_object" },
-      max_tokens: 3000,
+      max_tokens: 10000,
     });
 
     const responseContent = response.choices[0].message.content || "{}";
@@ -91,13 +91,10 @@ export async function analyzeKeyFrames(frameData: Array<{base64: string, timesta
       result = JSON.parse(responseContent);
     } catch (parseError) {
       console.error("JSON parsing failed:", parseError);
-      result = {
-        summary: "Video analysis completed with limited details due to response format issues",
-        keyPoints: ["Video content analyzed", "Processing completed"],
-        topics: ["General content"],
-        sentiment: "neutral",
-        visualElements: ["Various visual elements detected"]
-      };
+      console.error("Raw OpenAI response:", responseContent);
+      const errorMsg = `Key frame analysis failed: ${(parseError as Error).message}`;
+      console.error(errorMsg);
+      throw new Error(errorMsg);
     }
     
     return {
@@ -109,7 +106,8 @@ export async function analyzeKeyFrames(frameData: Array<{base64: string, timesta
     };
   } catch (error) {
     console.error("Error analyzing key frames:", error);
-    throw new Error("Failed to analyze key frames");
+    const errorMsg = error instanceof Error ? error.message : "Failed to analyze key frames";
+    throw new Error(errorMsg);
   }
 }
 
@@ -152,6 +150,7 @@ Use this context to provide meaningful frame descriptions that connect to the bi
           content: `You are a video transcriber. Create detailed frame-by-frame descriptions. Focus on:
           - Specific actions and movements in each frame
           - Important objects and changes
+          - Key events or differences between frames
           - Environmental details
           
           Keep each transcription entry SHORT (10-15 words) and focused on what's happening in that specific moment.
@@ -188,14 +187,10 @@ Use this context to provide meaningful frame descriptions that connect to the bi
       result = JSON.parse(responseContent);
     } catch (parseError) {
       console.error("JSON parsing failed:", parseError);
-      result = {
-        transcription: frameData.map((_, index) => {
-          const minutes = Math.floor(frameData[index].timestamp / 60);
-          const seconds = Math.floor(frameData[index].timestamp % 60);
-          const timestamp = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-          return `[${timestamp}] Frame ${index + 1} processed`;
-        })
-      };
+      console.error("Raw OpenAI response:", responseContent);
+      const errorMsg = `Frame batch transcription failed: ${(parseError as Error).message}`;
+      console.error(errorMsg);
+      throw new Error(errorMsg);
     }
     
     return {
@@ -203,12 +198,14 @@ Use this context to provide meaningful frame descriptions that connect to the bi
     };
   } catch (error) {
     console.error("Error transcribing frame batch:", error);
-    throw new Error("Failed to transcribe frame batch");
+    const errorMsg = error instanceof Error ? error.message : "Failed to transcribe frame batch";
+    throw new Error(errorMsg);
   }
 }
 
 // DEPRECATED: Use analyzeKeyFrames() and transcribeFrameBatch() instead
 export async function analyzeVideoFrames(frameData: Array<{base64: string, timestamp: number}>, language: string = 'en'): Promise<VideoAnalysis> {
+  console.warn("analyzeVideoFrames() is deprecated. Please use analyzeKeyFrames() and transcribeFrameBatch() instead.");
   try {
     // Prepare images for the request
     const imageContent = frameData.map(frame => ({
