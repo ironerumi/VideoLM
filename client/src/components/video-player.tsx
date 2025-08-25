@@ -5,11 +5,64 @@ import { Slider } from "@/components/ui/slider";
 import type { VideoWithFrames } from "@shared/types";
 import { useI18n } from "@/lib/i18n";
 
+// Sizing constants for consistent spacing
+const TIMELINE_PADDING = 'p-2';
+const THUMBNAIL_HEIGHT = 'h-8';
+const THUMBNAIL_WIDTH = 'w-18';
+const THUMBNAIL_SPACING = 'space-x-2';
+const FRAME_WIDTH_PX = 80; // 18*4 + 8px gap
+
 interface VideoPlayerProps {
   video: VideoWithFrames | undefined;
   videos: VideoWithFrames[];
   onVideoSelect: (videoId: string) => void;
   seekToTime?: number;
+}
+
+// Frame thumbnail component with proper error handling
+interface FrameThumbnailProps {
+  src: string;
+  alt: string;
+  timestamp: number;
+  index: number;
+  isPastFrame: boolean;
+}
+
+function FrameThumbnail({ src, alt, timestamp, index, isPastFrame }: FrameThumbnailProps) {
+  const [hasError, setHasError] = useState(false);
+
+  const getGradient = (index: number) => {
+    const gradients = [
+      'from-purple-400 to-blue-500',
+      'from-blue-400 to-purple-500', 
+      'from-pink-400 to-purple-500',
+      'from-purple-500 to-pink-400',
+      'from-blue-500 to-indigo-500',
+    ];
+    return gradients[index % gradients.length];
+  };
+
+  if (hasError) {
+    return (
+      <div className={`w-full h-full bg-gradient-to-br ${getGradient(index)} flex items-center justify-center`}>
+        <span className="text-white text-xs">{timestamp.toFixed(1)}s</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={`w-full h-full object-cover transition-all duration-300 ${
+        isPastFrame ? 'grayscale opacity-60' : ''
+      }`}
+      onError={() => {
+        console.error(`Failed to load frame at ${timestamp}s`);
+        setHasError(true);
+      }}
+    />
+  );
 }
 
 export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }: VideoPlayerProps) {
@@ -85,16 +138,6 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
     }
   };
 
-  const getGradient = (index: number) => {
-    const gradients = [
-      'from-purple-400 to-blue-500',
-      'from-blue-400 to-purple-500',
-      'from-pink-400 to-purple-500',
-      'from-purple-500 to-pink-400',
-      'from-blue-500 to-indigo-500',
-    ];
-    return gradients[index % gradients.length];
-  };
 
   // Handle seeking to specific time when requested
   useEffect(() => {
@@ -128,9 +171,8 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
     const targetFrameIndex = frames.findIndex(frame => Math.abs(frame.timestamp - targetTime) < 0.5);
     
     if (targetFrameIndex >= 0) {
-      // Each frame is w-24 (96px) + space-x-2 (8px gap) = 104px per frame
-      const frameWidth = 104;
-      const scrollPosition = targetFrameIndex * frameWidth;
+      // Each frame uses FRAME_WIDTH_PX constant
+      const scrollPosition = targetFrameIndex * FRAME_WIDTH_PX;
       
       // Smooth scroll to position
       timelineRef.current.scrollTo({
@@ -255,10 +297,10 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
           )}
         </div>
 
-        {/* Thumbnail Timeline - Real Extracted Frames */}
-        <div className="p-6 bg-white border-t border-slate-100 flex-shrink-0 min-w-0">
+        {/* Thumbnail Timeline */}
+        <div className={`${TIMELINE_PADDING} bg-white border-t border-slate-100 flex-shrink-0 min-w-0`}>
           <div className="overflow-x-auto max-w-full" ref={timelineRef}>
-            <div className="flex space-x-2 pb-2 w-max">
+            <div className={`flex ${THUMBNAIL_SPACING} pb-2 w-max`}>
             {video?.thumbnails?.frames && Array.isArray(video.thumbnails.frames) && video.thumbnails.frames.length > 0 ? (
               video.thumbnails.frames.map((frame: any, index: number) => {
                 const frameProgress = actualDuration > 0 ? (frame.timestamp / actualDuration) * 100 : 0;
@@ -268,41 +310,19 @@ export default function VideoPlayer({ video, videos, onVideoSelect, seekToTime }
                 return (
                   <div
                     key={frame.frameNumber}
-                    className={`flex-shrink-0 w-24 h-14 rounded-lg cursor-pointer transition-all duration-200 transform hover:scale-105 overflow-hidden ${
+                    className={`flex-shrink-0 ${THUMBNAIL_WIDTH} ${THUMBNAIL_HEIGHT} rounded-lg cursor-pointer transition-all duration-200 transform hover:scale-105 overflow-hidden ${
                       isActive ? 'ring-2 ring-indigo-400' : 'hover:ring-2 hover:ring-indigo-300'
                     }`}
                     onClick={() => handleSeek([frameProgress])}
                     data-testid={`thumbnail-${index}`}
                   >
-                    <img
+{/* Frame image with React error fallback */}
+                    <FrameThumbnail
                       src={`/api/videos/${video.id}/frames/${frame.fileName}?session=${video.sessionId}`}
                       alt={`Frame at ${frame.timestamp.toFixed(1)}s`}
-                      className={`w-full h-full object-cover transition-all duration-300 ${
-                        isPastFrame ? 'grayscale opacity-60' : ''
-                      }`}
-                      onError={(e) => {
-                        console.error(`Failed to load frame: ${frame.fileName}`);
-                        // Fallback to gradient if frame loading fails
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        if (parent) {
-                          // Add gradient classes properly by splitting them
-                          const gradientClasses = `bg-gradient-to-br ${getGradient(index)}`.split(' ');
-                          parent.classList.add(...gradientClasses);
-                          
-                          // Create elements safely using DOM methods
-                          const containerDiv = document.createElement('div');
-                          containerDiv.className = 'w-full h-full flex items-center justify-center';
-                          
-                          const timestampSpan = document.createElement('span');
-                          timestampSpan.className = 'text-white text-xs';
-                          timestampSpan.textContent = `${frame.timestamp.toFixed(1)}s`;
-                          
-                          containerDiv.appendChild(timestampSpan);
-                          parent.appendChild(containerDiv);
-                        }
-                      }}
+                      timestamp={frame.timestamp}
+                      index={index}
+                      isPastFrame={isPastFrame}
                     />
                   </div>
                 );
