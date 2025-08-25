@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,6 @@ interface QAInterfaceProps {
 
 export default function QAInterface({ videoId, selectedVideoCount, onFrameClick }: QAInterfaceProps) {
   const [message, setMessage] = useState("");
-  const [currentQA, setCurrentQA] = useState<ChatMessage | null>(null);
-  const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const { t } = useI18n();
@@ -29,23 +27,49 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
     refetchOnWindowFocus: false,
   });
 
+  // Extract timestamp from frame name
+  const extractTimestamp = (frameName: string) => {
+    const match = frameName.match(/frame_\d+_(\d+(\.\d+)?)s/);
+    return match ? parseFloat(match[1]) : 0;
+  };
+
+  // Derive current Q&A from latest message
+  const currentQA = useMemo(() => {
+    if (chatHistory.length === 0) return null;
+    return [...chatHistory].sort((a, b) => 
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    )[0];
+  }, [chatHistory]);
+
+  // Memoized frame parsing and sorting
+  const parseFrames = useMemo(() => (relevantFrame: string | null | string[]) => {
+    if (!relevantFrame) return [];
+    if (Array.isArray(relevantFrame)) return relevantFrame;
+    try {
+      return relevantFrame.startsWith('[') ? JSON.parse(relevantFrame) : [relevantFrame];
+    } catch {
+      return relevantFrame ? [relevantFrame] : [];
+    }
+  }, []);
+
+  const sortedFrames = useMemo(() => {
+    if (!currentQA?.relevantFrame) return [];
+    const frames = parseFrames(currentQA.relevantFrame);
+    return frames.sort((a: string, b: string) => {
+      const timeA = extractTimestamp(a);
+      const timeB = extractTimestamp(b);
+      return timeA - timeB;
+    });
+  }, [currentQA?.relevantFrame, parseFrames]);
+
   const chatMutation = useMutation({
     mutationFn: async ({ message, videoId }: { message: string; videoId: string }) => {
       const response = await apiRequest('POST', `api/videos/${videoId}/chat`, { message });
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["api/videos", videoId, "chat"] });
       setMessage("");
-      setIsWaitingForResponse(false);
-      // Set the new Q&A immediately from the response
-      if (data && data.success) {
-        // The response should contain the new message, we'll let the effect handle it
-        // but we ensure waiting state is cleared
-      }
-    },
-    onError: () => {
-      setIsWaitingForResponse(false);
     },
   });
 
@@ -56,18 +80,12 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["api/videos", videoId, "chat"] });
-      setCurrentQA(null);
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() || !videoId) return;
-    
-    // Clear the current Q&A when asking a new question
-    setCurrentQA(null);
-    setIsWaitingForResponse(true);
-    
     chatMutation.mutate({ message: message.trim(), videoId });
   };
 
@@ -77,6 +95,7 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
   };
 
   const isLoading = chatMutation.isPending || clearChatMutation.isPending;
+  const isWaitingForResponse = chatMutation.isPending;
 
   const formatTime = (date: Date | string) => {
     return new Date(date).toLocaleTimeString('en-US', {
@@ -86,59 +105,10 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
     });
   };
 
-  // Get the latest Q&A pair (most recent message)
-  useEffect(() => {
-    if (chatHistory.length > 0) {
-      // Sort by timestamp to ensure we get the most recent
-      const sortedHistory = [...chatHistory].sort((a, b) => 
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      );
-      const latestMessage = sortedHistory[0];
-      setCurrentQA(latestMessage);
-    } else {
-      setCurrentQA(null);
-    }
-  }, [chatHistory]);
-
-  // Reset current Q&A when video changes
-  useEffect(() => {
-    setCurrentQA(null);
-    setIsWaitingForResponse(false);
-  }, [videoId]);
-
-  // Parse frames from relevantFrame field
-  const parseFrames = (relevantFrame: string | null) => {
-    if (!relevantFrame) return [];
-    
-    try {
-      // Handle both string and array formats
-      if (relevantFrame.startsWith('[')) {
-        return JSON.parse(relevantFrame);
-      } else {
-        return [relevantFrame];
-      }
-    } catch {
-      return relevantFrame ? [relevantFrame] : [];
-    }
-  };
-
-  // Sort frames chronologically by extracting timestamp
-  const sortFramesChronologically = (frames: string[]) => {
-    return frames.sort((a, b) => {
-      const timeA = extractTimestamp(a);
-      const timeB = extractTimestamp(b);
-      return timeA - timeB;
-    });
-  };
-
-  const extractTimestamp = (frameName: string) => {
-    const match = frameName.match(/frame_\d+_(\d+(\.\d+)?)s/);
-    return match ? parseFloat(match[1]) : 0;
-  };
 
   const handleFrameClick = (frameName: string) => {
     const timestamp = extractTimestamp(frameName);
-    if (onFrameClick && timestamp > 0) {
+    if (onFrameClick && timestamp >= 0) {
       onFrameClick(timestamp);
     }
   };
@@ -151,62 +121,56 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
 
   return (
     <div className="h-full flex flex-col bg-white">
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex-shrink-0">
-        <h3 className="text-lg font-semibold text-slate-800">{t.qaInterface}</h3>
-      </div>
-      
       {/* Q&A Display Area */}
       <div className="flex-1 overflow-hidden min-h-0">
         <ScrollArea className="h-full w-full" ref={scrollRef}>
           {!videoId ? (
-            <div className="flex items-center justify-center h-full p-6">
+            <div className="flex items-center justify-center h-full p-4">
               <div className="text-center">
-                <Bot className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-700 mb-2">{t.noVideoSelectedChat}</h3>
-                <p className="text-slate-500">{t.selectVideoToChat}</p>
+                <Bot className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                <h3 className="text-sm font-medium text-slate-700 mb-1">{t.noVideoSelectedChat}</h3>
+                <p className="text-xs text-slate-500">{t.selectVideoToChat}</p>
               </div>
             </div>
           ) : currentQA ? (
-            // Display the latest Q&A in vertical sections with right-aligned icons
-            <div className="p-6 space-y-4">
-              {/* Section 1: Rephrased Question */}
-              <div className="bg-slate-50 rounded-lg p-4">
-                <div className="text-slate-800 bg-white rounded-md p-3 border relative pl-10 break-keep">
-                  <User className="h-4 w-4 absolute top-3 left-3 text-slate-500" />
+            <div className="p-3 space-y-2 relative">
+              {/* Question */}
+              <div className="bg-slate-50 rounded p-2">
+                <div className="text-slate-800 bg-white rounded p-2 border relative pl-6 text-sm">
+                  <User className="h-3 w-3 absolute top-2 left-2 text-slate-500" />
                   {currentQA.rephrasedQuestion || currentQA.message}
                 </div>
               </div>
 
-              {/* Section 2: Bot Response */}
-              <div className="bg-blue-50 rounded-lg p-4">
-                <div className="text-slate-800 bg-white rounded-md p-3 border relative pl-10 break-keep">
-                  <Bot className="h-4 w-4 absolute top-3 left-3 text-slate-500" />
+              {/* Response */}
+              <div className="bg-blue-50 rounded p-2">
+                <div className="text-slate-800 bg-white rounded p-2 border relative pl-6 text-sm">
+                  <Bot className="h-3 w-3 absolute top-2 left-2 text-slate-500" />
                   {currentQA.response}
                 </div>
               </div>
 
-              {/* Section 3: Related Frames */}
+              {/* Frames */}
               {currentQA.relevantFrame && (
-                <div className="bg-amber-50 rounded-lg p-4">
-                  <div className="relative pl-6">
-                    <svg className="h-4 w-4 absolute top-1 left-0 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <div className="bg-amber-50 rounded p-2">
+                  <div className="relative pl-4">
+                    <svg className="h-3 w-3 absolute top-0.5 left-0 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                       <circle cx="8.5" cy="8.5" r="1.5"/>
                       <polyline points="21,15 16,10 5,21"/>
                     </svg>
-                    <div className="flex flex-wrap gap-2">
-                      {sortFramesChronologically(parseFrames(currentQA.relevantFrame)).map((frameName, index) => (
+                    <div className="flex flex-wrap gap-1">
+                      {sortedFrames.map((frameName: string, index: number) => (
                         <button
                           key={index}
                           onClick={() => handleFrameClick(frameName)}
-                          className="group relative overflow-hidden rounded-lg border-2 border-transparent hover:border-blue-500 transition-all duration-200"
+                          className="group relative overflow-hidden rounded border border-transparent hover:border-blue-500 transition-all duration-200"
                           data-testid={`frame-thumbnail-${index}`}
                         >
                           <img
                             src={`api/videos/${videoId}/frames/${frameName}?session=${sessionManager.getSessionId()}`}
                             alt={`Frame at ${extractTimestamp(frameName)}s`}
-                            className="w-16 h-12 object-cover rounded-md"
+                            className="w-12 h-9 object-cover rounded-sm"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               const parent = target.parentElement;
@@ -215,12 +179,7 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
                               }
                             }}
                           />
-                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
-                            <span className="text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                              {Math.floor(extractTimestamp(frameName))}s
-                            </span>
-                          </div>
-                          <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 py-0.5 rounded">
+                          <div className="absolute bottom-0 right-0 bg-black/70 text-white text-xs px-1 rounded-tl">
                             {Math.floor(extractTimestamp(frameName))}s
                           </div>
                         </button>
@@ -229,20 +188,30 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
                   </div>
                 </div>
               )}
+              
+              {/* Loading overlay for subsequent questions */}
+              {isWaitingForResponse && (
+                <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    <p className="text-slate-600 text-sm">Analyzing video...</p>
+                  </div>
+                </div>
+              )}
             </div>
           ) : isWaitingForResponse ? (
-            <div className="flex items-center justify-center h-full p-6">
+            <div className="flex items-center justify-center h-full p-4">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-slate-600">Analyzing video and generating response...</p>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                <p className="text-slate-600 text-sm">Analyzing video...</p>
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full p-6">
+            <div className="flex items-center justify-center h-full p-4">
               <div className="text-center">
-                <Bot className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-700 mb-2">{t.aiAnalysisReady}</h3>
-                <p className="text-slate-500">{t.aiReadyDescription}</p>
+                <Bot className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                <h3 className="text-sm font-medium text-slate-700 mb-1">{t.aiAnalysisReady}</h3>
+                <p className="text-xs text-slate-500">{t.aiReadyDescription}</p>
               </div>
             </div>
           )}
@@ -252,7 +221,7 @@ export default function QAInterface({ videoId, selectedVideoCount, onFrameClick 
 
 
       {/* Input Section */}
-      <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex-shrink-0">
+      <div className="p-3 border-t border-slate-100 bg-slate-50/50 flex-shrink-0">
         {!videoId ? (
           <div className="text-center text-slate-500">
             <p>{t.selectVideoFirst}</p>
