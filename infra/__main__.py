@@ -12,19 +12,24 @@ BASE_DIR = Path(__file__).parent
 env_dir = BASE_DIR / "custom_environment"
 zip_path = BASE_DIR / "custom_environment.zip"
 
+hasher = hashlib.sha256()
+
 # Create (or overwrite) the ZIP archive with all files from the custom_environment directory
 with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
     for file_path in env_dir.rglob("*"):
         if file_path.is_file():
             # Place files at the root of the ZIP (no leading custom_environment/ folder)
-            zipf.write(file_path, file_path.relative_to(env_dir))
+            relative_path = file_path.relative_to(env_dir)
+            zipf.write(file_path, relative_path)
+
+            # Update the hash with the contents of the file
+            with file_path.open("rb") as f:
+                hasher.update(f.read())
+                hasher.update(relative_path.as_posix().encode())
+                hasher.update(b"\0")  # Null byte as separator
 
 # Absolute path to the generated ZIP archive
 docker_context_path = str(zip_path.resolve())
-
-# --- Calculate a deterministic hash of the ZIP file contents (SHA-256) ---
-with open(zip_path, "rb") as _z:
-    docker_context_hash = hashlib.sha256(_z.read()).hexdigest()
 
 # Create a custom execution environment
 exe_env = datarobot.ExecutionEnvironment(
@@ -32,7 +37,7 @@ exe_env = datarobot.ExecutionEnvironment(
     programming_language="other",
     use_cases=["customApplication"],
     docker_context_path=docker_context_path,
-    description=f"Custom execution environment for VideoLM with hash {docker_context_hash}",
+    description=f"Custom execution environment for VideoLM with hash {hasher.hexdigest()}",
 )
 
 # Export the execution environment ID
