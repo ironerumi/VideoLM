@@ -121,8 +121,31 @@ export default function VideoUpload({ onVideoUploaded, onCancel, showCancel = tr
     }
   }, [uploadMutation]);
 
+  const onDropRejected = useCallback((fileRejections: any[]) => {
+    const rejection = fileRejections[0];
+    if (rejection?.errors?.length > 0) {
+      const error = rejection.errors[0];
+      let errorMessage = t.uploadFailed;
+
+      if (error.code === 'file-too-large') {
+        errorMessage = t.fileSizeError;
+      } else if (error.code === 'file-invalid-type') {
+        errorMessage = t.fileTypeError;
+      } else if (error.code === 'too-many-files') {
+        errorMessage = t.tooManyFilesError;
+      }
+
+      toast({
+        title: t.uploadFailed,
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  }, [toast, t]);
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
+    onDropRejected,
     accept: {
       'video/*': ['.mp4', '.mov', '.avi', '.mkv', '.webm']
     },

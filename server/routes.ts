@@ -48,22 +48,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/videos/upload", upload.single('video'), async (req: MulterRequest, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ message: "No video file provided" });
+  app.post("/api/videos/upload",
+    (req: MulterRequest, res, next) => {
+      upload.single('video')(req, res, (err) => {
+        if (err) {
+          if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(413).json({ message: "File size exceeds the 100MB limit" });
+          }
+          if (err.message.includes('Invalid file type')) {
+            return res.status(400).json({ message: err.message });
+          }
+          return res.status(400).json({ message: err.message || "Upload error" });
+        }
+        next();
+      });
+    },
+    async (req: MulterRequest, res) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: "No video file provided" });
+        }
+        const userLanguage = req.headers['x-user-language'] as string || 'en';
+        const result = await VideoService.handleUpload(req.file, req.sessionId, userLanguage);
+        res.json(result);
+      } catch (error) {
+        console.error("💥 Upload error:", error);
+        if (req.file?.path && fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
+        res.status(500).json({ message: "Failed to upload video" });
       }
-      const userLanguage = req.headers['x-user-language'] as string || 'en';
-      const result = await VideoService.handleUpload(req.file, req.sessionId, userLanguage);
-      res.json(result);
-    } catch (error) {
-      console.error("💥 Upload error:", error);
-      if (req.file?.path && fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
-      }
-      res.status(500).json({ message: "Failed to upload video" });
     }
-  });
+  );
 
   app.get("/api/videos/:id/status", async (req: MulterRequest, res) => {
     try {
