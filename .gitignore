@@ -11,6 +11,7 @@ vite.config.ts.*
 *.wmv
 *.flv
 *.mkv
+*.m2ts
 
 # Ignore image files
 *.jpg
@@ -30,6 +31,6 @@ infra/*.zip
 __pycache__
 *.pyc
 
-# video and data files
-*.m2ts
+# data files
 *.xlsx
+*.csv
