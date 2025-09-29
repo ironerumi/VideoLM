@@ -82,7 +82,7 @@ export async function analyzeKeyFrames(frameData: Array<{base64: string, timesta
         },
       ],
       response_format: { type: "json_object" },
-      max_tokens: 10000,
+      max_tokens: 50000,
     });
 
     const responseContent = response.choices[0].message.content || "{}";

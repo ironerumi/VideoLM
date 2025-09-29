@@ -29,3 +29,7 @@ infra/*.zip
 # python cache
 __pycache__
 *.pyc
+
+# video and data files
+*.m2ts
+*.xlsx
