@@ -33,78 +33,10 @@ const client = new OpenAI({
   baseURL,
 });
 
-async function analyzeVideo() {
-  try {
-    // Load video file
-    const videoPath = path.join(process.cwd(), 'data', 'F25-047_048_compressed.mp4');
-
-    if (!fs.existsSync(videoPath)) {
-      console.error(`Error: Video file not found at ${videoPath}`);
-      process.exit(1);
-    }
-
-    console.log(`Reading video file: ${videoPath}`);
-    const videoBytes = fs.readFileSync(videoPath);
-    const encodedData = videoBytes.toString('base64');
-
-    // Build messages payload exactly like Python script
-    const messages = [
-      {
-        role: "system" as const,
-        content: "You are a expert video analysis assistant.",
-      },
-      {
-        role: "user" as const,
-        content: [
-          {
-            type: "file" as const,
-            file: {
-              file_data: `data:video/mp4;base64,${encodedData}`,
-            },
-          },
-          {
-            type: "text" as const,
-            text: "generate transcription like description for the video for all the key moments, format `[xx:xx]: content`. Answer in Japanese",
-          },
-        ],
-      },
-    ];
-
-    console.log('Sending request to DataRobot endpoint...');
-
-    // Call API - try with explicit typing
-    const response = await client.chat.completions.create({
-      model,
-      messages: messages as any, // Force TypeScript to accept the file format
-    });
-
-    // Parse and print results
-    const content = response.choices[0]?.message?.content;
-    if (content) {
-      console.log("Content:\n", content);
-    } else {
-      console.log("No content received in response");
-    }
-
-    if (response.usage) {
-      console.log("\nUsage:\n", response.usage);
-    }
-
-    console.log("\nRaw response:\n", response);
-
-  } catch (error) {
-    console.error("Error:", error);
-    if (error instanceof Error) {
-      console.error("Error message:", error.message);
-    }
-  }
-}
-
-// Specialized analyzer for sewage inspection footage
 // Returns a single JSON object with nested table per requirements
 async function analyzeVideo4Sewage() {
   try {
-    const videoPath = path.join(process.cwd(), 'data', 'F25-047_048_compressed.mp4');
+    const videoPath = path.join(process.cwd(), 'data', 'F25-047_048.mp4');
 
     if (!fs.existsSync(videoPath)) {
       console.error(`Error: Video file not found at ${videoPath}`);
@@ -114,6 +46,8 @@ async function analyzeVideo4Sewage() {
     console.log(`Reading video file: ${videoPath}`);
     const videoBytes = fs.readFileSync(videoPath);
     const encodedData = videoBytes.toString('base64');
+    // check encodedData size in MB
+    console.log(`Encoded data size: ${encodedData.length / 1024 / 1024} MB`);
 
     // Structured prompt tailored for sewage footage key-frame extraction
     const messages = [
@@ -127,6 +61,8 @@ async function analyzeVideo4Sewage() {
           {
             type: "file" as const,
             file: {
+              // file_id: `https://storage.googleapis.com/ygu_test/best.mp4?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=service-account-837%40ygu-test.iam.gserviceaccount.com%2F20251020%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20251020T161703Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=a8beab6225b436bb7eae2cb4fe8c77c166ae0f1ce00e9c1c6810c7745d20e240fbf5e6f3e704c94f59bf34663b30472b25324cdc0f86222e8aac33e524b62a2cc33ff1c385fb0eda669d5f4ee5eb179e91851f4272f0abd3beb994d838fabe08f4b8d71ba072c773ae3a6284effef94352e5d7b148fec8a2ae4367b3b6ef242522650d126b54dcfb897fad1b21c5e0a5e6ad930bcdca490b44aa477f1957890246964377305002e5b82f210c78016decbbaac9301ec847d376857c1bb930c2081302514218844913fc627ae7cc2570c9f6cc3fde3817260588ff0bc28e42c735ea59f535e5b62ac1935ae1f3e2c139d7bc21a82a6bf252e60c1f92c8d0cbfe53`,
+              // format: "video/mp4"
               file_data: `data:video/mp4;base64,${encodedData}`,
             },
           },
@@ -227,13 +163,7 @@ const isDirectRun = argvScript && argvScript === thisFile;
 
 if (isDirectRun) {
   const args = process.argv.slice(2).map(a => a.toLowerCase());
-  const isSewage = args.some(a => a === 'sewage' || a === '--sewage' || a === '--mode=sewage');
-
-  if (isSewage) {
-    console.log('Mode: sewage');
-    analyzeVideo4Sewage();
-  } else {
-    console.log('Mode: default');
-    analyzeVideo();
-  }
+  
+  console.log('Analyzing video for sewage inspection...');
+  analyzeVideo4Sewage();
 }
